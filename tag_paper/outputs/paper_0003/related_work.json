@@ -1,0 +1,237 @@
+{
+  "target_paper_title": "FLASHVID: EFFICIENT VIDEO LARGE LANGUAGE MODELS VIA TRAINING-FREE TREE-BASED SPA-TIOTEMPORAL TOKEN MERGING",
+  "related_work_items": [
+    {
+      "citation_marker": "b51",
+      "paper_title": "Fastvid: Dynamic density pruning for fast video large language models",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Compared baselines.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "We compare FlashVID with four state-of-the-art training-free VLLM acceleration methods ... FastVID, compressing redundant tokens via density-based spatiotemporal pruning."
+        },
+        {
+          "section": "Additional efficiency analysis",
+          "evidence_type": "comparison_context",
+          "evidence_text": "We test the efficiency of our FlashVID on LLaVA-OneVision, comparing to FastVID."
+        },
+        {
+          "section": "C.2 REPRODUCTION DETAILS OF FLASHVID",
+          "evidence_type": "method_context",
+          "evidence_text": "State-of-the-art VLLM acceleration methods commonly apply video partitioning before token compression, aiming to avoid information mixing and building upon DySeg."
+        }
+      ],
+      "gap_relevance_note": "FastVID is a main direct baseline in the same training-free VLLM acceleration setting and is repeatedly used to frame FlashVID's gains in both effectiveness and efficiency."
+    },
+    {
+      "citation_marker": "b21",
+      "paper_title": "Prunevid: Visual token pruning for efficient video large language models",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "INTRODUCTION",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Recent VLLM acceleration methods typically adopt a three-stage pipeline ... however, previous methods typically compress temporal and spatial redundancy independently."
+        },
+        {
+          "section": "Compared baselines.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "We compare FlashVID with four state-of-the-art training-free VLLM acceleration methods ... PruneVID, combining spatiotemporal token merging with attention-based selection in the LLM."
+        },
+        {
+          "section": "Visual Token Compression.",
+          "evidence_type": "tension_context",
+          "evidence_text": "PruneVID distinguishes static and dynamic tokens, whereas the paper argues for a unified structure-aware mechanism to capture coupled spatiotemporal redundancy."
+        }
+      ],
+      "gap_relevance_note": "PruneVID is a close comparison target because it also addresses efficient video token pruning, but the paper positions FlashVID against its decoupled handling of spatiotemporal redundancy."
+    },
+    {
+      "citation_marker": "b74",
+      "paper_title": "Visionzip: Longer is better but not necessary in vision language models",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "INTRODUCTION",
+          "evidence_type": "method_context",
+          "evidence_text": "While advances have been achieved in visual token compression for images ... extending these methods to video remains largely underexplored."
+        },
+        {
+          "section": "Compared baselines.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "VisionZip prunes tokens using [CLS] attention and spatial merging before the LLM."
+        },
+        {
+          "section": "C.1 REPRODUCTION DETAILS OF COMPARED BASELINES",
+          "evidence_type": "tension_context",
+          "evidence_text": "VisionZip prunes visual tokens at the output of the vision encoder ... we instead apply pruning after pooling for VisionZip."
+        }
+      ],
+      "gap_relevance_note": "VisionZip is a strong bridge baseline from image/VLM token compression that the paper uses to motivate why video-specific spatiotemporal modeling is needed."
+    },
+    {
+      "citation_marker": "b6",
+      "paper_title": "An image is worth 1/2 tokens after layer 2: Plug-and-play inference acceleration for large visionlanguage models",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Compared baselines.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "FastV selects prompt-relevant tokens via text-to-visual attention at the prefilling stage."
+        },
+        {
+          "section": "MAIN RESULTS",
+          "evidence_type": "comparison_context",
+          "evidence_text": "FastV shows the weakest performance, as early-layer pruning is unstable."
+        },
+        {
+          "section": "Visual Token Compression.",
+          "evidence_type": "method_context",
+          "evidence_text": "FastV identifies text-relevant visual tokens based on text-to-visual attention in the LLM."
+        }
+      ],
+      "gap_relevance_note": "FastV is a representative earlier token-pruning approach that the paper directly compares against, especially to show the limits of early-layer spatial pruning for video."
+    },
+    {
+      "citation_marker": "b48",
+      "paper_title": "Holitom: Holistic token merging for fast video large language models",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Visual Token Compression.",
+          "evidence_type": "method_context",
+          "evidence_text": "HoliTom combines global redundancy-aware video partition with spatial and inner-LLM compression."
+        },
+        {
+          "section": "INTRODUCTION",
+          "evidence_type": "tension_context",
+          "evidence_text": "The paper criticizes previous methods for compressing temporal and spatial redundancy independently and motivates joint spatiotemporal compression."
+        }
+      ],
+      "gap_relevance_note": "HoliTom is part of the immediate lineage of video token compression frameworks that combine multiple compression stages, making it a relevant bridge work for FlashVID's hybrid design."
+    },
+    {
+      "citation_marker": "b53",
+      "paper_title": "Dycoke: Dynamic compression of tokens for fast video large language models",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Visual Token Compression.",
+          "evidence_type": "method_context",
+          "evidence_text": "DyCoke merges redundant tokens in each segment."
+        },
+        {
+          "section": "C.2 REPRODUCTION DETAILS OF FLASHVID",
+          "evidence_type": "method_context",
+          "evidence_text": "State-of-the-art VLLM acceleration methods commonly apply video partitioning before token compression."
+        }
+      ],
+      "gap_relevance_note": "DyCoke is a nearby video compression method that informs the segmented compression pipeline FlashVID builds on but extends with unified tree-based spatiotemporal merging."
+    },
+    {
+      "citation_marker": "b22",
+      "paper_title": "Multi-granular spatio-temporal token merging for training-free acceleration of video llms",
+      "primary_label": "tension_or_conflict_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "INTRODUCTION",
+          "evidence_type": "tension_context",
+          "evidence_text": "The paper argues that decoupled temporal token merging fails to capture video dynamics and may merge less correlated tokens at fixed spatial locations."
+        },
+        {
+          "section": "Visual Token Compression.",
+          "evidence_type": "method_context",
+          "evidence_text": "Several token compression frameworks for VLLMs have been proposed, including methods that merge or compress spatiotemporal tokens."
+        }
+      ],
+      "gap_relevance_note": "This work is relevant because it also targets training-free spatiotemporal token merging, but FlashVID frames its own contribution around more faithful dynamic spatiotemporal correspondence via redundancy trees."
+    },
+    {
+      "citation_marker": "b81",
+      "paper_title": "Video instruction tuning with synthetic data",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "INTRODUCTION",
+          "evidence_type": "method_context",
+          "evidence_text": "The paper evaluates on three representative VLLMs, including LLaVA-OneVision."
+        },
+        {
+          "section": "Implementation details.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "We evaluate our method on three representative VLLMs: LLaVA-OneVision, LLaVA-Video, and Qwen2.5-VL."
+        }
+      ],
+      "gap_relevance_note": "LLaVA-Video is one of the core VLLM backbones used for evaluation, so it is part of the model lineage that FlashVID is designed to accelerate."
+    },
+    {
+      "citation_marker": "b27",
+      "paper_title": "Llava-onevision: Easy visual task transfer",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Video Large Language Models.",
+          "evidence_type": "method_context",
+          "evidence_text": "LLaVA-OneVision demonstrates strong video understanding capabilities through task transfer from images."
+        },
+        {
+          "section": "MAIN RESULTS",
+          "evidence_type": "comparison_context",
+          "evidence_text": "FlashVID preserves 99.1% of the vanilla model's accuracy even at 10% retention and is evaluated extensively on LLaVA-OneVision."
+        }
+      ],
+      "gap_relevance_note": "LLaVA-OneVision is a central target architecture in the experiments, making it important lineage context for understanding where FlashVID plugs in."
+    },
+    {
+      "citation_marker": "b3",
+      "paper_title": "Qwen2.5-vl technical report",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Video Large Language Models.",
+          "evidence_type": "method_context",
+          "evidence_text": "Qwen2.5-VL uses Multimodal Rotary Position Embedding and is one of the representative VLLMs in the paper."
+        },
+        {
+          "section": "MAIN RESULTS",
+          "evidence_type": "comparison_context",
+          "evidence_text": "When integrated into Qwen2.5-VL, FlashVID enables processing of up to 10× more video frames and achieves the largest performance gains under fixed computational budget."
+        }
+      ],
+      "gap_relevance_note": "Qwen2.5-VL is another main evaluation backbone, so it serves as model-lineage context rather than a competing compression method."
+    }
+  ]
+}

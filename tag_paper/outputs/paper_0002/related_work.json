@@ -1,0 +1,180 @@
+{
+  "target_paper_title": "DIFFUSION LANGUAGE MODELS KNOW THE ANSWER BEFORE DECODING",
+  "related_work_items": [
+    {
+      "citation_marker": "b48",
+      "paper_title": "Fast-dLLM: Training-free acceleration of diffusion LLM by enabling KV cache and parallel decoding",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Sampling and decoding optimization.",
+          "evidence_type": "method_context",
+          "evidence_text": "Fast-dLLM combines approximate block-wise KV caching with confidence-aware parallel decoding that commits tokens exceeding a confidence threshold."
+        },
+        {
+          "section": "Sampling and decoding optimization.",
+          "evidence_type": "tension_context",
+          "evidence_text": "Unlike methods such as Fast-dLLM that optimize the cost per step, Prophet reduces the total number of steps required. The two approaches are therefore orthogonal and can be combined for multiplicative speedups."
+        },
+        {
+          "section": "COMPARISON WITH OTHER ACCELERATION METHODS",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Fast-dLLM alone achieves a 6.82× speedup by reducing per-step cost, combining it with Prophet yields a 7.66× total speedup without quality degradation."
+        }
+      ],
+      "gap_relevance_note": "Fast-dLLM is the clearest direct comparison point because the paper repeatedly positions Prophet against it and argues that Fast-dLLM addresses cost per step, whereas Prophet addresses the number of steps."
+    },
+    {
+      "citation_marker": "b45",
+      "paper_title": "Accelerating diffusion large language models with slowfast: The three golden principles",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Sampling and decoding optimization.",
+          "evidence_type": "method_context",
+          "evidence_text": "SlowFast proposes a dynamic scheme that alternates between a cautious exploratory phase and an accelerated phase guided by three principles: certainty, convergence, and position."
+        },
+        {
+          "section": "MAIN RESULTS AND ANALYSIS",
+          "evidence_type": "comparison_context",
+          "evidence_text": "The paper contrasts Prophet with static truncation and emphasizes that its adaptive stopping preserves accuracy on complex tasks."
+        }
+      ],
+      "gap_relevance_note": "SlowFast is a close acceleration baseline in the same decoding-optimization space, making it a direct comparison work for how to accelerate DLM inference while preserving quality."
+    },
+    {
+      "citation_marker": "b13",
+      "paper_title": "Beyond autoregression: Fast LLMs via self-distillation through time",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "tension_or_conflict_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "COMPARISON WITH OTHER ACCELERATION METHODS",
+          "evidence_type": "comparison_context",
+          "evidence_text": "The paper compares against Self-Distillation Through Time, a training-based method that reduces the number of inference steps."
+        },
+        {
+          "section": "COMPARISON WITH OTHER ACCELERATION METHODS",
+          "evidence_type": "tension_context",
+          "evidence_text": "SDTT halves inference steps through distillation, while Prophet achieves competitive speedup without any retraining cost and is complementary to the distilled student."
+        }
+      ],
+      "gap_relevance_note": "SDTT provides a strong contrasting acceleration route because it attacks the same decoding-latency problem but requires training, which sharpens the paper's motivation for a training-free method."
+    },
+    {
+      "citation_marker": "b49",
+      "paper_title": "treamingdllm: Accelerating diffusion llms via suffix pruning and dynamic decoding",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Token pruning.",
+          "evidence_type": "method_context",
+          "evidence_text": "A second direction reduces attention cost by pruning redundant tokens. For example, DPad is a training-free method that treats suffix tokens as a computational scratchpad and prunes distant ones prior to computation."
+        },
+        {
+          "section": "Sampling and decoding optimization.",
+          "evidence_type": "tension_context",
+          "evidence_text": "The paper frames Prophet as reducing the total number of steps, in contrast to methods that reduce attention cost or per-step computation."
+        }
+      ],
+      "gap_relevance_note": "This work represents a neighboring acceleration direction based on token pruning rather than stopping, helping explain that the target paper's contribution is about when to stop decoding rather than how to shrink each step."
+    },
+    {
+      "citation_marker": "b19",
+      "paper_title": "Accelerating diffusion language model inference via efficient kv caching and guided diffusion",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "KV Cache optimization.",
+          "evidence_type": "method_context",
+          "evidence_text": "One line of work exploits the high similarity between hidden states across consecutive denoising steps to enable approximate caching."
+        },
+        {
+          "section": "INTRODUCTION",
+          "evidence_type": "explicit_claim",
+          "evidence_text": "Recent efforts have proposed excellent algorithms to enable the KV cache and improve the performance of parallel decoding."
+        }
+      ],
+      "gap_relevance_note": "This paper sits in the KV-cache acceleration lineage that the target paper explicitly cites as important prior progress but not sufficient to address redundant full-length decoding."
+    },
+    {
+      "citation_marker": "b32",
+      "paper_title": "Large language diffusion models",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "INTRODUCTION",
+          "evidence_type": "method_context",
+          "evidence_text": "Diffusion language models have emerged as a compelling and competitively efficient alternative to autoregressive models for sequence generation."
+        },
+        {
+          "section": "EXPERIMENTAL SETUP",
+          "evidence_type": "comparison_context",
+          "evidence_text": "The paper evaluates Prophet on LLaDA-8B, one of the two state-of-the-art diffusion language models used as the experimental base."
+        }
+      ],
+      "gap_relevance_note": "This work is part of the core DLM backbone the paper builds on, so it is a method-lineage item rather than the main acceleration target."
+    },
+    {
+      "citation_marker": "b50",
+      "paper_title": "Diffusion large language models",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "INTRODUCTION",
+          "evidence_type": "method_context",
+          "evidence_text": "The introduction lists recent DLM systems including Dream among the representative diffusion language models motivating this work."
+        },
+        {
+          "section": "EXPERIMENTAL SETUP",
+          "evidence_type": "comparison_context",
+          "evidence_text": "The paper evaluates Prophet on Dream-7B as one of its two main model platforms."
+        }
+      ],
+      "gap_relevance_note": "This reference is another core model lineage work because Prophet is demonstrated on top of Dream-7B rather than proposing a new DLM backbone."
+    },
+    {
+      "citation_marker": "b28",
+      "paper_title": "Discrete diffusion language modeling by estimating the ratios of the data distribution",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "DIFFUSION LARGE LANGUAGE MODEL",
+          "evidence_type": "method_context",
+          "evidence_text": "SEDD focused on directly estimating likelihood ratios and introduced a denoising score entropy criterion for training."
+        },
+        {
+          "section": "BACKGROUND ON DIFFUSION LANGUAGE MODELS",
+          "evidence_type": "method_context",
+          "evidence_text": "The background section frames modern DLMs through discrete diffusion formulations and reverse denoising dynamics."
+        }
+      ],
+      "gap_relevance_note": "This reference belongs to the foundational DLM training and modeling lineage that underpins the target paper's analysis of diffusion decoding behavior."
+    }
+  ]
+}

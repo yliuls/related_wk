@@ -1,0 +1,1309 @@
+{
+  "title": "OpenWorldSAM: Extending SAM2 for Universal Image Segmentation with Language Prompts",
+  "authors": "Shiting Xiao; Rishabh Kabra; Yuhang Li; Donghyun Lee; João Carreira; Priyadarshini Panda",
+  "pub_date": "",
+  "abstract": "The ability to segment objects based on open-ended language prompts remains a critical challenge, requiring models to ground textual semantics into precise spatial masks while handling diverse and unseen categories. We present OpenWorldSAM, a framework that extends the prompt-driven Segment Anything Model v2 (SAM2) to open-vocabulary scenarios by integrating multi-modal embeddings extracted from a lightweight vision-language model (VLM). Our approach is guided by four key principles: i) Unified prompting: OpenWorldSAM supports a diverse range of prompts, including category-level and sentence-level language descriptions, providing a flexible interface for various segmentation tasks. ii) Efficiency: By freezing the pre-trained components of SAM2 and the VLM, we train only 4.5 million parameters on the COCO-stuff dataset, achieving remarkable resource efficiency. iii) Instance Awareness: We enhance the model's spatial understanding through positional tie-breaker embeddings and cross-attention layers, enabling effective segmentation of multiple instances. iv) Generalization: OpenWorldSAM exhibits strong zero-shot capabilities, generalizing well on unseen categories and an open vocabulary of concepts without additional training. Extensive experiments demonstrate that OpenWorldSAM achieves state-of-the-art performance in open-vocabulary semantic, instance, and panoptic segmentation across multiple benchmarks. Code is available at https://github.com/GinnyXiao/OpenWorldSAM.",
+  "sections": [
+    {
+      "heading": "Introduction",
+      "text": "Image segmentation has long been constrained to closed-vocabulary settings, where models can only recognize objects from a predefined taxonomy [1,2,3,4,5,6,7,8]. However, real-world applications, e.g., Embodied AI [9,10], demand systems that can understand open-ended language descriptions (from single nouns like \"pedestrian\" to rich referring expressions such as \"the man in a red shirt\") and segment novel objects unseen during training. This open-vocabulary segmentation problem poses two core challenges: (1) Semantic grounding -mapping free-form text to visual entities, and (2) Instance awareness -distinguishing multiple objects that match the same description.\nDetection-centric methods [11,12] relied on two-stage pipelines, first detecting class-agnostic mask proposals then classifying them with vision-language models (VLMs), e.g., CLIP [13] and ALIGN [14]. While effective, such approaches struggle with complex queries and specialize exclusively in semantic segmentation, lacking versatility. Recent generalist models [15,16] explore unified architectures that jointly handle vision and language, allowing a single model to perform detection, segmentation, and grounding tasks. These generalist models demonstrate impressive flexibility, but they typically involve resource-intensive pre-training. The emergence of promptable segmentation models like the Segment Anything Model (SAM) [17,18] offered new possibilities -it introduced\nInteractive (Point, Box) Visual Prompts Open-Vocabulary Category-level Prompts Instance Panoptic Semantic Sentence-Level Prompts",
+      "publication_ref": [
+        "b0",
+        "b1",
+        "b2",
+        "b3",
+        "b4",
+        "b5",
+        "b6",
+        "b7",
+        "b8",
+        "b9",
+        "b10",
+        "b11",
+        "b12",
+        "b13",
+        "b14",
+        "b15",
+        "b16",
+        "b17"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Referring Expression",
+      "text": "",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "OpenWorld SAM SAM2",
+      "text": "Figure 1: Overview of the proposed framework. The green region highlights the SAM v2 baseline, supporting visual prompts (e.g., boxes, points) for interactive segmentation. Our OpenWorldSAM extension integrates open-vocabulary language understanding, enabling both category-level segmentation across semantic, instance, panoptic tasks and referring expression segmentation.\na paradigm shift by allowing users to segment arbitrary objects using simple visual prompts (e.g., points, boxes). Trained on an extensive dataset, these models exhibit remarkable generalization and interactive capabilities. However, they inherently lack semantic understanding. Subsequent attempts to combine SAM with large language models (LLMs) [19,20,21] achieved language awareness but at prohibitive computational costs, imposing overwhelming overhead.\nWe posit that an ideal open-vocabulary segmenter should: (i) Natively support textual prompts without cascaded classification components, (ii) Preserve the knowledge of the vision foundation models like SAM without adding large overhead, and (iii) Segment multiple possible instances that could correspond to a single query. To this end, we propose OpenWorldSAM, an open-vocabulary extension to the SAM v2 (SAM2) architecture that satisfies these requirements. OpenWorldSAM injects language understanding while retaining SAM2's core strengths through a lightweight language adapter (≈4.5M trainable parameters), unifing category-level instance, semantic, and panoptic segmentation, and sentence-level referring expression segmentation (Figure 1).\nSpecifically, we feed the image and descriptive text input into a frozen multi-modal encoder and obtain fused semantic representations. These serve as prompts to SAM2' mask decoder that produces masks for any described object or region. We introduce a positional tie-breaker mechanism to resolve ambiguities when a text query could apply to multiple regions, allowing the model to perform multi-instance segmentation. Furthermore, our adapter employs a soft prompting technique that uses cross-attention between textual queries and image features, sharpening localization by allowing semantic contexts to focus toward relevant image areas. By combining these design innovations, OpenWorldSAM can accurately identify and segment arbitrary objects described by text, all while using only frozen pre-trained encoders and a tiny trainable adaptation module.\nVOC-20 (mIoU) ADE-857 (mIoU) ADE-150 (mIoU) ADE-150 (PQ) SCAN-40 (mIoU) SCAN-20 (PQ) SCAN-20 (mIoU) SUN-37 (mIoU) PC-459 (mIoU) PC-59 (mIoU) In summary, OpenWorldSAM represents a new paradigm of \"segment anything in the open world\". It inherits SAM's interactiveness while being guided by flexible language prompts. Our contributions include:\n1. We introduce OpenWorldSAM, a unified interface that supports various open-vocabulary segmentation tasks. We propose an efficient language adapter with tie-breaker and cross-attention soft prompting, improving multi-object localization. 2. OpenWorldSAM achieves state-of-the-art zeroshot performance across six benchmarks (Figure 2), setting a new standard for open-vocabulary segmentation (e.g., 60.4 mIoU on ADE20K [22]). OpenWorldSAM also acheives strong performance in referring expression segmentation (74.0 cIoU on RefCOCOg [23]) with substantially fewer resources compared to recent models. 3. Our work demonstrates that lightweight architectural interventions can unlock zero-shot segmentation capabilities rivaling specialized models while preserving SAM2's efficiency and interactivity. 2 Related Work",
+      "publication_ref": [
+        "b18",
+        "b19",
+        "b20",
+        "b21",
+        "b22"
+      ],
+      "figure_ref": [
+        "fig_0"
+      ],
+      "table_ref": []
+    },
+    {
+      "heading": "Open-vocabulary segmentation.",
+      "text": "Recent advances in open-vocabulary segmentation have leveraged vision-language models (VLMs) [13,14] to overcome the constraints of traditional closed-set segmentation models. Early approaches like LSeg [24], RegionCLIP [25] and OWL-ViT [26] established a baseline by introducing a contrastive learning framework to align image embeddings with CLIP-based text embeddings for zero-shot detection/segmentation. Subsequent methods [11,27] scaled effectively by using weak supervision of large-scale images with captions (up to millions of regions) or text-only signals, enabling more flexible and broader semantic coverage. Two-stage approaches like MaskCLIP [28] and OVSeg [12] further refined this paradigm by generating mask proposals using MaskFormer [29] followed by CLIP-based classification, notably boosting accuracy through mask-adapted fine-tuning. Another line of works formulated this task as a visual grounding problem and established region-text fusion [30,31,32,33]. More recently, unified architectures such as ODISE [34], X-Decoder [15], SEEM [35], OpenSeeD [36], HIPIE [37], Semantic-SAM [38] and APE [16] have integrated multiple segmentation tasks into a single framework, showing significant progress towards general-purpose models, but they typically required resource intensive pre-training.\nExtending SAM for text-prompted segmentation. The Segment Anything Model (SAM) [17,18] achieved a breakthrough in promptable segmentation by training on 1 billion masks, enabling it to generate high-quality masks for visual prompts. A flurry of recent works have explored infusing SAM with semantic or language understanding to move beyond its original prompt types. Grounded-SAM [39] is a pioneering effort that combines an open-vocabulary detector GroundingDINO [31] to generate bounding boxes from a text query, then feeds those boxes as prompts into SAM. Fast-SAM [40] matches CLIP embeddings with regions of interest. LLM-centric works [41,20,19,21] attempt to map large LLMs or VLMs language embeddings into SAM or SAM-like decoder's prompt latent space to enable referring expression segmentation. Among these, LISA [19] pioneered \"maskas-text-embedding\" approach but was limited to single-object queries. LISA++ [42] introduced instance awareness through additional instruction-tuning data, though it requires LLMs to explicitly enumerate objects-a computationally expensive process. EVF-SAM [43] recently demonstrated a lightweight alternative, integrating SAM with a multi-modal BEiT-3 encoder [44] (0.7B parameters). While achieving state-of-the-art referring segmentation accuracy with minimal parameters, it remains constrained to single-object queries. Inspired by the success of EVF-SAM, we enhance SAM further into the domain of open-vocabulary segmentation, where the goal is to segment and label all objects (\"things\" and \"stuff\") in the scene with open-set categories.",
+      "publication_ref": [
+        "b12",
+        "b13",
+        "b23",
+        "b24",
+        "b25",
+        "b10",
+        "b26",
+        "b27",
+        "b11",
+        "b28",
+        "b29",
+        "b30",
+        "b31",
+        "b32",
+        "b33",
+        "b14",
+        "b34",
+        "b35",
+        "b36",
+        "b37",
+        "b15",
+        "b16",
+        "b17",
+        "b38",
+        "b30",
+        "b39",
+        "b40",
+        "b19",
+        "b18",
+        "b20",
+        "b18",
+        "b41",
+        "b42",
+        "b43"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Methodology",
+      "text": "Motivation and key challenges. A fundamental limitation of SAM-like architectures is their inability to resolve multi-instance ambiguity from a single prompt. While visual prompts (e.g., points) may occasionally lack granularity specificity-for instance, a click on a backpack could imply segmentation of either the backpack or the entire person (Figure 3a)-they inherently localize to a single spatial region. Language prompts, however, introduce a distinct challenge: a text query like \"zebra\" may correspond to multiple spatially disjoint objects (Figure 3b), with no prior knowledge of instance counts. Prior attempts to add language capabilities either rely on segmentation-thenclassification pipelines (losing end-to-end training) or require costly region-level text grounding\nHungarian Matching … … Norm 𝑲𝑽 3× … … … … … Self-Attention 𝑸 Cross Attention Norm MLP … … (a) Inputs & Encoder Outputs (b) Model Pipeline (c) Soft Prompting -Zooming in … 𝒕 ! , 𝒕 \" , … , 𝒕 # 🔥 𝒖 $%&'(() 𝒖 &*+, … … + + = = … … … … … … … 𝑭 -.×-.",
+      "publication_ref": [],
+      "figure_ref": [
+        "fig_1",
+        "fig_1"
+      ],
+      "table_ref": []
+    },
+    {
+      "heading": "SAM2 Image Encoder",
+      "text": "Input: {𝐼} Output: {𝑭} Input: {𝐼, 𝑇}",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Multi-Modal Encoder",
+      "text": "{𝒑 0'1$ } MLP Projector Output: {𝒖} \"giraffe\"/ \"rock\" Text Prompts: … … 🔥 𝒒 {!:4} 𝒒' {!:4} SAM2 Prompt Encoder SAM2 Mask Decoder   during pre-training. Our key insight addresses this gap: SAM2's mask decoder can inherently segment multiple instances if equipped with diverse positional guidance, i.e., learned cues that disentangle identical semantic queries into spatially distinct segmentation targets.\nArchitecture overview. Figure 4 depicts our framework which comprises: (i) a hierarchical SAM2 image encoder that extracts image features, (ii) a multi-modal vision-language encoder that jointly ingests the image and text prompt, (iii) a lightweight MLP projector, (iv) learnable positional tiebreakers for multi-instance queries, (v) a soft prompting Transformer block that aligns text-image features with SAM2's image features, and (vi) the SAM2 mask decoder producing final masks. Only a small language adapter with components (iii-v) is trained; all other backbones remain frozen.\nMulti-modal encoder. We leverage BEiT-3 [44] to encode the input description into a semantic embedding. Given an image I and a text prompt T (e.g., a category name or a referring expression), we feed both modalities into BEiT-3's encoder to obtain joint visual-text embeddings. Concretely, tokens of T and patch embeddings of a downsampled I are concatenated and processed by BEiT-3, yielding a set of feature vectors {f [CLS] , f 1 , . . . }. We take the classification token f [CLS] as a compact summary denoted as p lang of the prompt conditioned on the image content.\nWe adopt BEiT-3 because its early-fusion training on image-text pairs equips it with rich, bidirectional semantics-crucial for reasoning about unseen classes. Compared with CLIP-style contrastive imagetext matching using only the features from the last encoder layers, BEiT-3 exposes finer cross-modal interactions. By embedding the text while it sees the image, the encoder already localizes the concept loosely (e.g., \"giraffe\" vs. \"rock\" in Figure 4) before any downstream segmentation, preventing the mask decoder from learning semantics from scratch.\nPrompt projection. BEiT-3 emits 1,024-D tokens, whereas SAM's prompt channels are 256-D. A two-layer MLP acts as a projector that (i) preserves the coarse semantics of p lang ∈ R d1024 and (ii) learns to highlight dimensions that are most useful for mask prediction: u = MLP(p lang ) ∈ R d256 .",
+      "publication_ref": [
+        "b43"
+      ],
+      "figure_ref": [
+        "fig_4",
+        "fig_4"
+      ],
+      "table_ref": []
+    },
+    {
+      "heading": "Positional tie-breaker and multi-instance queries generation. The projected visual-text embedding",
+      "text": "u captures what to segment but lacks awareness of how many instances exist and where they are. To enable multi-instance segmentation, we propose K learnable positional tie-breaker vectors {t 1 , . . . , t K } ⊂ R d256 that perturb u into K distinct queries:\nq i = u + t i , i = 1, . . . , K.(1)\nThese perturbations serve two purposes: 1) Positional disambiguation: Each t i nudges the query towards different spatial regions (Figure 3b), mimicking how human annotators might click different points to segment each zebra. 2) Instance diversity: The tie-breakers are optimized during training to maximize coverage of distinct instances, preventing query collapse. Conceptually these queries play the role of the \"object queries\" in DETR [45]. Crucially, they impose segmentation distinction for the same language semantics, making positional tie-breaking a novel and key feature for OpenWorldSAM.\nIn practice K = 20 covers >99% images in COCO [46]; for larger scenes K can be increased trivially.",
+      "publication_ref": [
+        "b44",
+        "b45"
+      ],
+      "figure_ref": [
+        "fig_1"
+      ],
+      "table_ref": []
+    },
+    {
+      "heading": "Soft-prompting via cross-attention.",
+      "text": "The perturbed queries {q i } interact with SAM2's image features through a 3-layer Transformer [47] in Figure 4c, which alternates self-attention (queries talk to each other, promoting diversity) and cross-attention (queries look at image features). Each language-aware query is refined on-the-fly by cross-attention with the frozen SAM2 features. SAM2's image encoder follows a hierarchical vision Transformer (\"Hiera\" [48,49]) that outputs three features {F 256×256 , F 128×128 , F 64×64 } with 256 2 , 128 2 , and 64 2 spatial resolutions, respectively. We operate on the level-3 features with 64 2 resolution as they optimally balance precision for retainaing boundary details and computational efficiency (16× cheaper than full-resolution attention). They are also used by SAM2 for mask decoding by default [18]. The soft prompting Transformer computes q ′ i = CrossAttn(q i , F 64×64 ), i = 1, . . . , K, whose key/value inputs are the flattened level-3 features F 64×64 ∈ R 4096×256 . This step grounds the language-aware queries in SAM2's high-resolution visual features, resolving ambiguities (e.g., distinguishing adjacent zebras by stripe patterns).\nMask decoding and class assignment. The refined queries {q ′ i } are input to SAM2's mask decoder alongside level-3 image features. We inject the queries as the prompt tokens in place of, e.g., point or box prompts in the original SAM2's prompt encoder to obtain prompt embeddings. The prompt embeddings are then passed to the mask decoder which outputs K masks and corresponding confidence scores. We assign each mask the original text prompt T as its class label, since the generation is fully conditioned on T and thus inherits the semantic identity.\nTraining. All heavy visual (Hiera) and vision-language (BEiT-3) encoders are kept frozen to preserve their pre-trained knowledge and avoid costly retraining. Only the MLP projector, tie-breakers, and the soft prompting Transformer are learnable. For each training sample and prompt, we match the K predicted masks to the ground-truth masks of class T via Hungarian matching [45], then apply a focal loss, encouraging precise segmentation of all instances described by the prompt. The tie-breakers t i ∈ R d256 are implemented as learnable parameters randomly initialized from a normal distribution. During training, the Hungarian matching loss naturally encourages each t i to specialize in different spatial regions. Notably, this mechanism requires no explicit supervision about instance counts.\nInference. From the predicted K masks, we derive results for three segmentation tasks: semantic, instance, and panoptic. For semantic segmentation, we merge masks sharing the same class label, weighted by their confidence scores. For instance segmentation, we apply confidence-score filtering to remove masks below a certain threshold, followed by non-maximum suppression (NMS) to eliminate highly overlapping masks and retain distinct object instances. Similarly, for panoptic segmentation, we perform confidence-based filtering and NMS, ensuring each pixel is uniquely assigned to either a \"thing\" (instance) or \"stuff\" (semantic) label.\nOptionally, we perform a two-stage inference. In this setup, masks obtained from the first inference stage are used as visual prompts fed back into SAM2's mask decoder, which refines mask contours. Qualitatively, two-stage inference improves the precision of mask boundaries for correct predictions (Appendix B). However, quantitative analysis (Table 1) reveals that the second inference stage provides minimal improvements in segmentation metrics, suggesting it mainly enhances visual quality rather than overall accuracy.",
+      "publication_ref": [
+        "b46",
+        "b47",
+        "b48",
+        "b17",
+        "b44"
+      ],
+      "figure_ref": [
+        "fig_4"
+      ],
+      "table_ref": [
+        "tab_0"
+      ]
+    },
+    {
+      "heading": "Experiments",
+      "text": "Datasets and metrics. We train OpenWorldSAM on the COCO2017-Stuff [46] dataset with panoptic annotations following X-Decoder [15]. The training set contains 104k images. We evaluate the model in a zero-shot setting on eight segmentation tasks across five diverse datasets: ADE20K-150/857 [22], PASCAL VOC-20 [50], PASCAL Context-59/459 [51], ScanNet-20/40 [52], and SUN-RGBD-37 [53]. Evaluation metrics include panoptic quality (PQ), mean average precision (mAP), and mean intersection-over-union (mIoU), corresponding to panoptic, instance, and semantic segmentation tasks, respectively. For referring segmentation, we finetune on RefCOCOg UMD training split. Following prior works, we report the cumulative intersection over the cumulative union (cIoU) metric on the RefCOCOg UMD validation split.\nImplementation. We implement our model in PyTorch. We initialize the visual model with the weights of SAM2-Hiera-Large [18] and the VLM encoder with the weights of EVF-SAM BEIT-3-Large [43]. It is trained for 25 epochs on COCO-Stuff using the AdamW optimizer with a learning rate of 1e-4, batch size 8, on a single NVIDIA A100 GPU. Image resolution is set to 1024 for SAM2 and 224 for BEiT-3. Number of postional tie-breaks is set to 20 for COCO dataset. Our implementation details can be found in Appendix A.",
+      "publication_ref": [
+        "b45",
+        "b14",
+        "b21",
+        "b49",
+        "b50",
+        "b51",
+        "b52",
+        "b17",
+        "b42"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Open-Vocabulary Segmentation Evaluation Protocols and Challenges",
+      "text": "Ambiguity of open vocabulary evaluation. Most prior open-vocabulary segmentation methods-including X-Decoder [15], OVSeg [12], and MaskCLIP [28]-adopt a Global-Matching protocol: for each predicted mask, a model matches it against the entire dataset vocabulary using precomputed text embeddings and selects the best-aligned class. However, this strategy can be problematic when applied to datasets like ADE20K, which contain hundreds of fine-grained and overlapping labels. As observed in OVSeg [12], this leads to semantically reasonable predictions being marked incorrect under exact label matching: \"The ground-truth category is 'building' while our model predicts 'skyscraper'. \" This ambiguity stems from the inherent subjectivity of language: synonymous or closely related concepts may be indistinguishable in a visual context, yet only one is accepted by the ground truth. We observe similar issues in our own qualitative analysis. As shown in Figure 5, X-Decoder predictions on ADE20K-857 often produce valid but non-canonical labels (e.g., 'road' instead of 'runway', or 'screen' instead of 'arcade machine'), resulting in unfair penalization.",
+      "publication_ref": [
+        "b14",
+        "b11",
+        "b27",
+        "b11"
+      ],
+      "figure_ref": [
+        "fig_5"
+      ],
+      "table_ref": []
+    },
+    {
+      "heading": "Oracle-Prompts evaluation.",
+      "text": "To address this, we introduce an alternative evaluation strategy: Oracle Prompts-during evaluation, we explicitly provide the ground-truth class names as prompts. This mimics the intended use case of prompt-based models like SAM, which are inherently interactive and conditioned on user input. Under this protocol, the model does not have to resolve linguistic ambiguity across the full label space; it segments what the user asks for. We report results under both settings: Table 1 shows baseline performance using the global matching protocol, consistent with prior works. Table 2 revisits X-Decoder under the oracle-prompt protocol for a more equitable comparison to OpenWorldSAM, which by design is evaluated under oracle prompts. We believe this approach provides a more fair assessment of SAM-style models in open-vocabulary segmentation.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": [
+        "tab_0"
+      ]
+    },
+    {
+      "heading": "Open-Vocabulary Segmentation Performance Analysis",
+      "text": "Zero-shot open-vocabulary transfer. OpenWorldSAM generalizes out-of-the-box to a broad set of segmentation tasks without any weight adaptation. As shown in Table 1, it achieves state-ofthe-art performance across almost all datasets and evaluation metrics. Its performance consistently surpasses strong baselines such as X-Decoder and APE, despite using only 4.5M trainable parameters. On ADE20K-857, OpenWorldSAM achieves 33.1% mIoU, outperforming the previous best (X-Decoder) by +23.9 absolute points (9.2 → 33.1). On PASCAL Context-459, it achieves 47.5% mIoU,  [24] 112 (M) ✔ ✔ ✔ ✘ ✘ --18.0 3.8 * 46.5 7.8 * * -* ZegFormer (B) [55] 60 (M) ✔ ✔ ✔ ✔ ✘ --* 8.1 80.7 * * * * --OpenSeg (B) [11] 86 (M) ✔ ✘ ✔ ✔ ✘ --26.4 8.1 70.2 44.8 11.5 * * -* OVSeg (B) [12] 0.6 (M) ✔ ✔ ✘ ✘ ✘ --29.6 9.0 94.5 55. 7 12.4 * * -* MaskCLIP (L) [28] 428 (M) ✔ ✔ ✘ ✘ ✘ 15.1 6.0 23.7 8.2 * 45.9 10.0 * * * * OpenSeeD (L) [36] 39 (M) ✔ ✘ ✔ ✔ ✔ 19.7 15.0 23.4 * * * * * * * * X-Decoder-Seg + (B) [15] 28 (M) ✔ ✔ ✘ ✘ ✘ 16.9 9.5 23.8 4.6 97.8 64.7 12.1 32.2 35.1 33.8 18.5 X-Decoder (L) [15] 38 (M) ✔ ✔ ✔ ✔ ✘ 21.8 13.1 29.6 9.2 97.7 64.0 16.1 43.0 49.5 39.5 29.7 APE-B (L) [16] 42 (M) ✔ ✔ ✔ ✔ ✔ 26. 4 23.5 29.0 9.2 95.8 58.3 21.0 * * * * ESC-Net [56] 451 (M) ✔ ✔ ✘ ✘ ✘ --41.8 18.1 98.3 65.6 27.0 * * -* OpenWorldSAM 4.5 (M) ✔ ✔ ✘ ✔ ✘ 35.2 16.9 60.4 33.1 98.0 73.7 47.5 67.7 65.0 41.9 55.6 + two-stage inference 4.5 (M) ✔ ✔ ✘ ✔ ✘ 36.3 15.6 58.0 32.6 97.6 72.6 45.8 68.2 64.8 39.9 54.1 Table 2: Oracle-Prompts evaluation of open-vocabulary segmentation models. We report the state-of-the-art (SOTA) model X-Decoder [15]'s performance under both evaluation protocols. Other methods are omitted either because: 1) they are not SOTA, or 2) they do not support oracle-prompts evaluation. Model Evaluation Protocol ADE-150 ADE-857 VOC-20 PC-59 PC-459 SUN-37 SCAN-40 mIoU mIoU mIoU mIoU mIoU mIoU mIoU X-Decoder (L) [15] Global-Matching (default) 29.6 9.2 97.7 64.0 16.1 43.0 29.7 X-Decoder (L) Oracle-Prompts 51.5 29.1 98.1 75.5 42.3 67.1 49.1 OpenWorldSAM Oracle-Prompts (default) 60.4 33.1 98.0 73.7 47.5 67.7 55.6\nimproving over APE's 21.8% by +25.7 points, and on ScanNet-40, it reaches 55.6% mIoU, a +25.9 point improvement over X-Decoder's 29.7%. On AP score we under-perform APE, which included extra detection datasets, e.g., Objects365 [57], in their training recipe for better localization.\nWe attribute our strong performance to the model's prompt-conditioned decoding mechanism, which directly leverages language input to guide mask prediction. This is particularly advantageous when the target concept is known at query time. In contrast, global retrieval-based models such as X-Decoder must resolve ambiguity across the entire vocabulary space, which introduces classification error. While one might argue that differing evaluation protocols confound the comparison, it's important to note that both families of models require the same semantic input-the only difference lies in when and how that input is used.\nOracle-Prompts evaluation. As SAM-style models are designed for interactive segmentation, oracle prompts closely reflect practical use cases-such as human-in-the-loop annotation, robotic object search, or dynamic UI feedback. To fairly compare with the state-of-the-art generalist model X-Decoder [15], we also evaluate it under oracle prompts: we restrict its vocabulary to the ground-truth classes for each image. As shown in Table 2, OpenWorldSAM continues to outperform even under these controlled conditions. Notably, on large-vocabulary datasets such as ADE20K-857 and PASCAL Context-459, OpenWorldSAM achieves 33.1% and 47.5% mIoU, surpassing X-Decoder by +4.0 and +5.2 points, respectively. This highlights our model's superior language grounding ability in longtailed, fine-grained category distributions. On smaller datasets like PASCAL Context-59 and PASCAL VOC-20, where most categories overlap with COCO, X-Decoder slightly outperforms our model (75.5% vs. 73.7% mIoU and 98.1% vs. 98.0%), suggesting it benefits more from class memorization in such settings. Moreover, Figure 5 illustrates that global matching often fails despite producing correct masks. Conditioning on oracle prompts significantly reduces this ambiguity, highlighting the robustness of our evaluation protocol and the effectiveness of prompt-based segmentation.\nQualitative Results. Figure 5 presents example outputs of OpenWorldSAM on challenging scenes, with comparisons to X-Decoder under both evaluation protocols. In one example 5(a), an image from ADE20K-857 containing a game room scene is segmented by our model using prompts for  various objects (\"ceiling, light, seat, person, arcade machine\"). OpenWorldSAM accurately masks each object and stuff region, whereas X-Decoder misclassifies the \"arcade machine\" due to confusion between similar semantic objects under Global-Matching, and produces fragmented masks for the person and seat under Oracle-Prompts. Similarly in example 5(b), X-Decoder misclassifies the \"wall\" and proposes object masks for prompts that did not exist in the ground truth (e.g., \"window glass\") under Global-Matching, and failed to segment \"plant\" under Oracle-Prompts. This showcases our model's clear understanding of category semantics (thanks to the VLM prompt) combined with precise mask delineation (thanks to SAM2's capability). More qualitative results in Appendix C.",
+      "publication_ref": [
+        "b23",
+        "b54",
+        "b10",
+        "b11",
+        "b6",
+        "b27",
+        "b35",
+        "b14",
+        "b14",
+        "b15",
+        "b3",
+        "b56",
+        "b14"
+      ],
+      "figure_ref": [
+        "fig_5",
+        "fig_5"
+      ],
+      "table_ref": [
+        "tab_0"
+      ]
+    },
+    {
+      "heading": "Referring Expression Segmentation Performance Analysis",
+      "text": "Performance. As shown in Table 3 and Figure 6, OpenWorldSAM achieves strong performance on the RefCOCOg validation set, obtaining a cIoU of 74.0%, significantly outperforming earlier generalist models like SEEM and X-Decoder (≈65%), and competitive with specialized models such as GLaMM (71.2%) and UNINEXT (74.4%). Notably, OpenWorldSAM reaches this accuracy using just BEiT-3 encoder with 673M parameters and an additional 4.5M trainable parameters, substantially fewer than recent large-scale models like LISA, GLaMM, and u-LLaVA, which rely on much larger vision-language foundations (7B+ parameters) and multiple additional datasets. While EVF-SAM achieves higher cIoU (77.0%), OpenWorldSAM inherits SAM's interactive features, offering unique flexibility in interative segmentation tasks. Furthermore, with its tie-breaker and soft-prompting modules, OpenWorldSAM can also perform general segmentation tasks, distinguishing it from higher-scoring yet narrower models.",
+      "publication_ref": [],
+      "figure_ref": [
+        "fig_6"
+      ],
+      "table_ref": [
+        "tab_1"
+      ]
+    },
+    {
+      "heading": "Ablation Studies",
+      "text": "We systematically validate OpenWorldSAM's design through zero-shot transfer on ADE20K-150/857 benchmark and fintuning on RefCOCOg benchmark.\nE1 ✘ ✘ ✘ ✔ 1.2 (M) ✘ ✔ ✘ 0.4 1.0 1.2 0.2 E2 ✔ ✘ ✘ ✔ 1.3 (M) ✔ ✘ ✘ - 9.5 - - E3 ✔ ✘ ✘ ✔ 1.3 (M) ✔ ✔ ✘35\n.1 17.1 56.8 32.2 E4 ✔ ✔ ✘ ✔ 674.0 (M) ✔ ✔ ✘ 13.6 3.5 24.4 10.6 E5 ✔ ✘ ✔ ✔ 4.5 (M) ✔ ✔ ✔ 35.2 16.9 60.4 33.1 E6 ✔ ✔ ✔ ✔ 677.2 (M) ✔ ✔ ✔ 15.9 3.8 23.6 11.2\nMulti-modal encoder analysis. In Table 4, we compares performances using different VLM encoders and fusion methods (early fusion vs. late fusion). BEiT-3's early cross-modal fusion (joint text-image processing across all layers) outperforms CLIP's late fusion (last-layer concatenation) by +33.9 mIoU, +21.2 PQ, and +13.3 AP on ADE-150, demonstrating that deep semantic integration is critical for aligning language concepts with visual regions, echoing findings by EVF-SAM [43].\nVisual Context Matters. Table 4 demonstrates that removing visual inputs to BEiT-3 (text-only) causes catastrophic performance collapse (-34.4 mIoU on ADE-150). This confirms that SAM's segmentation backbone cannot ground textual semantics without explicit visual-textual co-encoding.",
+      "publication_ref": [
+        "b42"
+      ],
+      "figure_ref": [],
+      "table_ref": [
+        "tab_2",
+        "tab_2"
+      ]
+    },
+    {
+      "heading": "Optimal Training Strategy.",
+      "text": "In Table 5, we varied the trainable modules in OpenWorldSAM (thus varying total new parameters from 1.2M to 770M). We found in E5 that freezing BEiT-3 and training only the language adapter module (tie-breaker + cross-attention, 4.5M parameters) yields optimal performance (60.4 mIoU ADE-150). Notably, comparing E6 vs E5 and E4 vs E3, we found fine-tuning the entire BEiT-3 encoder (673M parameters) significantly degrades accuracy (mIoU drops from 60.4 to 23.6), likely due to underfitting on sparse category label prompts compared to its original web-scale pretraining.\nPositional tie-breaker vs. none. Comparing E3 vs E1 in Table 5, positional tie-breaker boosts AP from 1.0% to 17.1%. As shown in Figure 3, without the tie-breaker, the model usually collapses on one instance of the class (especially if the one was particularly salient among others). This confirms the necessity of this component for reliable instance segmentation.",
+      "publication_ref": [],
+      "figure_ref": [
+        "fig_1"
+      ],
+      "table_ref": [
+        "tab_3",
+        "tab_3"
+      ]
+    },
+    {
+      "heading": "Cross-Attention layer removal.",
+      "text": "As shown in Table 5, E5 vs E3, removing the cross-attention layers expectedly led to inferior performance (-1.5 mIoU on ADE-150 and -0.9 mIoU on ADE-857). This indicates that cross-attention helps align prompts to the intended visual regions.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": [
+        "tab_3"
+      ]
+    },
+    {
+      "heading": "Conclusion",
+      "text": "OpenWorldSAM bridges the gap between promptable segmentation and open-vocabulary understanding by unifying SAM's segmentation prowess with vision-language models' semantic grounding. This approach generalizes across tasks (semantic/instance/panoptic) and prompts (nouns/sentences), offering practitioners a unified tool for real-world scenarios where novel objects and ambiguous queries are the norm. Three innovations drive this success: (1) Positional tie-breakers enable multi-instance segmentation from single-text queries, resolving a critical limitation of SAM-like architectures.\n(\nCross-modal soft prompting dynamically aligns language semantics with SAM's visual space, ensuring precise localization without costly LLMs. (3) Frozen foundation synergy leverages pretrained knowledge from SAM and BEiT-3, proving that dense prediction tasks benefit as much as classification from parameter-efficient adaptation. Beyond technical contributions, OpenWorldSAM advances a paradigm for extending segmentation foundations: instead of training monolithic models, strategic adaptation of frozen components achieves open-world readiness at minimal cost. Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained? Answer: [NA] Justification: The paper does not involve crowdsourcing nor research with human subjects. 16. Declaration of LLM usage Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does not impact the core methodology, scientific rigorousness, or originality of the research, declaration is not required. Answer: [NA] Justification: The core method development in this research does not involve LLMs as any important, original, or non-standard components.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "A Experimental Settings",
+      "text": "",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "A.1 Pre-training",
+      "text": "We implement our model in PyTorch, building on the Detectron2 [68] framework. We initialize the base models with the public weights of SAM2-Hiera-Largefoot_0 and BEIT-3-Largefoot_1 . The model is pre-trained for 25 epochs on the COCO-2017 training split (104K images) [46]. We use the panoptic annotations, which provide pixel-accurate masks and category labels for all 132 thing and stuff classes. Training is conducted on a single NVIDIA A100 (80 GB) GPU with a batch size of 8. Optimization employs AdamW (learning rate 1e-4). A step decay scheduler drops the learning rate by a factor of 0.1 at 89% and 96% of the total iterations. Compared with recent generalist models, our recipe is markedly more data-efficient (see Table 6).",
+      "publication_ref": [
+        "b67",
+        "b45"
+      ],
+      "figure_ref": [],
+      "table_ref": [
+        "tab_4"
+      ]
+    },
+    {
+      "heading": "A.2 Zero-Shot Evaluation",
+      "text": "We evaluate semantic, instance, and panoptic segmentation in a zero-shot setting. For instance segmentation and panoptic segmentation, we apply confidence-score filtering to remove masks with scores below 0.7, followed by non-maximum suppression (NMS) with IoU threshold 0.5 to remove duplicate detections and retain distinct object instances. The confidence scores, originally termed \"estimated IoU scores\" in SAM [17,18], are direct outputs from SAM2's mask decoder. These scores were optimized during SAM2's pre-training to select high-quality (i.e., confident) mask outputs. The open-vocabulary benchmark comprises 5 datasets covering 8 different segmentation tasks; statistics are summarized in Table 7. We show a comprehensive evaluation protocol for openvocabulary segmentation in various vocabulary sizes and image domains.",
+      "publication_ref": [
+        "b16",
+        "b17"
+      ],
+      "figure_ref": [],
+      "table_ref": [
+        "tab_5"
+      ]
+    },
+    {
+      "heading": "A.3 Finetuning",
+      "text": "For referring-expression segmentation we fine-tune the pre-trained checkpoint on RefCOCOg UMD training split for 10 epochs. Because images from RefCOCOg were seen during pre-training (with category labels substituted for referring expressions ground truth), we adopt a conservative learning rate of 1e-5. We use a batch size of 8 during training.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "B Qualitative Comparison on Two-Stage-Inference",
+      "text": "During inference, we perform an optional two-stage inference. First, the model predicts multi-instance masks. These masks are then fed back as visual prompts, and SAM2's mask decoder is run a second time to refine the contours. Figure 7 illustrates the visual improvement. However, quantitative gains are marginal across segmentation metrics (see Sec.",
+      "publication_ref": [],
+      "figure_ref": [
+        "fig_8"
+      ],
+      "table_ref": []
+    },
+    {
+      "heading": "C Additional Zero-Shot Qualitative Results",
+      "text": "Figure 8 showcases multiple challenging indoor scenes drawn from ADE20K-150/857 [22], and PASCAL Context-459 [51]. In each sub-panel, we compare example outputs of OpenWorldSAM with comparisons to X-Decoder under both global-matching and oracle-prompts evaluation protocols.\nPanel (a) (ADE20K-150) top row depicts a cluttered bedroom. OpenWorldSAM cleanly delineates thin structures such as the \"closet\" edge and the narrow \"lamp stem\", and assigns a single coherent mask to the \"cushion\". X-Decoder fragments the closet and mis-classifies the cushion as a generic \"pillow\" under global matching. Under oracle-prompts, X-decoder fails to predict \"cushion\". Similarly, the bottom row depicts an airport conveyor belt. X-Decoder mis-classifies the \"bulletin board\" as the \"crt screen\", the \"box\" as the \"trade name\" under global matching, and still mis-classifies the \"box\" under oracle-prompts.\nPanel (b) (ADE20K-857) top row shows a dining area. Under the global-matching protocol, X-Decoder hallucinates \"rug\"/\"rocking chair\" labels and fragments the \"sofa bed\" pixels. The bottom row shows a cluttered living room where X-Decoder outputs fragmented low-quality masks and false predictions under both evaluation protocols. In comparison, our model preserves category fidelity-introducing no extra labels-and produces noticeably cleaner chair boundaries, illustrating the synergy between BEiT-3 language grounding and SAM2's high-resolution masks.\nPanel (c) (PASCAL Context-459) top row shows that X-Decoder fails to predict the \"cloth\" object. The bottom row is an indoor scene crowded with small objects (\"cd\", \"speaker\", \"chair\"). OpenWorld-SAM retrieves almost every queried category (except for \"cd\") and suppresses false positives such as \"calendar\" and \"ladder\" that appear in X-Decoder's output, demonstrating stronger open-vocabulary grounding and sharper instance separation.",
+      "publication_ref": [
+        "b21",
+        "b50"
+      ],
+      "figure_ref": [
+        "fig_9"
+      ],
+      "table_ref": []
+    },
+    {
+      "heading": "D Limitations -Outdoor Generalization",
+      "text": "Despite strong results on indoor and everyday photographs, OpenWorldSAM under-performs on driving datasets such as Cityscapes [69] and BDD10K [70] (Table 8). Fine-tuning on Cityscapes narrows the gap, yet performance still trails methods explicitly exposed to multi-domain data.\nUnderstanding the source of this shortfall is essential for future extensions.\nObserved failure modes. Figure 9 shows high IoU for broad stuff regions (e.g. road, sky), but a sharp drop for small or elongated thing instances. Correspondingly, AP remains low for motorcycle, person, bicycle, etc.  Hypotheses.\n(i) Domain shift. COCO images are mostly handheld and indoor, whereas Cityscapes/BDD10K contain forward-looking dash-cam frames with motion blur, glare and night scenes. X-Decoder was co-trained on web-scale image-text pairs that include many outdoor photos, so its visual encoder has wider coverage. Large-scale multi-domain training is known to mitigate domain shift [71].\n(ii) Resolution bottleneck. Cityscapes frames are 2048×1024. Rescaling to 1024×1024 (SAM default) reduces poles and traffic lights to nearly one pixel at the feature stride of 16×. X-Decoder keeps an FPN branch at 8×, preserving thin structures.\nTake-away. COCO-only pre-training for OpenWorldSAM leaves a blind spot for urban driving imagery-particularly for distant, thin or cluttered objects under challenging lighting. Bridging the gap likely requires (i) explicit exposure to outdoor domains and (ii) higher-resolution feature branches. We leave large-scale outdoor pre-training and depth-aware augmentation for future work.",
+      "publication_ref": [
+        "b68",
+        "b69",
+        "b70"
+      ],
+      "figure_ref": [
+        "fig_10"
+      ],
+      "table_ref": [
+        "tab_6"
+      ]
+    },
+    {
+      "heading": "E Model Structure Details",
+      "text": "Table 9 summarizes the architectural differences between OpenWorldSAM and competing models, detailing each method's visual backbone, segmentation head, text encoder, and training-image resolution.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "NeurIPS Paper Checklist",
+      "text": "",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Claims",
+      "text": "Question: Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope? Answer: [Yes] Justification: In our abstract and introduction, we talk about our contribution on proposing a novel framework for open-vocabulary segmentation. We provide extensive experiments on comprehensive datasets to support this claim. We also conduct in-depth ablation studies that verifies the effectiveness of our model design.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Limitations",
+      "text": "Question: Does the paper discuss the limitations of the work performed by the authors? Answer: [Yes] Justification: We discuss the limitations in Appendix D, which is about the model generalization quality to outdoor scenes and self-driving scenes.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Theory assumptions and proofs",
+      "text": "Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof? Answer: [NA] Justification: Our work does not include theoretical assumptions and proofs.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Experimental result reproducibility",
+      "text": "Question: Does the paper fully disclose all the information needed to reproduce the main experimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper (regardless of whether the code and data are provided or not)? Answer: [Yes] Justification: We provide the detailed methodology and experimental setup in Sections 3 and 4. Moreover, we provide all source codes to reproduce the results, including training scripts (detailed configurations included) and evaluation scripts (model checkpoints included). We will open source the code on GitHub after acceptance.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Open access to data and code",
+      "text": "Question: Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results, as described in supplemental material? Answer: [Yes] Justification: We provide the source codes as supplementary material. We provide instructions that contain the exact command and environment needed to run to reproduce the results. We provide instructions on data access and preparation, including how to access the raw data, preprocessed data, intermediate data, and generated data, etc.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Experimental setting/details",
+      "text": "Question: Does the paper specify all the training and test details (e.g., data splits, hyperparameters, how they were chosen, type of optimizer, etc.) necessary to understand the results?\nAnswer: [Yes] Justification: Justification: Training and test details can be found in Sections 3 and 4, and Appendix A.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Experiment statistical significance",
+      "text": "Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments? Answer: [No] Justification: We did not include the error bars as we fix the random seed for every experiment, reducing the impact from data loader and other parameters initialization.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Experiments compute resources",
+      "text": "Question: For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments? Answer: [Yes] Justification: We provide the details of computer resources in Section 4. All experiments can be run on a single A100 GPU. We also provide analysis on trainable parameters in Section 4.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Code of ethics",
+      "text": "Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics https://neurips.cc/public/EthicsGuidelines?\nAnswer: [Yes] Justification: Our experiments conform to the NeurIPS Code of Ethics.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Broader impacts",
+      "text": "Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed?",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Answer: [NA]",
+      "text": "Justification: There is no social impact of this work.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Safeguards",
+      "text": "Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g., pretrained language models, image generators, or scraped datasets)?\nAnswer: [NA] Justification: The paper poses no such risks.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Licenses for existing assets",
+      "text": "Question: Are the creators or original owners of assets (e.g., code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected? Answer: [Yes] Justification: Our model and its code development are based on baseline works which are credited in the paper. Our datasets are the standard benchmarks that are widely used in academia.\n13. New assets Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets? Answer: [NA] Justification: The paper does not release new assets.\n14. Crowdsourcing and research with human subjects Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)? Answer: [NA] Justification: The paper does not involve crowdsourcing nor research with human subjects. 15. Institutional review board (IRB) approvals or equivalent for research with human subjects Table 9: Architectural choices for recent open-vocabulary models: visual backbone, base segmentation model, text/multi-modal encoder, and training image size.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Method Visual Backbone",
+      "text": "Base Model Text Encoder Image Size",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Short Long",
+      "text": "MSeg (B) [54] HRNet-W48 (65 M) HRNet-Seg -1024 1024 GroupViT (S) [27] ViT-S/16 (22 M) GroupViT Transformer 224 224 LSeg+ (B) [24] CLIP ViT-B/16 (86 M) DenseCLIP CLIP 512 512 ZegFormer (B) [55] CLIP ViT-B/16 (86 M) ZegFormer CLIP 640 640 OpenSeg (B) [11] ResNet-101 (45 M) OpenSeg CLIP/ALIGN 640 640 OVSeg (B) [12] CLIP ViT-B/16 (86 M) MaskFormer CLIP 640 640 MaskCLIP (L) [28] CLIP ViT-L/14 (307 M) MaskCLIP CLIP 1024 1024 X-Decoder [15] DaViT-L (196 M) X-Decoder CLIP 1024 1024 OpenSeeD [36] Swin-L (197 M) MaskDINO UniCL 1024 1024 SEEM [35] DaViT-L (196 M) X-Decoder CLIP 800 1333 APE (B) [16] ViT-L (307 M) DETA CLIP 1024 1024 PolyFormer (L) [59] Swin-L (197 M) PolyFormer BERT 1024 1024 UNINEXT (H) [32] ViT-H (632 M) DINO BERT 320∼800 1333 PixelLM [61] CLIP ViT-L/14 (307 M) PixelLM LLaMA2-13B 448 448 LISA [19] SAM ViT-H (636 M) SAM Vicuna-7B 1024 1024 GLaMM [20] SAM ViT-H (636 M) SAM Vicuna-7B 1024 1024 u-LLaVA [21] SAM ViT-H (636 M) SAM Vicuna-7B 1024 1024 EVF-SAM [43] SAM ViT-H (636 M) SAM BEiT-3 1024 1024 EVF-SAM2 [43] SAM2 Hiera-L (224 M) SAM2 BEiT-3 1024 1024 OpenWorldSAM SAM2 Hiera-L (224 M) SAM2 BEiT-3 1024 1024",
+      "publication_ref": [
+        "b53",
+        "b26",
+        "b23",
+        "b54",
+        "b10",
+        "b11",
+        "b27",
+        "b14",
+        "b35",
+        "b34",
+        "b15",
+        "b58",
+        "b31",
+        "b60",
+        "b18",
+        "b19",
+        "b20",
+        "b42",
+        "b42"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "E.1 Possible Text Encoder Alternatives",
+      "text": "We argue that the key ingredients for open-vocabulary segmentation are backbone-agnostic: any strong interactive segmenter can supply high-resolution mask decoding, while any pretrained vision-language encoder can provide semantics. What is missing is a lightweight adaptor that (i) aligns the two embedding spaces, (ii) scales to multiple object instances from a single text query, and (iii) preserves the efficiency that makes interactive segmentation attractive in the first place.\nOur OpenWorldSAM is a general plug-in architecture that satisfies these desiderata while keeping all heavy backbones frozen. Although we instantiate the framework with SAM2 and BEiT-3 in this paper, neither component is required by design; alternative interactive decoders or vision-language encoders can be swapped in with only minor re-training of the adapter.\nTable 10 surveys representative VLM encoders that could replace BEiT-3 in OpenWorldSAM with ≤5 M adaptor parameters. All rows assume the heavy backbone is frozen; only the 256-D projector and tie-breakers are fine-tuned.\nAdaptor fine-tuning recipe (all encoders). Freeze all VLM weights and SAM2 decoder; initialize a d in ×256 MLP projector and K 256-D tie-breaker embeddings (default K = 20, total ≈5M params). For training, one could use unchanged Hungarian matching loss on COCO.\nTakeaway. Early-fusion encoders (VLMo, OFA, Florence-2) require zero architectural change beyond projector resizing and are therefore the most promising immediate swaps. Dual-encoders (CLIP family) need a shallow cross-attention adaptor to overcome missing image context. Larger hybrids (BLIP-2, Kosmos-2, PaLI) open research directions (multi-query tie-breakers, OCR) at the cost of real-time guarantees.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "F Additional Ablation Studies",
+      "text": "We provide additional ablation studies on the number of tie-breaker tokens and the number of cross-attention layers.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "F.1 Effect of varying tie-breaker tokens",
+      "text": "We set the hyperparameter K = 20, meaning for each prompt (e.g., a category name), our model can identify up to 20 distinct objects. For crowded scenes containing more than 20 objects per category, increasing K is straightforward and advisable. In practice, COCO images typically contain a moderate number of distinct categories and instances (the original COCO paper reports \"on average, our dataset contains 3.5 categories and 7.7 instances per image.\" [46]). The chosen value should match or exceed the maximum expected number of objects per category. For reference, DETR [45] used 100 total queries, aligning roughly with the maximum number of objects per image. Our choice (K = 20) results, on average, in approximately 70 queries per image (20 queries × 3.5 categories), providing ample coverage for typical scenes.\nFurther, [81] observed that increasing queries initially improved Average Precision (AP), but then plateaued or even slightly declined when queries became excessive, indicating redundancy in higher query counts. However, recall does improve with more queries, since more detection slots increase the chance to find each object.\nWe conducted additional ablation experiments in Table 11 by varying K, pretrained on COCO and evaluated on ADE20K instance segmentation. Observations. (1) Increasing K from 10 to 20 improves recall and AP; beyond 20 gains saturate, mirroring the behavior reported for DETR-style object queries; (2) Average Recall with max 100 detections per image (AR@100) improve when increasing K from 10 → 20 → 30;\n(3) K = 20 is optimal for balancing precision and recall in standard datasets.",
+      "publication_ref": [
+        "b45",
+        "b44",
+        "b80"
+      ],
+      "figure_ref": [],
+      "table_ref": [
+        "tab_10"
+      ]
+    },
+    {
+      "heading": "F.2 Effect of varying number of cross-attention layers",
+      "text": "In Table 12, we observe consistently higher accuracy with 3-layer cross-attention across datasets, confirming the importance of multi-layer cross-attention. However, a single-layer variant significantly narrows the gap with fewer parameters (2.4M vs. 4.5M), suggesting a practical compromise between parameter count and accuracy.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": [
+        "tab_11"
+      ]
+    },
+    {
+      "heading": "G Inference Speed Analysis",
+      "text": "We conducted detailed profiling to quantify the impact of adding the VLM and our adapter modules to SAM. In Table 13 and 14, we present inference timing breakdowns for processing a single 1024 × 1024 image on an NVIDIA A5000 GPU, averaged over five independent runs.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": [
+        "tab_12"
+      ]
+    },
+    {
+      "heading": "Summary (single prompt).",
+      "text": "SAM modules total time: 373.35 ms (81.0%), Non-SAM modules total time: 87.21 ms (18.9%), Non-SAM overhead: 87.21 ms.\nSummary (six prompts). SAM modules total time: 539.72 ms (78.4%), Non-SAM modules total time: 148.65 ms (21.6%), Non-SAM overhead: 148.65 ms.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Takeaway.",
+      "text": "The profiling results show that adding the VLM and adapter modules results in only a moderate increase in inference time (approximately 19-22% overhead). Most computational cost remains within SAM's backbone and mask decoder.\nMask Decoder scaling. sam_mask_decoder cost grows almost linearly with (K × P ).\n• Going from 1 → 20 queries (same prompt) adds ∼41 ms.\n• Going from 1 prompt → 6 prompts (120 queries) adds a further ∼162 ms.\nNote that one text prompt mimics user clicks 20 times on an image. If automatic mask generation is desired without user intervention, SAM's built-in auto-mask generator uses a dense 32 × 32 grid of point prompts, incurring significantly higher costs compared to our text-based prompting approach.\nOverall overhead. Relative to one vanilla SAM2 call, our pipeline is approximately 39% slower for a single prompt (332 → 461 ms). However, it becomes approximately 3× more efficient when handling three or more prompts, as the backbone and VLM overhead are amortized. Thus, our enhancements introduce manageable overhead, maintaining practical usability in real-world applications.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    }
+  ],
+  "references": [
+    {
+      "ref_id": "b0",
+      "title": "Fully convolutional networks for semantic segmentation",
+      "journal": "",
+      "year": "2015",
+      "authors": "Jonathan Long; Evan Shelhamer; Trevor Darrell"
+    },
+    {
+      "ref_id": "b1",
+      "title": "U-net: Convolutional networks for biomedical image segmentation",
+      "journal": "Springer",
+      "year": "2015",
+      "authors": "Olaf Ronneberger; Philipp Fischer; Thomas Brox"
+    },
+    {
+      "ref_id": "b2",
+      "title": "Deeplab: Semantic image segmentation with deep convolutional nets, atrous convolution, and fully connected crfs",
+      "journal": "IEEE transactions on pattern analysis and machine intelligence",
+      "year": "2017",
+      "authors": "Liang-Chieh Chen; George Papandreou; Iasonas Kokkinos; Kevin Murphy; Alan L Yuille"
+    },
+    {
+      "ref_id": "b3",
+      "title": "Encoder-decoder with atrous separable convolution for semantic image segmentation",
+      "journal": "",
+      "year": "2018",
+      "authors": "Liang-Chieh Chen; Yukun Zhu; George Papandreou; Florian Schroff; Hartwig Adam"
+    },
+    {
+      "ref_id": "b4",
+      "title": "Mask r-cnn",
+      "journal": "",
+      "year": "2017",
+      "authors": "Kaiming He; Georgia Gkioxari; Piotr Dollár; Ross Girshick"
+    },
+    {
+      "ref_id": "b5",
+      "title": "Segformer: Simple and efficient design for semantic segmentation with transformers",
+      "journal": "Advances in neural information processing systems",
+      "year": "2021",
+      "authors": "Enze Xie; Wenhai Wang; Zhiding Yu; Anima Anandkumar; Jose M Alvarez; Ping Luo"
+    },
+    {
+      "ref_id": "b6",
+      "title": "Masked-attention mask transformer for universal image segmentation",
+      "journal": "",
+      "year": "2022",
+      "authors": "Bowen Cheng; Ishan Misra; Alexander G Schwing; Alexander Kirillov; Rohit Girdhar"
+    },
+    {
+      "ref_id": "b7",
+      "title": "Mask dino: Towards a unified transformer-based framework for object detection and segmentation",
+      "journal": "",
+      "year": "2023",
+      "authors": "Feng Li; Hao Zhang; Huaizhe Xu; Shilong Liu; Lei Zhang; Lionel M Ni; Heung-Yeung Shum"
+    },
+    {
+      "ref_id": "b8",
+      "title": "Active open-vocabulary recognition: Let intelligent moving mitigate clip limitations",
+      "journal": "",
+      "year": "2024",
+      "authors": "Lei Fan; Jianxiong Zhou; Xiaoying Xing; Ying Wu"
+    },
+    {
+      "ref_id": "b9",
+      "title": "Findanything: Open-vocabulary and object-centric mapping for robot exploration in any environment",
+      "journal": "",
+      "year": "2025",
+      "authors": "Sebastián Barbas; Laina; Simon Boche; Sotiris Papatheodorou; Simon Schaefer; Jaehyung Jung; Stefan Leutenegger"
+    },
+    {
+      "ref_id": "b10",
+      "title": "Scaling open-vocabulary image segmentation with image-level labels",
+      "journal": "Springer",
+      "year": "2022",
+      "authors": "Golnaz Ghiasi; Xiuye Gu; Yin Cui; Tsung-Yi Lin"
+    },
+    {
+      "ref_id": "b11",
+      "title": "Open-vocabulary semantic segmentation with mask-adapted clip",
+      "journal": "",
+      "year": "2023",
+      "authors": "Feng Liang; Bichen Wu; Xiaoliang Dai; Kunpeng Li; Yinan Zhao; Hang Zhang; Peizhao Zhang; Peter Vajda; Diana Marculescu"
+    },
+    {
+      "ref_id": "b12",
+      "title": "Learning transferable visual models from natural language supervision",
+      "journal": "PmLR",
+      "year": "2021",
+      "authors": "Alec Radford; Jong Wook Kim; Chris Hallacy; Aditya Ramesh; Gabriel Goh; Sandhini Agarwal; Girish Sastry; Amanda Askell; Pamela Mishkin; Jack Clark"
+    },
+    {
+      "ref_id": "b13",
+      "title": "Scaling up visual and vision-language representation learning with noisy text supervision",
+      "journal": "PMLR",
+      "year": "2021",
+      "authors": "Chao Jia; Yinfei Yang; Ye Xia; Yi-Ting Chen; Zarana Parekh; Hieu Pham; Quoc Le; Yun-Hsuan Sung; Zhen Li; Tom Duerig"
+    },
+    {
+      "ref_id": "b14",
+      "title": "Generalized decoding for pixel, image, and language",
+      "journal": "",
+      "year": "2023",
+      "authors": "Xueyan Zou; Zi-Yi Dou; Jianwei Yang; Zhe Gan; Linjie Li; Chunyuan Li; Xiyang Dai; Harkirat Behl; Jianfeng Wang; Lu Yuan"
+    },
+    {
+      "ref_id": "b15",
+      "title": "Aligning and prompting everything all at once for universal visual perception",
+      "journal": "",
+      "year": "2024",
+      "authors": "Yunhang Shen; Chaoyou Fu; Peixian Chen; Mengdan Zhang; Ke Li; Xing Sun; Yunsheng Wu; Shaohui Lin; Rongrong Ji"
+    },
+    {
+      "ref_id": "b16",
+      "title": "Segment anything",
+      "journal": "",
+      "year": "2023",
+      "authors": "Alexander Kirillov; Eric Mintun; Nikhila Ravi; Hanzi Mao; Chloe Rolland; Laura Gustafson; Tete Xiao; Spencer Whitehead; Alexander C Berg; Wan-Yen Lo"
+    },
+    {
+      "ref_id": "b17",
+      "title": "Segment anything in images and videos",
+      "journal": "",
+      "year": "2024",
+      "authors": "Nikhila Ravi; Valentin Gabeur; Yuan-Ting Hu; Ronghang Hu; Chaitanya Ryali; Tengyu Ma; Haitham Khedr; Roman Rädle; Chloe Rolland; Laura Gustafson"
+    },
+    {
+      "ref_id": "b18",
+      "title": "Reasoning segmentation via large language model",
+      "journal": "",
+      "year": "2024",
+      "authors": "Xin Lai; Zhuotao Tian; Yukang Chen; Yanwei Li; Yuhui Yuan; Shu Liu; Jiaya Jia; Lisa"
+    },
+    {
+      "ref_id": "b19",
+      "title": "Glamm: Pixel grounding large multimodal model",
+      "journal": "",
+      "year": "2024",
+      "authors": "Hanoona Rasheed; Muhammad Maaz; Sahal Shaji; Abdelrahman Shaker; Salman Khan; Hisham Cholakkal; Eric Rao M Anwer; Ming-Hsuan Xing; Fahad S Yang; Khan"
+    },
+    {
+      "ref_id": "b20",
+      "title": "u-llava: Unifying multi-modal tasks via large language model",
+      "journal": "IOS Press",
+      "year": "2024",
+      "authors": "Jinjin Xu; Liwu Xu; Yuzhe Yang; Xiang Li; Fanyi Wang; Yanchun Xie; Yi-Jie Huang; Yaqian Li"
+    },
+    {
+      "ref_id": "b21",
+      "title": "Scene parsing through ade20k dataset",
+      "journal": "",
+      "year": "2017",
+      "authors": "Bolei Zhou; Hang Zhao; Xavier Puig; Sanja Fidler; Adela Barriuso; Antonio Torralba"
+    },
+    {
+      "ref_id": "b22",
+      "title": "Modeling context between objects for referring expression understanding",
+      "journal": "Springer",
+      "year": "2016",
+      "authors": "Vlad I Varun K Nagaraja; Larry S Morariu; Davis"
+    },
+    {
+      "ref_id": "b23",
+      "title": "Languagedriven semantic segmentation",
+      "journal": "",
+      "year": "2022",
+      "authors": "Boyi Li; Q Kilian; Serge Weinberger; Vladlen Belongie; René Koltun; Ranftl"
+    },
+    {
+      "ref_id": "b24",
+      "title": "Regionclip: Region-based language-image pretraining",
+      "journal": "",
+      "year": "2022",
+      "authors": "Yiwu Zhong; Jianwei Yang; Pengchuan Zhang; Chunyuan Li; Noel Codella; Liunian Harold Li; Luowei Zhou; Xiyang Dai; Lu Yuan; Yin Li"
+    },
+    {
+      "ref_id": "b25",
+      "title": "Simple open-vocabulary object detection",
+      "journal": "Springer",
+      "year": "2022",
+      "authors": "Matthias Minderer; Alexey Gritsenko; Austin Stone; Maxim Neumann; Dirk Weissenborn; Alexey Dosovitskiy; Aravindh Mahendran; Anurag Arnab; Mostafa Dehghani; Zhuoran Shen"
+    },
+    {
+      "ref_id": "b26",
+      "title": "Groupvit: Semantic segmentation emerges from text supervision",
+      "journal": "",
+      "year": "2022",
+      "authors": "Jiarui Xu; Shalini De Mello; Sifei Liu; Wonmin Byeon; Thomas Breuel; Jan Kautz; Xiaolong Wang"
+    },
+    {
+      "ref_id": "b27",
+      "title": "Maskclip: Masked self-distillation advances contrastive language-image pretraining",
+      "journal": "",
+      "year": "2023",
+      "authors": "Xiaoyi Dong; Jianmin Bao; Yinglin Zheng; Ting Zhang; Dongdong Chen; Hao Yang; Ming Zeng; Weiming Zhang; Lu Yuan; Dong Chen"
+    },
+    {
+      "ref_id": "b28",
+      "title": "Per-pixel classification is not all you need for semantic segmentation",
+      "journal": "Advances in neural information processing systems",
+      "year": "2021",
+      "authors": "Bowen Cheng; Alex Schwing; Alexander Kirillov"
+    },
+    {
+      "ref_id": "b29",
+      "title": "Grounded language-image pre-training",
+      "journal": "",
+      "year": "2022",
+      "authors": "Liunian Harold; Li; Pengchuan Zhang; Haotian Zhang; Jianwei Yang; Chunyuan Li; Yiwu Zhong; Lijuan Wang; Lu Yuan; Lei Zhang; Jenq-Neng Hwang"
+    },
+    {
+      "ref_id": "b30",
+      "title": "Grounding dino: Marrying dino with grounded pre-training for open-set object detection",
+      "journal": "Springer",
+      "year": "2024",
+      "authors": "Shilong Liu; Zhaoyang Zeng; Tianhe Ren; Feng Li; Hao Zhang; Jie Yang; Qing Jiang; Chunyuan Li; Jianwei Yang; Hang Su"
+    },
+    {
+      "ref_id": "b31",
+      "title": "Universal instance perception as object discovery and retrieval",
+      "journal": "",
+      "year": "2023",
+      "authors": "Bin Yan; Yi Jiang; Jiannan Wu; Dong Wang; Ping Luo; Zehuan Yuan; Huchuan Lu"
+    },
+    {
+      "ref_id": "b32",
+      "title": "Detclip: Dictionary-enriched visual-concept paralleled pre-training for open-world detection",
+      "journal": "",
+      "year": "2022",
+      "authors": "Lewei Yao; Jianhua Han; Youpeng Wen; Xiaodan Liang; Dan Xu; Wei Zhang; Zhenguo Li; Chunjing Xu; Hang Xu"
+    },
+    {
+      "ref_id": "b33",
+      "title": "Open-vocabulary panoptic segmentation with text-to-image diffusion models",
+      "journal": "",
+      "year": "2023",
+      "authors": "Jiarui Xu; Sifei Liu; Arash Vahdat; Wonmin Byeon; Xiaolong Wang; Shalini De Mello"
+    },
+    {
+      "ref_id": "b34",
+      "title": "Segment everything everywhere all at once. Advances in neural information processing systems",
+      "journal": "",
+      "year": "2023",
+      "authors": "Xueyan Zou; Jianwei Yang; Hao Zhang; Feng Li; Linjie Li; Jianfeng Wang; Lijuan Wang; Jianfeng Gao; Yong Jae Lee"
+    },
+    {
+      "ref_id": "b35",
+      "title": "A simple framework for open-vocabulary segmentation and detection",
+      "journal": "",
+      "year": "2023",
+      "authors": "Hao Zhang; Feng Li; Xueyan Zou; Shilong Liu; Chunyuan Li; Jianwei Yang; Lei Zhang"
+    },
+    {
+      "ref_id": "b36",
+      "title": "Hierarchical open-vocabulary universal image segmentation",
+      "journal": "Advances in Neural Information Processing Systems",
+      "year": "2023",
+      "authors": "Xudong Wang; Shufan Li; Konstantinos Kallidromitis; Yusuke Kato; Kazuki Kozuka; Trevor Darrell"
+    },
+    {
+      "ref_id": "b37",
+      "title": "Semantic-sam: Segment and recognize anything at any granularity",
+      "journal": "",
+      "year": "2023",
+      "authors": "Feng Li; Hao Zhang; Peize Sun; Xueyan Zou; Shilong Liu; Jianwei Yang; Chunyuan Li; Lei Zhang; Jianfeng Gao"
+    },
+    {
+      "ref_id": "b38",
+      "title": "Grounded sam: Assembling open-world models for diverse visual tasks",
+      "journal": "",
+      "year": "2024",
+      "authors": "Tianhe Ren; Shilong Liu; Ailing Zeng; Jing Lin; Kunchang Li; He Cao; Jiayu Chen; Xinyu Huang; Yukang Chen; Feng Yan"
+    },
+    {
+      "ref_id": "b39",
+      "title": "",
+      "journal": "",
+      "year": "2023",
+      "authors": "Xu Zhao; Wenchao Ding; Yongqi An; Yinglong Du; Tao Yu; Min Li; Ming Tang; Jinqiao Wang"
+    },
+    {
+      "ref_id": "b40",
+      "title": "Refsam: Efficiently adapting segmenting anything model for referring video object segmentation",
+      "journal": "",
+      "year": "2023",
+      "authors": "Yonglin Li; Jing Zhang; Xiao Teng; Long Lan; Xinwang Liu"
+    },
+    {
+      "ref_id": "b41",
+      "title": "An improved baseline for reasoning segmentation with large language model",
+      "journal": "CoRR",
+      "year": "2023",
+      "authors": "Senqiao Yang; Tianyuan Qu; Xin Lai; Zhuotao Tian; Bohao Peng; Shu Liu; Jiaya Jia"
+    },
+    {
+      "ref_id": "b42",
+      "title": "Evf-sam: Early vision-language fusion for text-prompted segment anything model",
+      "journal": "",
+      "year": "2024",
+      "authors": "Yuxuan Zhang; Tianheng Cheng; Lianghui Zhu; Rui Hu; Lei Liu; Heng Liu; Longjin Ran; Xiaoxin Chen; Wenyu Liu; Xinggang Wang"
+    },
+    {
+      "ref_id": "b43",
+      "title": "Image as a foreign language: Beit pretraining for vision and vision-language tasks",
+      "journal": "",
+      "year": "2023",
+      "authors": "Wenhui Wang; Hangbo Bao; Li Dong; Johan Bjorck; Zhiliang Peng; Qiang Liu; Kriti Aggarwal; Owais Khan Mohammed; Saksham Singhal; Subhojit Som"
+    },
+    {
+      "ref_id": "b44",
+      "title": "End-to-end object detection with transformers",
+      "journal": "Springer",
+      "year": "2020",
+      "authors": "Nicolas Carion; Francisco Massa; Gabriel Synnaeve; Nicolas Usunier; Alexander Kirillov; Sergey Zagoruyko"
+    },
+    {
+      "ref_id": "b45",
+      "title": "Microsoft coco: Common objects in context",
+      "journal": "Springer",
+      "year": "2014",
+      "authors": "Tsung-Yi Lin; Michael Maire; Serge Belongie; James Hays; Pietro Perona; Deva Ramanan; Piotr Dollár; C Lawrence; Zitnick"
+    },
+    {
+      "ref_id": "b46",
+      "title": "Attention is all you need",
+      "journal": "Advances in neural information processing systems",
+      "year": "2017",
+      "authors": "Ashish Vaswani; Noam Shazeer; Niki Parmar; Jakob Uszkoreit; Llion Jones; Aidan N Gomez; Łukasz Kaiser; Illia Polosukhin"
+    },
+    {
+      "ref_id": "b47",
+      "title": "Hiera: A hierarchical vision transformer without the bells-and-whistles",
+      "journal": "PMLR",
+      "year": "2023",
+      "authors": "Chaitanya Ryali; Yuan-Ting Hu; Daniel Bolya; Chen Wei; Haoqi Fan; Po-Yao Huang; Vaibhav Aggarwal; Arkabandhu Chowdhury; Omid Poursaeed; Judy Hoffman"
+    },
+    {
+      "ref_id": "b48",
+      "title": "Window attention is bugged: how not to interpolate position embeddings",
+      "journal": "",
+      "year": "2023",
+      "authors": "Daniel Bolya; Chaitanya Ryali; Judy Hoffman; Christoph Feichtenhofer"
+    },
+    {
+      "ref_id": "b49",
+      "title": "The pascal visual object classes challenge",
+      "journal": "",
+      "year": "2011",
+      "authors": "Mark Everingham; John Winn"
+    },
+    {
+      "ref_id": "b50",
+      "title": "The role of context for object detection and semantic segmentation in the wild",
+      "journal": "",
+      "year": "2014",
+      "authors": "Roozbeh Mottaghi; Xianjie Chen; Xiaobai Liu; Nam-Gyu Cho; Seong-Whan Lee; Sanja Fidler; Raquel Urtasun; Alan Yuille"
+    },
+    {
+      "ref_id": "b51",
+      "title": "Scannet: Richly-annotated 3d reconstructions of indoor scenes",
+      "journal": "",
+      "year": "2017",
+      "authors": "Angela Dai; X Angel; Manolis Chang; Maciej Savva; Thomas Halber; Matthias Funkhouser; Nießner"
+    },
+    {
+      "ref_id": "b52",
+      "title": "Sun rgb-d: A rgb-d scene understanding benchmark suite",
+      "journal": "",
+      "year": "2015",
+      "authors": "Shuran Song; Jianxiong Samuel P Lichtenberg; Xiao"
+    },
+    {
+      "ref_id": "b53",
+      "title": "Mseg: A composite dataset for multi-domain semantic segmentation",
+      "journal": "",
+      "year": "2020",
+      "authors": "John Lambert; Zhuang Liu; Ozan Sener; James Hays; Vladlen Koltun"
+    },
+    {
+      "ref_id": "b54",
+      "title": "Decoupling zero-shot semantic segmentation",
+      "journal": "",
+      "year": "2022",
+      "authors": "Jian Ding; Nan Xue; Gui-Song Xia; Dengxin Dai"
+    },
+    {
+      "ref_id": "b55",
+      "title": "Effective sam combination for open-vocabulary semantic segmentation",
+      "journal": "",
+      "year": "2025",
+      "authors": "Minhyeok Lee; Suhwan Cho; Jungho Lee; Sunghun Yang; Heeseung Choi; Ig-Jae Kim; Sangyoun Lee"
+    },
+    {
+      "ref_id": "b56",
+      "title": "Objects365: A large-scale, high-quality dataset for object detection",
+      "journal": "",
+      "year": "2019",
+      "authors": "Shuai Shao; Zeming Li; Tianyuan Zhang; Chao Peng; Gang Yu; Xiangyu Zhang; Jing Li; Jian Sun"
+    },
+    {
+      "ref_id": "b57",
+      "title": "Lora: Low-rank adaptation of large language models",
+      "journal": "ICLR",
+      "year": "2022",
+      "authors": "J Edward; Yelong Hu; Phillip Shen; Zeyuan Wallis; Yuanzhi Allen-Zhu; Shean Li; Lu Wang; Weizhu Wang; Chen"
+    },
+    {
+      "ref_id": "b58",
+      "title": "Polyformer: Referring image segmentation as sequential polygon generation",
+      "journal": "",
+      "year": "2023",
+      "authors": "Jiang Liu; Hui Ding; Zhaowei Cai; Yuting Zhang; Ravi Kumar Satzoda; Vijay Mahadevan; Manmatha"
+    },
+    {
+      "ref_id": "b59",
+      "title": "Bert: Pre-training of deep bidirectional transformers for language understanding",
+      "journal": "",
+      "year": "2019",
+      "authors": "Jacob Devlin; Ming-Wei Chang; Kenton Lee; Kristina Toutanova"
+    },
+    {
+      "ref_id": "b60",
+      "title": "Pixellm: Pixel reasoning with large multimodal model",
+      "journal": "",
+      "year": "2024",
+      "authors": "Zhicheng Zhongwei Ren; Yunchao Huang; Yao Wei; Dongmei Zhao; Jiashi Fu; Xiaojie Feng; Jin"
+    },
+    {
+      "ref_id": "b61",
+      "title": "Llama 2: Open foundation and fine-tuned chat models",
+      "journal": "",
+      "year": "2023",
+      "authors": "Hugo Touvron; Louis Martin; Kevin Stone; Peter Albert; Amjad Almahairi; Yasmine Babaei; Nikolay Bashlykov; Soumya Batra; Prajjwal Bhargava; Shruti Bhosale"
+    },
+    {
+      "ref_id": "b62",
+      "title": "Judging llm-as-a-judge with mt-bench and chatbot arena",
+      "journal": "Advances in Neural Information Processing Systems",
+      "year": "2023",
+      "authors": "Lianmin Zheng; Wei-Lin Chiang; Ying Sheng; Siyuan Zhuang; Zhanghao Wu; Yonghao Zhuang; Zi Lin; Zhuohan Li; Dacheng Li; Eric Xing"
+    },
+    {
+      "ref_id": "b63",
+      "title": "Sa2va: Marrying sam2 with llava for dense grounded understanding of images and videos",
+      "journal": "",
+      "year": "2025",
+      "authors": "Haobo Yuan; Xiangtai Li; Tao Zhang; Zilong Huang; Shilin Xu; Shunping Ji; Yunhai Tong; Lu Qi; Jiashi Feng; Ming-Hsuan Yang"
+    },
+    {
+      "ref_id": "b64",
+      "title": "How far are we to gpt-4v? closing the gap to commercial multimodal models with open-source suites",
+      "journal": "Science China Information Sciences",
+      "year": "2024",
+      "authors": "Zhe Chen; Weiyun Wang; Shenglong Hao Tian; Zhangwei Ye; Erfei Gao; Wenwen Cui; Kongzhi Tong; Jiapeng Hu; Zheng Luo; Ma"
+    },
+    {
+      "ref_id": "b65",
+      "title": "Infusing wisdom in sam2 for text-driven video segmentation",
+      "journal": "",
+      "year": "2025",
+      "authors": "Claudia Cuttano; Gabriele Trivigno; Gabriele Rosi; Carlo Masone; Giuseppe Averta; Samwise"
+    },
+    {
+      "ref_id": "b66",
+      "title": "A robustly optimized bert pretraining approach",
+      "journal": "",
+      "year": "2019",
+      "authors": "Yinhan Liu; Myle Ott; Naman Goyal; Jingfei Du; Mandar Joshi; Danqi Chen; Omer Levy; Mike Lewis; Luke Zettlemoyer; Veselin Stoyanov; Roberta"
+    },
+    {
+      "ref_id": "b67",
+      "title": "",
+      "journal": "Detectron",
+      "year": "2019",
+      "authors": "Yuxin Wu; Alexander Kirillov; Francisco Massa; Wan-Yen Lo; Ross Girshick"
+    },
+    {
+      "ref_id": "b68",
+      "title": "The cityscapes dataset",
+      "journal": "",
+      "year": "2015",
+      "authors": "Marius Cordts; Mohamed Omran; Sebastian Ramos; Timo Scharwächter; Markus Enzweiler; Rodrigo Benenson; Uwe Franke; Stefan Roth; Bernt Schiele"
+    },
+    {
+      "ref_id": "b69",
+      "title": "A diverse driving video database with scalable annotation tooling",
+      "journal": "",
+      "year": "2018",
+      "authors": "Fisher Yu; Wenqi Xian; Yingying Chen; Fangchen Liu; Mike Liao; Vashisht Madhavan; Trevor Darrell"
+    },
+    {
+      "ref_id": "b70",
+      "title": "Multi-domain semantic segmentation with overlapping labels",
+      "journal": "",
+      "year": "2022",
+      "authors": "Petra Bevandić; Marin Oršić; Ivan Grubišić; Josip Šarić; Siniša Šegvić"
+    },
+    {
+      "ref_id": "b71",
+      "title": "Vlmo: Unified vision-language pre-training with mixture-of-modality-experts",
+      "journal": "",
+      "year": "2022",
+      "authors": "Hangbo Bao; Wenhui Wang; Li Dong; Qiang Liu; Owais Khan Mohammed; Kriti Aggarwal; Subhojit Som; Songhao Piao; Furu Wei"
+    },
+    {
+      "ref_id": "b72",
+      "title": "Ofa: Unifying architectures, tasks, and modalities through a simple sequence-to-sequence learning framework",
+      "journal": "PMLR",
+      "year": "2022",
+      "authors": "Peng Wang; An Yang; Rui Men; Junyang Lin; Shuai Bai; Zhikang Li; Jianxin Ma; Chang Zhou; Jingren Zhou; Hongxia Yang"
+    },
+    {
+      "ref_id": "b73",
+      "title": "Florence-2: Advancing a unified representation for a variety of vision tasks",
+      "journal": "",
+      "year": "2024",
+      "authors": "Bin Xiao; Haiping Wu; Weijian Xu; Xiyang Dai; Houdong Hu; Yumao Lu; Michael Zeng; Ce Liu; Lu Yuan"
+    },
+    {
+      "ref_id": "b74",
+      "title": "Eva-clip: Improved training techniques for clip at scale",
+      "journal": "",
+      "year": "2023",
+      "authors": "Quan Sun; Yuxin Fang; Ledell Wu; Xinlong Wang; Yue Cao"
+    },
+    {
+      "ref_id": "b75",
+      "title": "Siglip 2: Multilingual vision-language encoders with improved semantic understanding, localization, and dense features",
+      "journal": "",
+      "year": "2025",
+      "authors": "Alexey Michael Tschannen; Xiao Gritsenko; Muhammad Wang; Ibrahim Ferjad Naeem; Nikhil Alabdulmohsin; Talfan Parthasarathy; Lucas Evans; Ye Beyer; Basil Xia; Mustafa"
+    },
+    {
+      "ref_id": "b76",
+      "title": "Coca: Contrastive captioners are image-text foundation models",
+      "journal": "",
+      "year": "2022",
+      "authors": "Jiahui Yu; Zirui Wang; Vijay Vasudevan; Legg Yeung; Mojtaba Seyedhosseini; Yonghui Wu"
+    },
+    {
+      "ref_id": "b77",
+      "title": "A jointly-scaled multilingual language-image model",
+      "journal": "",
+      "year": "2022",
+      "authors": "Xi Chen; Xiao Wang; Soravit Changpinyo; Piotr Piergiovanni; Daniel Padlewski; Sebastian Salz; Adam Goodman; Basil Grycner; Lucas Mustafa; Beyer"
+    },
+    {
+      "ref_id": "b78",
+      "title": "Blip-2: Bootstrapping language-image pre-training with frozen image encoders and large language models",
+      "journal": "",
+      "year": "2023",
+      "authors": "Junnan Li; Dongxu Li; Silvio Savarese; Steven Hoi"
+    },
+    {
+      "ref_id": "b79",
+      "title": "Kosmos-2: Grounding multimodal large language models to the world",
+      "journal": "",
+      "year": "2023",
+      "authors": "Zhiliang Peng; Wenhui Wang; Li Dong; Yaru Hao; Shaohan Huang; Shuming Ma; Furu Wei"
+    },
+    {
+      "ref_id": "b80",
+      "title": "What are expected queries in end-to-end object detection",
+      "journal": "",
+      "year": "2022",
+      "authors": "Shilong Zhang; Xinjiang Wang; Jiaqi Wang; Jiangmiao Pang; Kai Chen"
+    }
+  ],
+  "figures": [
+    {
+      "figure_label": "2",
+      "figure_type": "figure",
+      "figure_id": "fig_0",
+      "figure_caption": "Figure 2 :2Figure 2: OpenWorldSAM achieves new state-ofthe-art on six datasets with one suite of parameters.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "3",
+      "figure_type": "figure",
+      "figure_id": "fig_1",
+      "figure_caption": "Figure 3 :3Figure3: (a) SAM takes a visual click and outputs 3 valid masks on the same person (the person, the backpack, and a backpack region)[17]. It will not output masks for the person standing next to her. (b) Tie-breakers shift the queries to distinct regions, enabling simultaneous segmentation of all three \"zebra\" instances. (c) Naïve approach[43]: A single language query for \"zebra\" causes SAM2 to segment only the most salient instance.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "",
+      "figure_type": "figure",
+      "figure_id": "fig_2",
+      "figure_caption": "[Image features]",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "",
+      "figure_type": "figure",
+      "figure_id": "fig_3",
+      "figure_caption": "[",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "4",
+      "figure_type": "figure",
+      "figure_id": "fig_4",
+      "figure_caption": "[Figure 4 :4Figure 4: (a) Preliminaries on the inputs and outputs of the vision and multi-modal encoders. (b) OpenWorld-SAM pipeline. (c) Detailed soft prompting Transformer architecture.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "5",
+      "figure_type": "figure",
+      "figure_id": "fig_5",
+      "figure_caption": "Figure 5 :5Figure5: Qualitative comparisons on ADE20K-857. In many cases, (e.g., (c) road, field), X-Decoder predicts semantically related but incorrect labels due to ambiguity in the category list. The final column shows X-Decoder predictions using oracle prompts, which reduces confusion. OpenWorldSAM, conditioned on the correct prompt, produces faithful masks and avoids semantic mismatches. Color maps for each model vary. Please refer to the predicted labels. Best viewed with zoom in. We use two-stage inference for the visualization.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "6",
+      "figure_type": "figure",
+      "figure_id": "fig_6",
+      "figure_caption": "Figure 6 :6Figure 6: Qualitative results on RefCOCOg. OpenWorldSAM is capable of understanding spatial relationship, colors, actions, and shapes, etc.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "",
+      "figure_type": "figure",
+      "figure_id": "fig_7",
+      "figure_caption": "4.2 of the main paper), suggesting it mainly enhances visual quality rather than overall accuracy. The reasons are twofold: (1) Two-stage inference only refines mask contours; IoU-style metrics saturate once coarse localization is accurate, so small contour tweaks seldom raise mIoU/PQ/AP; (2) Errors will be amplified on hard examples. On incorrectly localized masks from stage 1, refinement anchored to incorrect regions can further degrade metrics. Given that the two-stage inference serves as an optional, low-cost post-processing step, users can conveniently enable or disable it based on their preference.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "7",
+      "figure_type": "figure",
+      "figure_id": "fig_8",
+      "figure_caption": "Figure 7 :7Figure 7: Qualitative results comparisons on using two-stage inference refinement on ADE20K-857.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "8",
+      "figure_type": "figure",
+      "figure_id": "fig_9",
+      "figure_caption": "Figure 8 :8Figure8: Qualitative comparisons between X-Decoder[15] and OpenWorldSAM on ADE20K-150, ADE20K-857, and PASCAL Context-459.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "9",
+      "figure_type": "figure",
+      "figure_id": "fig_10",
+      "figure_caption": "Figure 9 :9Figure 9: Per-class IoU And AP on Cityscapes (sorted by IoU). Performance collapses on thin or distant thing classes (e.g. person, traffic light).",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "1",
+      "figure_type": "table",
+      "figure_id": "tab_0",
+      "figure_caption": "Zero-shot performance of open-vocabulary segmentation models across multiple benchmarks. For COCO, different methods use different supervisions of mask (m), class label (cls) and caption (cap). \"ITP\" indicates whether model uses image-text pairs/referring data. \"DET\" indicates extra detection data (e.g., Objects365, LVIS, OpenImages, etc.) \"*\" denotes the model has the capability for the task but does not have number reported. \"-\" means the model does not have the ability for the specific task. Purple color means a fully supervised approach, and tan a semi-supervised learning approach. Two-stage inference means we refine mask contours by re-prompting SAM using the raw mask predictions. Bold entries indicate the best performance.",
+      "figure_data": "ModelTrain ParamsCOCO (p/s) ITP DET m cls capADE-150 PQ mAP mIoU mIoU ADE-857 VOC-20 PC-59 PC-459 SUN-37 SCAN-20 SCAN-40 mIoU mIoU mIoU mIoU mIoU PQ mIoUMSeg (B) [54]70 (M)✔ ✔ ✔ ✘✘ 33.7 32.6 19.1*73.443.4*29.633.4 **GroupViT (S) [27]44 (M)✘ ✘ ✘ ✔✘--**52.322.4***-*LSeg+ (B)"
+    },
+    {
+      "figure_label": "3",
+      "figure_type": "table",
+      "figure_id": "tab_1",
+      "figure_caption": "We compare model trainable parameters, model capabilities (OV seg (open-vocabulary segmentation) and Inter Seg (interactive segmentation)), and training data required. \"*\" denotes an estimate of the trainable parameters, since these models use LoRA[58] with rank-8/16 adapters for finetuning.",
+      "figure_data": "MethodFoundation ModelTrain Params w/ SAM? OV Seg? Inter Seg? Training DatacIoUX-Decoder (L) [15] CLIP-B [13] (63M)38 (M)✘✔✘C, RCg, Cap4M64.6SEEM (L) [35]CLIP-B [13] (63M)39 (M)✘✔✔C, RC, RCg, PL65.6PolyFormer (L) [59] BERT-B [60] (104M)450 (M)✘✘✘RC, RCg71.2UNINEXT (H) [32] BERT-B [60] (104M)673 (M)✘✔✘C, RC, O365, V74.4APE-B (L) [16]CLIP-L [13] (123M)42 (M)✘✔✘C, PC, O365, OID, VG, RC, RCg 63.5PixelLM [61]LLaMA2 [62] (13B)29 (M)  *✘✔✘C, RC, ADE, PL, MUSE69.3LISA [19]Vicuna [63] (7B)32 (M)  *✔✘✘C, RC, ADE, PL, PP66.4GLaMM [20]Vicuna [63] (7B)40 (M)  *✔✔✘RC, GranD74.2u-LLaVA [21]Vicuna [63] (7B)44 (M)  *✔✘✘C, RC, ADE, PL, PC71.6u-LLaVA [21]Vicuna [63] (7B)7 (B)✔✘✘C, RC, ADE, PL, PC74.8Sa2VA [64]InternVL2 [65] (1B)22 (M)  *✔✘✔RC, RCg, V, GranD72.3Sa2VA [64]InternVL2 [65] (4B)35 (M)  *✔✘✔RC, RCg, V, GranD74.1SAMWISE [66]RoBERTa [67] (125M)5.6 (M)✔✘✘RC67.3EVF-SAM [43]BEIT-3-L [44] (0.7B)674 (M)✔✘✘RC77.0OpenWorldSAMBEIT-3-L [44] (0.7B)4.5 (M)✔✔✔C, RCg74.0"
+    },
+    {
+      "figure_label": "4",
+      "figure_type": "table",
+      "figure_id": "tab_2",
+      "figure_caption": "Ablation on the VLM choice, e.g., CLIP[13] model from OpenAI. '✔' denotes modality used during training, and '✘' unused. Only the adapter modules are trainable, and the VLMs are kept frozen. Late fusion means we concatenate text/image features from the last layers of CLIP's text/image encoder. Early fusion means BEiT-3 processes both modalities in all 24 Transformer layers.",
+      "figure_data": "EncoderParams Text ImageModality FusionADE-150 PQ AP mIoUADE-857 RefCOCOg mIoU cIoUCLIP-Large123 (M) ✔✘-13.5 2.9 25.712.825.2CLIP-Large428 (M) ✔✔Late (Last-layer Concat) 14.0 3.6 26.514.025.3BEiT-3-Large 370 (M) ✔✘-13.6 3.1 26.313.326.1BEiT-3-Large 673 (M) ✔✔Early (All-layer Attention) 35.2 16.9 60.433.174.0"
+    },
+    {
+      "figure_label": "5",
+      "figure_type": "table",
+      "figure_id": "tab_3",
+      "figure_caption": "Ablation on trainable and inference modules. For training, '✔' denotes trainable, and '✘' denotes frozen. For inference, '✔' denotes activate, and '✘' denotes non-activate.",
+      "figure_data": "ExpTrain Modules Tie-breaker BEiT-3 Cross-Attn MLP ProjectorTrain ParamsInference Modules Tie-breaker BEiT-3 Cross-Attn PQ AP mIoU ADE-150ADE-857 mIoU"
+    },
+    {
+      "figure_label": "6",
+      "figure_type": "table",
+      "figure_id": "tab_4",
+      "figure_caption": "A detailed list of training data for generalist models and OpenWorldSAM. O365: Objects365. OID: OpenImages Detection. VG: Visual Genome. INB: ImageNetBoxes. RefC: RefCOCO/ +/g.",
+      "figure_data": "MethodTrain Data (grouped by annotation types)Image ConsumptionInstance-levelImage-levelBatch Size#Epoch × #Image / Batch Size × #IterX-Decoder [15]COCO, RefCCap4M32, 1024200M (50 Ep × 4M Img)OpenSeeD [36]COCO, O365-32, 6448M (30 Ep × 1.8M Img)APE (B) [16]COCO, LVIS, O365, OID, VG, RefC-1617.28M (16 Bs × 1.08M Iter)OpenWorldSAM COCO-82.50M (25 Ep × 0.104M Img)"
+    },
+    {
+      "figure_label": "7",
+      "figure_type": "table",
+      "figure_id": "tab_5",
+      "figure_caption": "Open-Vocabulary Segmentation Benchmark Statistics.",
+      "figure_data": "Evaluation Dataset Scene typeAnnotations Semantic Instance Panoptic# Images # ClassesADE-150common✔✔✔2000150ADE-847common✔✘✘2000847Pascal Voccommon✔✘✘144920Pascal Context-59common✔✘✘510559Pascal Context-459common✔✘✘5105459SUN RGB-Din-door✔✘✘505037ScanNet-20in-door✔✘✔543620ScanNet-40in-door✔✘✘543640"
+    },
+    {
+      "figure_label": "8",
+      "figure_type": "table",
+      "figure_id": "tab_6",
+      "figure_caption": "Outdoor performance. Open-vocabulary models are evaluated zero-shot on Cityscapes and BDD10K; the last row is fine-tuned on Cityscapes.",
+      "figure_data": "ModelEvaluationCityscapes mIoU APPQBDD10K mIoU PQX-Decoder (L) [15] zero-shot52.024.9 38.147.217.8OpenWorldSAMzero-shot39.410.1 26.431.315.6OpenWorldSAMFinetune on Cityscapes57.412.0 36.138.017.4"
+    },
+    {
+      "figure_label": "10",
+      "figure_type": "table",
+      "figure_id": "tab_7",
+      "figure_caption": "Candidate vision-language encoders. \"TFM\" stands for Transformer. \"Pooled dim\" is the size of the single semantic vector exposed to the adaptor; \"GFLOPs/Img\" computed at 224 2 resolution for the visual branch.",
+      "figure_data": "GFLOPs/Img18.6/25.417.9/24.726.319.037.28.123.756.431.534.8Params Pros for OpenWorldSAM Adaptor-specific tweaksEarly-fusion Transformers (drop-in closest to BEiT-3)230/341M same interface as BEiT-3; smaller model; multi-closest to BEiT-3 → just replace tokenizer + di-lingual mension in the projector; keep tie-breakers un-changed184/312M instruction-tuned; handy if we ever expose cap-adjust tokenizer and change input dim in projector;tioning reports slightly weaker alignment than BEiT-3230M SOTA zero-shot retrieval; 10-lang support none beyond changing tokenizer and input dim inprojectorDual-encoder Contrastive (text vector not image-conditioned)304M unlimited vocabulary; tiny latency; many open semantic vector is not image-conditioned → ourcheckpoints ablation saw weaker performance. Mitigation: adda 2-layer cross-attn adapter that re-injects imagetokens before the projector; expect AP drop if nocross-attn610M stronger semantics than CLIP-L memory heavy; expect AP drop if no cross-attn86M edge-friendly; multilingual expect AP drop if no cross-attnEncoder-Decoder w/ Contrastive Head (pooled vector from decoder)365 M better long-tail semantics need to tap the unimodal decoder hidden state3.0 B 100-lang OCR; robust semantics memory heavy; need to tap the unimodal decoderhidden stateQuery-former Hybrids (multiple vectors)1.1B native multi-query pool/average queries or extend SAM prompt len.1.6B optional box tokens for UX studies Requires a one-step decode per prompt (latency)and an additional MLP to strip location biasPooled dim76876810247681024512768102432×256768Family / Exemplars Arch. typeVLMo-B/L [72] joint enc. TFMOFA-B/L [73] joint enc. TFMFlorence-2-Base [74] joint enc. TFMCLIP-ViT-L/14 [13] ViT+Text enc.EVA-CLIP-E [75] ViT-G/14 + TextSigLIP-2-S [76] ViT / TextCoCa-Base [77] ViT enc. + TFM dec.PaLI-3B [78] ViT-E enc. + T5 dec.BLIP-2-OPT-2.7B [79] ViT + Q-Former + LLMKosmos-2 [80] ViT enc. + LLM dec."
+    },
+    {
+      "figure_label": "11",
+      "figure_type": "table",
+      "figure_id": "tab_10",
+      "figure_caption": "Ablation on the number of tie-breakers K.",
+      "figure_data": "MetricK = 10K = 20K = 30Average Precision (AP)14.216.916.5Average Recall@100 (AR)21.628.829.4"
+    },
+    {
+      "figure_label": "12",
+      "figure_type": "table",
+      "figure_id": "tab_11",
+      "figure_caption": "Ablation on cross-attention depth across datasets. Metrics are PQ/AP/mIoU for ADE-150 and mIoU for the others.",
+      "figure_data": "VariantParams ADE-150 (PQ/AP/mIoU) ADE-857 (mIoU) PC-59PC-459VOC-20SUN-37SCAN-40no cross-attn1.7 (M)35.1 / 17.1 / 56.832.270.444.297.363.653.81-layer cross-attn 2.4 (M)35.1 / 16.8 / 59.032.872.646.397.566.454.03-layer cross-attn 4.5 (M)35.2 / 16.9 / 60.433.173.747.598.067.755.6"
+    },
+    {
+      "figure_label": "13",
+      "figure_type": "table",
+      "figure_id": "tab_12",
+      "figure_caption": "Inference timing breakdown for a single text prompt (20 queries).",
+      "figure_data": "ModuleTime (ms)PercentageCategorysam_backbone_feature_prep329.8371.6%SAMprompt_tokenization0.430.1%Non-SAMbeit3_forward70.8415.4%Non-SAMmlp_projection_layer6.681.4%Non-SAMprepare_batched_tie_breaker_tokens0.130.0%Non-SAMcross_attention8.451.8%Non-SAMsam_prompt_encoder0.110.0%SAMsam_mask_decoder43.419.4%SAMpostprocessing0.680.1%Non-SAMTOTAL TIME460.69100.0%-"
+    },
+    {
+      "figure_label": "14",
+      "figure_type": "table",
+      "figure_id": "tab_13",
+      "figure_caption": "Inference timing breakdown for six text prompts (120 queries).",
+      "figure_data": "ModuleTime (ms)PercentageCategorysam_backbone_feature_prep334.4248.6%SAMprompt_tokenization1.020.1%Non-SAMbeit3_forward123.7318.0%Non-SAMmlp_projection_layer4.480.6%Non-SAMprepare_batched_tie_breaker_tokens0.200.0%Non-SAMcross_attention_layers18.172.6%Non-SAMsam_prompt_encoder0.120.0%SAMsam_mask_decoder205.1829.8%SAMpostprocessing1.060.2%Non-SAMTOTAL TIME688.50100.0%-"
+    }
+  ],
+  "formulas": [
+    {
+      "formula_id": "formula_0",
+      "formula_text": "q i = u + t i , i = 1, . . . , K.(1)",
+      "formula_coordinates": [
+        4.0,
+        246.71,
+        628.55,
+        257.96,
+        9.68
+      ]
+    },
+    {
+      "formula_id": "formula_1",
+      "formula_text": "E1 ✘ ✘ ✘ ✔ 1.2 (M) ✘ ✔ ✘ 0.4 1.0 1.2 0.2 E2 ✔ ✘ ✘ ✔ 1.3 (M) ✔ ✘ ✘ - 9.5 - - E3 ✔ ✘ ✘ ✔ 1.3 (M) ✔ ✔ ✘35",
+      "formula_coordinates": [
+        9.0,
+        111.5,
+        247.9,
+        378.07,
+        25.81
+      ]
+    }
+  ],
+  "doi": "",
+  "source_paper": {
+    "title": "OpenWorldSAM: Extending SAM2 for Universal Image Segmentation with Language Prompts",
+    "openreview_url": "https://openreview.net/forum?id=fLx3vQPmDu",
+    "openreview_id": "fLx3vQPmDu",
+    "venue": "NeurIPS",
+    "year": 2025
+  }
+}

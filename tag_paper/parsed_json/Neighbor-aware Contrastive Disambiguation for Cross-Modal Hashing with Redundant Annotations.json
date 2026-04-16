@@ -1,0 +1,899 @@
+{
+  "title": "Neighbor-aware Contrastive Disambiguation for Cross-Modal Hashing with Redundant Annotations",
+  "authors": "Chao Su; Likang Peng; Yuan Sun; Dezhong Peng; Xi Peng; Xu Wang",
+  "pub_date": "",
+  "abstract": "Cross-modal hashing aims to efficiently retrieve information across different modalities by mapping data into compact hash codes. However, most existing methods assume access to fully accurate supervision, which rarely holds in real-world scenarios. In fact, annotations are often redundant, i.e., each sample is associated with a set of candidate labels that includes both ground-truth labels and redundant noisy labels. Treating all annotated labels as equally valid introduces two critical issues:(1) the sparse presence of true labels within the label set is not explicitly addressed, leading to overfitting on redundant noisy annotations; (2) redundant noisy labels induce spurious similarities that distort semantic alignment across modalities and degrade the quality of the hash space. To address these challenges, we propose that effective cross-modal hashing requires explicitly identifying and leveraging the true label subset within all candidate annotations. Based on this insight, we present Neighbor-aware Contrastive Disambiguation (NACD), a novel framework designed for robust learning under redundant supervision. NACD consists of two key components. The first, Neighbor-aware Confidence Reconstruction (NACR), refines label confidence by aggregating information from cross-modal neighbors to distinguish true labels from redundant noisy ones. The second, Class-aware Robust Contrastive Hashing (CRCH), constructs reliable positive and negative pairs based on label confidence scores, thereby significantly enhancing robustness against noisy supervision. Moreover, to effectively reduce the quantization error, we incorporate a quantization loss that enforces binary constraints on the learned hash representations. Extensive experiments conducted on three large-scale multimodal benchmarks demonstrate that our method consistently outperforms state-of-the-art approaches, thereby establishing a new standard for cross-modal hashing with redundant annotations. Code is available at https://github.com/Rose-bud/NACD.",
+  "sections": [
+    {
+      "heading": "Introduction",
+      "text": "With the explosion of large-scale and diverse data on the Internet [1][2][3][4][5][6][7], efficiently retrieving semantically relevant data across modalities has become increasingly important [8][9][10][11][12][13][14][15][16]. For large-scale datasets, cross-modal hashing (CMH) offers an effective solution by encoding heterogeneous data into compact binary hash codes, enabling high retrieval efficiency and low storage cost. The core challenge of CMH lies in effectively leveraging available supervision while minimizing semantic discrepancies between different modalities.\nExisting CMH methods can be broadly categorized into unsupervised and supervised approaches based on whether the label information is available. The unsupervised CMH methods [17][18][19][20][21][22] learn hash functions by exploring the intrinsic structure and similarity of the data without access to labels. For instance, CIRH [21] jointly preserves the multimodal correlation and identity semantics into binary hash codes based on a heterogeneous graph network. Moreover, UCCH [22] proposes a contrastive learning-based unsupervised CMH method with a momentum optimizer and crossmodal ranking learning loss to improve performance. However, the lack of supervision limits their ability to learn semantically discriminative representations. In contrast, supervised methods [23][24][25][26][27][28][29][30][31] leverage label information to learn more discriminative hash codes to improve retrieval performance. Within a probabilistic modality alignment framework, MIAN [27] investigates the preservation of asymmetric similarities both within and between modalities, thereby fully utilizing multi-level semantic information throughout the entire database. RSHNL [31] designs a Robust Self-paced Hashing mechanism that mitigates the misleading effects of noisy labels on the model by simulating the human cognitive process. While these supervised methods have achieved satisfactory retrieval performance by leveraging label information, they implicitly rely on two assumptions: (1) all labels in the training data are accurate; (2) noisy annotations are simulated by replacing correct labels with incorrect ones. However, in real-world applications, data annotations are often redundant, i.e., each instance is labeled with a candidate label set that includes both true and spurious labels. We refer to this setting as redundant annotations. As shown in Fig. 1, among the annotations of the anchor sample pair, only \"Sea, Plant, Beach, Cloud\" are correct labels, while the others are additional noisy labels. Such redundancy can severely distort semantic similarity estimation and hinder effective hash learning by introducing spurious correlations across modalities. Crucially, existing methods fail to explicitly distinguish true labels within the candidate label set, leading to degraded performance under redundant noisy supervision. Although partial multi-label learning (PML) [32][33][34][35] provides a potential solution for redundant annotations, most PML methods assume a shared feature space and overlook cross-modal semantic divergence. In contrast, CMH must address both accurate label disambiguation and modality-robust contrastive pair construction, which remains a rarely explored challenge.",
+      "publication_ref": [
+        "b0",
+        "b1",
+        "b2",
+        "b3",
+        "b4",
+        "b5",
+        "b6",
+        "b7",
+        "b8",
+        "b9",
+        "b10",
+        "b11",
+        "b12",
+        "b13",
+        "b14",
+        "b15",
+        "b16",
+        "b17",
+        "b18",
+        "b19",
+        "b20",
+        "b21",
+        "b20",
+        "b21",
+        "b22",
+        "b23",
+        "b24",
+        "b25",
+        "b26",
+        "b27",
+        "b28",
+        "b29",
+        "b30",
+        "b26",
+        "b30",
+        "b31",
+        "b32",
+        "b33",
+        "b34"
+      ],
+      "figure_ref": [
+        "fig_0"
+      ],
+      "table_ref": []
+    },
+    {
+      "heading": "Anchor Neighbor",
+      "text": "A serene beach scene with footprints in the sand, calm waters, and plants under a partly cloudy sky. In this paper, we focus on the practical scenario of redundant annotations and propose a novel framework, Neighbor-aware Contrastive Disambiguation (NACD), for robust cross-modal hashing. NACD benefits from an efficient Neighbor-aware Confidence Reconstruction (NACR) module and a novel Class-aware Robust Contrastive Hashing (CRCH) module. Specifically, NACR integrates sample label confidence with its cross-modal neighborhood label confidence to identify the groundtruth labels within the entire annotations. CRCH dynamically constructs positive and negative sample pairs based on class confidence thresholds, reducing erroneous associations caused by misleading labels and significantly enhancing the model's robustness to redundant supervision. Moreover, to effectively reduce the quantization error, we employ an effective quantization loss that enforces binary constraints on the learned hash representations. The main contributions of the proposed NACD are as follows:",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Redundant Annotations",
+      "text": "Sea\n• We first focus on the practical scenario of redundant annotations in cross-modal hashing and propose a novel Neighbor-aware Contrastive Disambiguation (NACD) framework that addresses the challenges caused by redundant noisy supervision.\n• To achieve accurate label disambiguation, an efficient Neighbor-aware Confidence Reconstruction (NACR) module is presented, which integrates the label confidence of the anchor sample pair with that aggregated from its cross-modal neighbors to identify the ground-truth labels within the entire annotations.\n• We design an innovative Class-aware Robust Contrastive Hashing (CRCH) module which dynamically constructs positive and negative sample pairs based on class-wise confidence thresholds, reducing erroneous associations caused by redundant noisy labels and significantly enhancing the model's robustness to incorrect supervision.\n• Comprehensive experiments on three multimodal datasets, i.e., MIRFlickr-25k, NUS-WIDE, and MS-COCO, demonstrate that NACD consistently outperforms state-of-the-art CMH methods across various redundancy levels.\n2 Related Work",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Cross-Modal Hashing",
+      "text": "Cross-modal hashing aims to retrieve semantically relevant data across different modalities within a shared Hamming space. The key challenge lies in bridging the modality gap. To address this challenge, numerous approaches have been proposed, which can be broadly divided into two categories: unsupervised CMH methods and supervised CMH methods. More specifically, unsupervised CMH methods [19][20][21][22] learn modality-specific transformations by maximizing cross-modal correlations without label supervision. For example, UCCH [22] integrates contrastive learning into unsupervised CMH to enhance retrieval performance and robustness. However, these unsupervised methods suffer from limited performance due to the absence of explicit supervision. Supervised CMH methods [29][30][31]36] are typically based on two assumptions: (1) all labels in the training data are accurate; (2) noisy annotations are simulated by replacing correct labels with incorrect ones. For example, HCCH [36] introduces a coarse-to-fine hierarchical hashing strategy to effectively utilize hierarchical features and accurate labels across modalities. RSHNL [31] proposes a robust self-paced hashing mechanism that emulates human cognition, thereby reducing the negative impact of noisy labels and improving model performance.\nHowever, in real-world applications, multimodal annotations often contain \"redundant annotations\". Therefore, this paper focuses on a largely unexplored yet challenging problem: cross-modal hashing with redundant annotations.",
+      "publication_ref": [
+        "b18",
+        "b19",
+        "b20",
+        "b21",
+        "b21",
+        "b28",
+        "b29",
+        "b30",
+        "b35",
+        "b35",
+        "b30"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Learning with Redundant Annotations",
+      "text": "Partial multi-label learning (PML) trains models using redundantly annotated data, where each instance is associated with a candidate label set containing both true and redundant noisy labels.\nThe key challenge in PML lies in filtering out incorrect labels and identifying reliable ones, thereby recovering the true label distribution for supervision. To achieve this, a number of methods have been developed. These methods can be broadly categorized into smoothness assumption-based, lowrank constraint-based, and sparsity regularization-based approaches. Smoothness assumption-based approaches [35,37,38] are based on the assumption that neighboring samples in the feature space are more likely to have similar labels. The low-rank constraint-based approaches [39][40][41] leverage the lowrank property to achieve disambiguation. The sparsity regularization-based approaches [32,33,40] impose sparsity on the candidate label set, effectively suppressing noisy labels and facilitating disambiguation.\nIn contrast to the aforementioned PML methods, our approach integrates the label confidence of an anchor sample pair with that aggregated from its cross-modal neighbors to identify true labels within all annotations. Furthermore, a dynamically updated class-wise threshold enables more accurate and adaptive label disambiguation.\nText Input A serene beach scene with footprints in the sand, calm waters, and plants under a partly cloudy sky. Text Backbone … … … … … (1,-1,1) (1,1,-1) (-1,1,1) Label Similarity 1.0 0.3 0.6 … 0 0.6 0.8 0.3 1.0 0 … 0 0.6 0.4 0.6 0 1.0 … 0.5 0 0.3 … … … … … … … 0.3 0 0.5 … 1.0 0.9 0 0.4 0.6 0 … 0.9 1.0 0.2 0.8 0.6 0 … 0 0.2 1.0 Image Input Image Backbone … … … … … negative itself positive Sea Plant Road Beach … Label Confidence 0.9 √ 0.8 √ 0.1 × 0.6 √ … Sea Plant Road Beach … Class Threshold 0.7 0.5 0.4 0.5 … Class-aware Robust Contrastive Hashing Neighbor-aware Confidence Reconstruction ... Anchor ... Neighbor 1 Reconstructed Confidence ... ... Neighbor C Hash Code Feature Similarity anchor neighbor other ... Classifier Classifier 𝐿 𝑐𝑟𝑐ℎ 𝐿 𝑛𝑎𝑐𝑟 𝐿 𝑐𝑟𝑐ℎ 𝐿 𝑛𝑎𝑐𝑟 𝐿 𝑞𝑢𝑎𝑛𝑡 𝐿 𝑞𝑢𝑎𝑛𝑡 Figure 2: The pipeline of the proposed framework NACD for cross-modal hashing with redundant annotations. NACR refines label confidence by aggregating information from cross-modal neighbors to distinguish true labels from redundant noisy ones. Meanwhile, CRCH constructs reliable positive and negative pairs based on the learned label confidence, which significantly improves robustness against noisy supervision.",
+      "publication_ref": [
+        "b34",
+        "b36",
+        "b37",
+        "b38",
+        "b39",
+        "b40",
+        "b31",
+        "b32",
+        "b39"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Proposed Approach",
+      "text": "",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Problem Definition",
+      "text": "For ease of presentation, we first give some definitions of cross-modal hashing of redundant annotations. Suppose the input space is denoted as X , and the label space as Y = {1, 2, ..., K}, where K indicates the total number of classes. Denote x m j 2 m=1 , y j N j=1 as the training set with N sample pairs, where x m j represents the j-th instance from the m-th modality (m = 1 for image and m = 2 for text). y j ∈ {0, 1} K denotes the candidate label vector of the j-th sample pair, which encodes both ground-truth and redundant noisy labels. The k-th element of y j equals 1 if the corresponding sample pair is annotated as class k. Here, p j is the label confidence vector of the candidate label vector y j . The hash codes are denoted as b m j N j=1 ∈ {-1, 1}\nL , where L is the hash code length.\nCMH leverages hash functions to map data from different modalities into a common Hamming space, enabling efficient similarity search across modalities through compact binary codes. Let the hash functions be f m , where m ∈ {1, 2}. Due to the NP-hard problem in binary optimization, we calculate the hash representations by h m j = tanh(f m (x m j )), m ∈ {1, 2} in the training process. Thus, the final binary hash codes are obtained by applying the sign function: b m j = sign(h m j ), m ∈ {1, 2}. Additionally, a linear classifier with a sigmoid activation function g(•) is employed to obtain the probability distribution z m j = g(h m j ), where m ∈ {1, 2}.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Neighbor-aware Confidence Reconstruction",
+      "text": "Under redundant supervision, confidence estimates obtained from individual samples may be unreliable. Meanwhile, semantically similar samples across modalities often share the same true labels. Motivated by this observation, we present a confidence-mixture (CM) strategy to reconstruct label confidence by balancing neighborhood consensus and self-prediction.\nFirst, assume that the prediction probability of the j-th target sample x m j 2 m=1 is z j , under the supervision of redundant annotations y j . We define the confidence of each sample's prediction by the model as:\np j ← γp j + (1 -γ) 1 2 2 m=1 z m j • y j ,(1)\nwhere • denotes Hadamard product, and γ is a momentum parameter that decays from 0.95 to 0.8 during training.\nSince model predictions may be unreliable under redundant supervision, and similar samples tend to share the same true labels, we exploit the predictions of cross-modal neighbors to refine the confidence estimation. Given the C nearest neighbors N j of the anchor sample pair x j , the neighbor-aggregated confidence q j is calculated as:\nq j = c∈Nj s jc p c c ′ ∈Nj s jc ′ , where s jc = 1 2 s 1 jc + s 2 jc ,(2)\nwhere s jc denotes the fused similarity between the anchor j and its neighbor c, obtained by averaging the similarities from the image and text modalities. To mitigate the issue that inaccurate estimates during training may hinder model optimization, we reconstruct the anchor confidence p j by mixing it with the neighbor-aggregated confidence q j . The reconstructed confidence is computed as:\np j ← λq j + (1 -λ)p j ,(3)\nwhere λ is a mixture coefficient that balances neighborhood consensus and self-prediction. After obtaining reconstructed confidence by Eq. ( 3), the disambiguation loss L nacr can be formulated as:\nL nacr = - 1 2N 2 m=1 N j=1 K k=1 p jk log z m jk + (1 -p jk ) log 1 -z m jk ,(4)\nwhere z m jk denotes the predicted probability that the j-th sample belongs to the k-th class under modality m, and p jk represents the reconstructed confidence of the j-th sample pair for class k.\nEmpirically, incorporating neighborhood consensus into label confidence estimation improves disambiguation accuracy, especially with abundant redundant noisy annotations. It enables the model to construct semantically faithful contrastive pairs, thus significantly enhancing the model's robustness.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Class-aware Robust Contrastive Hashing",
+      "text": "Although NACR reconstructs label confidence effectively, it does not explicitly incorporate classlevel information when constructing robust positive and negative pairs. Therefore, we propose a Class-aware Robust Contrastive Hashing (CRCH) module to adaptively build reliable pseudo-labels thereby enhancing the stability of contrastive optimization.\nFirst, we establish a class-wise threshold for each class based on the reconstructed label confidence. The threshold t k for the k-th class is calculated as follows:\nt k = 1 N k N j=1 p jk ,(5)\nwhere p jk denotes the reconstructed label confidence of the j-th sample pair on class k, and N k indicates the number of samples for which p jk > 0 among all N samples. This class-specific averaging adaptively captures the distributional characteristics of each class rather than relying on a fixed threshold. To build class-wise supervision, we derive the pseudo-label ŷj = [ŷ j1 , . . . , ŷjK ] by comparing each reconstructed confidence p jk with its corresponding class-wise threshold t k :\nŷjk = 1, if p jk ≥ t k 0, otherwise ,(6)\nwhere ŷjk ∈ {0, 1} indicates whether class k is considered positive for the j-th sample pair. For a mini-batch containing n sample pairs, we compute a label similarity matrix T ∈ [0, 1] n×n based on the intersection-over-union (IoU) between pseudo-label vectors:\nT ij = ŷi ∩ ŷj ŷi ∪ ŷj ,(7)\nwhere T ij measures the semantic similarity between the i-th and j-th sample pair based on their pseudo-labels. A higher T ij indicates stronger semantic consistency, while T ij = 0 means that the sample pairs are semantically disjoint. Accordingly, positive and negative pairs are determined by the indicator functions I[T ij > 0] and I[T ij = 0], respectively. However, directly relying on T ij for pair construction can be unreliable due to redundant noisy annotations. To mitigate this issue, we follow [22] and introduce a margin-based thresholding mechanism that adaptively adjusts cross-modal similarities matrix S to reduce the impact of negative pairs with overly high similarities. Specifically, the adjusted similarity matrix N * ij is defined as:\nN * ij = S * ij , if S * ij ≥ S ii -δ S * ij -ξ, otherwise ,(8)\nwhere * ∈ {12, 21} denotes image-to-text and text-to-image retrieval directions.\nS 12 ij = h 1 i • h 2 j , S 21 ij = h 2 i •h 1 j .\nThe margin parameter δ distinguishes hard and easy negative pairs, while the shift parameter ξ suppresses the influence of overly easy negatives. The loss of CRCH is defined as:\nL crch = 1 n 2 n i=1 n j̸ =i I[T ij = 0] • * exp N * ij + I[T ij > 0] • exp(-S ij -T ij ) - 1 n n i=1 S ii ,(9)\nwhere L crch consists of three components: (1) I[T ij = 0] • * exp(N * ij ) penalizes all negative cross-modal sample pairs, especially those that are easily confusable. (2) I[T ij > 0] • exp(-S ij -T ij ) treats cross-modal sample pairs with non-zero label similarity T ij as positive pairs and encourages greater semantic alignment. The higher the label similarity, the stronger the penalty imposed for insufficient feature similarity S ij . (3) -1 n n i=1 S ii encourages consistency within each sample pair by increasing the similarity between the image and text representations.\nThe CRCH module dynamically constructs positive and negative sample pairs based on class-wise confidence thresholds, enabling the model to effectively capture nuanced relationships between samples. This design significantly reduces erroneous associations caused by redundant noisy labels and enhances the model's robustness to incorrect supervision.",
+      "publication_ref": [
+        "b21"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Optimization",
+      "text": "Benefiting from the NACR and CRCH modules, our model effectively learns discriminative hash codes within the Hamming space. However, the discrepancy between continuous representations and discrete binary codes inevitably leads to quantization errors, which can substantially degrade retrieval performance in CMH. To address this issue, we present an effective quantization loss as follows:\nL quant = 1 n • L 2 m=1 n j=1 L l=1 h m jl -sign(h m jl ) ,(10)\nwhere h m jl denotes the l-th element of the hash representation h m j . This loss penalizes the deviation between continuous hash values and their corresponding binary codes sign(h m jl ), thereby encouraging each element to approach ±1 and effectively reducing the quantization error, as demonstrated in our ablation studies. Thus, the final loss function of NACD can be defined as:\nL = L nacr + αL crch + βL quant ,(11)\nwhere α and β are hyperparameters that balance the contributions of L nacr , L crch , and L quant . Additional optimization details of NACD are provided in Appendix Sec. A.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Experiments 4.1 Experimental Settings",
+      "text": "To evaluate the effectiveness of NACD, we conducted experiments on three benchmark datasets: MIRFlickr-25k (Flickr) [42], NUS-WIDE (NUS) [43], and MS-COCO (COCO) [44]. For all methods, we evaluate the Mean Average Precision (MAP) on both Image-to-Text (I2T) and Text-to-Image (T2I) retrieval tasks. Note that all MAP scores are computed over the entire retrieval set (i.e., MAP@ALL). Additionally, precision-recall curves under the hash lookup protocol are employed to visually assess the performance of CMH. To distinguish between different levels of redundant annotations, we define a redundant rate, which represents the ratio between the number of redundant noisy labels and the number of ground-truth labels in the entire annotations. Experiments were conducted with hash code lengths of 32, 64, and 128 bits, under redundant rates of 1.0, 1.5, 2.0, and 2.5. Additional details about the datasets are provided in Appendix Sec. B.",
+      "publication_ref": [
+        "b41",
+        "b42",
+        "b43"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Implementation Details",
+      "text": "In the proposed NACD, the image modality adopts the VGG19 model [45], pre-trained on ImageNet, as its CNN backbone. For text processing, the pre-trained Doc2Vec model [46] is employed as the backbone. For cross-modal shared representation learning, the image and text modalities employ three and two hidden layers, respectively. Each fully connected (FC) layer is succeeded by a ReLU activation layer, except for the final layer, which uses a tanh function. Each hidden layer contains 8,192 units, followed by an output layer of dimension L representing the shared embedding space. The model is trained using the RMSprop optimizer [47], with an initial learning rate of 1e -5 and a maximum of 100 epochs. The parameters δ and ξ in Eq. ( 8) are set to 0.2 and 1.0, respectively. Additionally, we employ a batch size n of 128. The model is evaluated every 20 epochs, with the first 10 epochs serving as a warm-up phase during which the CM strategy and class-wise threshold update are disabled. The number of neighbors C is set to 20 to ensure accurate neighborhood information.\nOur NACD is implemented using the PyTorch framework [48] and all experiments are carried out with 4 NVIDIA V100 GPUs.",
+      "publication_ref": [
+        "b44",
+        "b45",
+        "b46",
+        "b47"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Comparison with State-of-the-Arts",
+      "text": "In this work, we compare our NACD against 11 state-of-the-art CMH methods, including five unsupervised methods: DJSRH [18], DGCPN [20], PIP [49], CIRH [21], and UCCH [22]; and six supervised methods: CMMQ [50], MIAN [27], LtCMH [28], DHRL [29], NRCH [30], and RSHNL [31]. The average MAP scores for the I2T and T2I tasks are reported in Table 1. Additionally, the experiment results with 8 and 16 bits can be found in Appendix Sec. C.1. Fig. 3 presents precisionrecall curves on three datasets for a hash code length of 128 bits and a redundant rate of 2.5. Based on these results, we make the following observations:\n• As the hash code length increases, the performance of almost all methods improves, since longer codes contain more discriminative information in the Hamming space.\n• As the redundant rate increases, the performance of all supervised CMH methods deteriorates, since the progressively redundant noisy supervision misleads model training. In contrast, NACD maintains stable and superior performance by effectively extracting correct supervision from redundant annotations. Meanwhile, unsupervised CMH methods remain unaffected as they do not rely on label information.\n• From Table 1, we can see that the proposed NACD consistently outperforms all competing methods across all settings. For instance, when the hash code length is 128 and the redundant rate is 2.5, NACD exceeds the second-best methods by 3.3%, 1.7%, and 2.6% on the Flickr, NUS, and COCO datasets, respectively.\n• As illustrated in Fig. 3, the area under the precision-recall curves indicates that NACD consistently outperforms all other state-of-the-art methods in both I2T and T2I tasks, demonstrating its stable and superior performance.",
+      "publication_ref": [
+        "b17",
+        "b19",
+        "b48",
+        "b20",
+        "b21",
+        "b49",
+        "b26",
+        "b27",
+        "b28",
+        "b29",
+        "b30"
+      ],
+      "figure_ref": [],
+      "table_ref": [
+        "tab_0",
+        "tab_0"
+      ]
+    },
+    {
+      "heading": "Ablation Study",
+      "text": "To verify the effectiveness of each component in NACD, we conducted extensive ablation studies on the NUS and COCO datasets with a hash code length of 128 bits across various redundant rates. We compared the full NACD with six ablated variants\n: (1) only L nacr ; (2) only L crch ; (3) NACD without the CM strategy; (4) NACD without the class-wise threshold t k fixed at 0.5; (5) NACD without L quant ; (6) NACD without the warm-up phase; and (7) the full NACD. As shown in Table 2, NACR, CRCH, and L quant all effectively enhance the performance of NACD. Additionally, the warm-up strategy, the CM strategy, and dynamic class-wise threshold updating are all crucial for achieving optimal model performance. 0.0 0.2 0.4 0.6 0.8 1.0 Recall 0.5 0.6 0.7 0.8 0.9 precision (a) Flickr (I2T) 0.0 0.2 0.4 0.6 0.8 1.0 Recall 0.3 0.4 0.5 0.6 0.7 0.8 precision (b) NUS (I2T) 0.0 0.2 0.4 0.6 0.8 1.0 Recall 0.4 0.5 0.6 0.7 0.8 0.9 precision NACD DJSRH DGCPN PIP CIRH UCCH CMMQ MIAN LtCMH DHRL NRCH RSHNL (c) COCO (I2T) 0.0 0.2 0.4 0.6 0.8 1.0 Recall 0.55 0.60 0.65 0.70 0.75 0.80 0.85 precision (d) Flickr (T2I) 0.0 0.2 0.4 0.6 0.8 1.0 Recall 0.3 0.4 0.5 0.6 0.7 0.8 precision (e) NUS (T2I) 0.0 0.2 0.4 0.6 0.8 1.0 Recall 0.0 0.2 0.4 0.6 0.8 precision NACD DJSRH DGCPN PIP CIRH UCCH CMMQ MIAN LtCMH DHRL NRCH RSHNL (f) COCO (T2I)\nFigure 3: The precision-recall curves on three datasets. Note that the hash code length is 128bits and the redundant rate is 2.5.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Parameter Analysis",
+      "text": "To evaluate the impact of the coefficient λ in Eq. ( 3), as well as α and β in Eq. ( 11), we conducted extensive experiments on the COCO dataset with a hash code length of 128 bits under various redundant rates. As shown in Fig. 4, λ yields optimal results within the range of [0.01, 0.04], demonstrating the effectiveness of NACR. Moreover, the model achieves superior performance when α lies within [0.1, 0.5] and β within [0.5, 1.5], further validating the effectiveness of both CRCH and the quantization loss L quant . Additional parameter analyses on the Flick and NUS datasets are provided in Appendix Sec. C.\n2. 0 0.01 0.02 0.03 0.04 0.05 0.08 1 0.65 0.66 0.67 0.68 0.69 0.70 MAP Redundant Rate:1.0 Redundant Rate:1.5 Redundant Rate:2.0 Redundant Rate:2.5 (a) λ on COCO. 0.05 0.1 0.3 0.5 1 1.5 2 3 0.50 0.55 0.60 0.65 0.70 MAP Redundant Rate:1.0 Redundant Rate:1.5 Redundant Rate:2.0 Redundant Rate:2.5 (b) α on COCO. 0 0.1 0.3 0.5 1 1.5 3 5 0.65 0.66 0.67 0.68 0.69 0.70 MAP Redundant Rate:1.0 Redundant Rate:1.5 Redundant Rate:2.0 Redundant Rate:2.5 (c) β on COCO.",
+      "publication_ref": [],
+      "figure_ref": [
+        "fig_1"
+      ],
+      "table_ref": []
+    },
+    {
+      "heading": "Model Analysis",
+      "text": "",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Robustness Analysis.",
+      "text": "To intuitively demonstrate the robustness of NACD, we compared it with two of its variants and the NRCH method. Their average MAP scores on the COCO dataset were plotted under the settings of a hash code length of 128 bits and redundant rates of 2.0 and 2.5. Specifically, NACD-1 denotes the variant without the CM strategy, while NACD-2 represents the variant in which the class-wise threshold t k is fixed at 0.5, meaning that no dynamic threshold update is performed.  As shown in Fig. 5(a,b): (1) Both NACD-1 and NACD-2 tend to overfit redundant noise, indicating that the CM strategy and class-wise threshold updating are crucial for enhancing the robustness of NACD. (2) Although NRCH exhibits certain robustness under redundant annotations, it still lags significantly behind NACD. This gap widens as noise levels increase, further underscoring NACD's robustness in challenging scenarios.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Disambiguation Analysis.",
+      "text": "In Fig. 5(c), we analyze the model's ability to disambiguate redundant annotations by computing the average pseudo-label length for all sample pairs in the COCO dataset.\nHere, the pseudo-label length for the j-th sample pair is defined as the number of positive entries in ŷj , reflecting how many classes the model predicts as positive. As shown in the figure, when the redundant rate decreases, the average pseudo-label length gradually approaches the average number of ground-truth labels in the COCO dataset (2.76). This indicates that NACD can accurately recover the true label subset from redundant annotations, confirming its strong disambiguation capability.\n0 20 40 60 80 100 Epoch 0.45 0.50 0.55 0.60 0.65 0.70 MAP NACD NACD-1 NACD-2 NRCH (a) redundant rate of 2.0. 0 20 40 60 80 100 Epoch 0.45 0.50 0.55 0.60 0.65 0.70 MAP NACD NACD-1 NACD-2 NRCH (b) redundant rate of 2.5. 0 20 40 60 80 100 Epoch 2 3 4 5 6 7 8 9\nAverage Length\nRedundant Rate:1.0 Redundant Rate:1.5 Redundant Rate:2.0 Redundant Rate:2.5 { warmup (c) average label length.\nFigure 5: The robustness study and disambiguation study results with 32 bits on the COCO dataset.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Conclusion",
+      "text": "In this paper, we propose a novel Neighbor-aware Contrastive Disambiguation (NACD) framework to address the challenge of redundant annotations in cross-modal hashing. NACD comprises two key modules: Neighbor-aware Confidence Reconstruction (NACR) and Class-aware Robust Contrastive Hashing (CRCH). Specifically, NACR reconstructs label confidence by aggregating information from cross-modal neighbors, thereby distinguishing true labels from ambiguous ones. Meanwhile, CRCH constructs reliable positive and negative pairs based on label confidence, substantially enhancing robustness under noisy supervision. Moreover, a quantization loss is incorporated to reduce the quantization error and enforce binary constraints on the learned hash representations. Extensive experiments on three large-scale multimodal benchmarks demonstrate that NACD consistently outperforms state-of-the-art approaches, showing strong robustness and stable performance for cross-modal hashing with redundant annotations.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Limitation.",
+      "text": "Although our proposed NACD demonstrates strong performance, there are still some limitations that need to be addressed. In this paper, the \"redundant annotations\" we study in crossmodal hashing do not account for the inherent similarity between labels. NACD may struggle when noisy labels are highly similar to the ground-truth, such as when the correct label is \"car\" and the noisy label is \"truck\". Additionally, we only conduct extensive experiments on image and text modalities to demonstrate NACD's effectiveness. In the future, additional modalities need to be considered to verify the generalization ability of NACD. We encourage further research to better understand and mitigate the limitations and risks of cross-modal hashing with redundant annotations.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "NeurIPS Paper Checklist",
+      "text": "1. Claims Question: Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope? Answer: [Yes] Justification: This paper proposes a novel Neighbor-aware Contrastive Disambiguation (NACD) method for cross-modal hashing with redundant annotations. The effectiveness of this method is thoroughly demonstrated through extensive experiments, which precisely align with the main claims made at the beginning. Guidelines:\n• The answer NA means that the abstract and introduction do not include the claims made in the paper.\n• The abstract and/or introduction should clearly state the claims made, including the contributions made in the paper and important assumptions and limitations. A No or NA answer to this question will not be perceived well by the reviewers.\n• The claims made should match theoretical and experimental results, and reflect how much the results can be expected to generalize to other settings.\n• It is fine to include aspirational goals as motivation as long as it is clear that these goals are not attained by the paper.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Limitations",
+      "text": "Question: Does the paper discuss the limitations of the work performed by the authors? Answer: [Yes] Justification: The limitations are discussed in the conclusion section.\nGuidelines:\n• The answer NA means that the paper has no limitation while the answer No means that the paper has limitations, but those are not discussed in the paper.\n• The authors are encouraged to create a separate \"Limitations\" section in their paper.\n• The paper should point out any strong assumptions and how robust the results are to violations of these assumptions (e.g., independence assumptions, noiseless settings, model well-specification, asymptotic approximations only holding locally). The authors should reflect on how these assumptions might be violated in practice and what the implications would be.\n• The authors should reflect on the scope of the claims made, e.g., if the approach was only tested on a few datasets or with a few runs. In general, empirical results often depend on implicit assumptions, which should be articulated.\n• The authors should reflect on the factors that influence the performance of the approach.\nFor example, a facial recognition algorithm may perform poorly when image resolution is low or images are taken in low lighting. Or a speech-to-text system might not be used reliably to provide closed captions for online lectures because it fails to handle technical jargon.\n• The authors should discuss the computational efficiency of the proposed algorithms and how they scale with dataset size.\n• If applicable, the authors should discuss possible limitations of their approach to address problems of privacy and fairness.\n• While the authors might fear that complete honesty about limitations might be used by reviewers as grounds for rejection, a worse outcome might be that reviewers discover limitations that aren't acknowledged in the paper. The authors should use their best judgment and recognize that individual actions in favor of transparency play an important role in developing norms that preserve the integrity of the community. Reviewers will be specifically instructed to not penalize honesty concerning limitations.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Theory assumptions and proofs",
+      "text": "Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof?\nQuestion: Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results, as described in supplemental material? Answer: [Yes] Justification: We provide code and instructions for using the data and code in the supplementary material.\nGuidelines:\n• The answer NA means that paper does not include experiments requiring code.\n• Please see the NeurIPS code and data submission guidelines (https://nips.cc/  public/guides/CodeSubmissionPolicy) for more details.\n• While we encourage the release of code and data, we understand that this might not be possible, so \"No\" is an acceptable answer. Papers cannot be rejected simply for not including code, unless this is central to the contribution (e.g., for a new open-source benchmark).\n• The instructions should contain the exact command and environment needed to run to reproduce the results. See the NeurIPS code and data submission guidelines (https:  //nips.cc/public/guides/CodeSubmissionPolicy) for more details.\n• The authors should provide instructions on data access and preparation, including how to access the raw data, preprocessed data, intermediate data, and generated data, etc.\n• The authors should provide scripts to reproduce all experimental results for the new proposed method and baselines. If only a subset of experiments are reproducible, they should state which ones are omitted from the script and why.\n• At submission time, to preserve anonymity, the authors should release anonymized versions (if applicable).\n• Providing as much information as possible in supplemental material (appended to the paper) is recommended, but including URLs to data and code is permitted.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Experimental setting/details",
+      "text": "Question: Does the paper specify all the training and test details (e.g., data splits, hyperparameters, how they were chosen, type of optimizer, etc.) necessary to understand the results?\nAnswer: [Yes] Justification: We briefly describe the key information of the experimental setting/details in the main paper and provide full details in the appendix.\nGuidelines:\n• The answer NA means that the paper does not include experiments.\n• The experimental setting should be presented in the core of the paper to a level of detail that is necessary to appreciate the results and make sense of them.\n• The full details can be provided either with the code, in appendix, or as supplemental material.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Experiment statistical significance",
+      "text": "Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments?\nAnswer: [No] Justification: The experimental data and comparative experiments in this paper are both very extensive. In addition to the large number of retrieval results, this paper also requires a significant amount of space to analyze the model's performance and influencing factors, which makes the presentation of error bars quite challenging. To enhance the reliability of the experimental evaluation, we conducted multiple experiments and presented the average results. However, this also greatly increased the resources and time consumed in our training.\nGuidelines:\n• The answer NA means that the paper does not include experiments.\n• The authors should answer \"Yes\" if the results are accompanied by error bars, confidence intervals, or statistical significance tests, at least for the experiments that support the main claims of the paper.\n• The factors of variability that the error bars are capturing should be clearly stated (for example, train/test split, initialization, random drawing of some parameter, or overall run with given experimental conditions).\n• The method for calculating the error bars should be explained (closed form formula, call to a library function, bootstrap, etc.) • The assumptions made should be given (e.g., Normally distributed errors).\n• It should be clear whether the error bar is the standard deviation or the standard error of the mean.\n• It is OK to report 1-sigma error bars, but one should state it. The authors should preferably report a 2-sigma error bar than state that they have a 96% CI, if the hypothesis of Normality of errors is not verified.\n• For asymmetric distributions, the authors should be careful not to show in tables or figures symmetric error bars that would yield results that are out of range (e.g. negative error rates).\n• If error bars are reported in tables or plots, The authors should explain in the text how they were calculated and reference the corresponding figures or tables in the text.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Experiments compute resources",
+      "text": "Question: For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments?\nAnswer: [Yes] Justification: We detail the computation resources used in our experiments in the appendix.\nGuidelines:\n• The answer NA means that the paper does not include experiments.\n• The paper should indicate the type of compute workers CPU or GPU, internal cluster, or cloud provider, including relevant memory and storage.\n• The paper should provide the amount of compute required for each of the individual experimental runs as well as estimate the total compute.\n• The paper should disclose whether the full research project required more compute than the experiments reported in the paper (e.g., preliminary or failed experiments that didn't make it into the paper).",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Code of ethics",
+      "text": "Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics https://neurips.cc/public/EthicsGuidelines?\nAnswer: [Yes] Justification: We ensure that the research in the paper fully complies with the Code of Ethics.\nGuidelines:\n• The answer NA means that the authors have not reviewed the NeurIPS Code of Ethics.\n• If the authors answer No, they should explain the special circumstances that require a deviation from the Code of Ethics.\n• The authors should make sure to preserve anonymity (e.g., if there is a special consideration due to laws or regulations in their jurisdiction).",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Broader impacts",
+      "text": "Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed?\nAnswer: [NA] Justification: Although our paper addresses the redundant annotations problem, which is related to the robustness of models, it does not have a direct association with societal aspects.\n• For scraped data from a particular source (e.g., website), the copyright and terms of service of that source should be provided.\n• If assets are released, the license, copyright information, and terms of use in the package should be provided. For popular datasets, paperswithcode.com/datasets has curated licenses for some datasets. Their licensing guide can help determine the license of a dataset.\n• For existing datasets that are re-packaged, both the original license and the license of the derived asset (if it has changed) should be provided.\n• If this information is not available online, the authors are encouraged to reach out to the asset's creators.\n13. New assets Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets?\nAnswer: [Yes]\nJustification: We will release our code, which is well documented, along with a link to the codebase repository.\nGuidelines:\n• The answer NA means that the paper does not release new assets.\n• Researchers should communicate the details of the dataset/code/model as part of their submissions via structured templates. This includes details about training, license, limitations, etc.\n• The paper should discuss whether and how consent was obtained from people whose asset is used.\n• At submission time, remember to anonymize your assets (if applicable). You can either create an anonymized URL or include an anonymized zip file.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Crowdsourcing and research with human subjects",
+      "text": "Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)?\nAnswer: [NA] Justification: The paper does not involve crowdsourcing nor research with human subjects.\nGuidelines:\n• The answer NA means that the paper does not involve crowdsourcing nor research with human subjects.\n• Including this information in the supplemental material is fine, but if the main contribution of the paper involves human subjects, then as much detail as possible should be included in the main paper.\n• According to the NeurIPS Code of Ethics, workers involved in data collection, curation, or other labor should be paid at least the minimum wage in the country of the data collector.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Institutional review board (IRB) approvals or equivalent for research with human subjects",
+      "text": "Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained?\nAnswer: [NA] Justification: The paper does not involve crowdsourcing nor research with human subjects.\nGuidelines:\n• The answer NA means that the paper does not involve crowdsourcing nor research with human subjects.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "",
+      "text": "Answer: [NA] Justification: This is not a theoretical paper.\nGuidelines:\n• The answer NA means that the paper does not include theoretical results.\n• All the theorems, formulas, and proofs in the paper should be numbered and crossreferenced.\n• All assumptions should be clearly stated or referenced in the statement of any theorems.\n• The proofs can either appear in the main paper or the supplemental material, but if they appear in the supplemental material, the authors are encouraged to provide a short proof sketch to provide intuition.\n• Inversely, any informal proof provided in the core of the paper should be complemented by formal proofs provided in appendix or supplemental material.\n• Theorems and Lemmas that the proof relies upon should be properly referenced.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Experimental result reproducibility",
+      "text": "Question: Does the paper fully disclose all the information needed to reproduce the main experimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper (regardless of whether the code and data are provided or not)?\nAnswer: [Yes] Justification: The architecture of NACD is fully described in the main paper. The experimental setup and implementation details are disclosed in the supplementary sections.\nGuidelines:\n• The answer NA means that the paper does not include experiments.\n• If the paper includes experiments, a No answer to this question will not be perceived well by the reviewers: Making the paper reproducible is important, regardless of whether the code and data are provided or not.\n• If the contribution is a dataset and/or model, the authors should describe the steps taken to make their results reproducible or verifiable.\n• Depending on the contribution, reproducibility can be accomplished in various ways.\nFor example, if the contribution is a novel architecture, describing the architecture fully might suffice, or if the contribution is a specific model and empirical evaluation, it may be necessary to either make it possible for others to replicate the model with the same dataset, or provide access to the model. In general. releasing code and data is often one good way to accomplish this, but reproducibility can also be provided via detailed instructions for how to replicate the results, access to a hosted model (e.g., in the case of a large language model), releasing of a model checkpoint, or other means that are appropriate to the research performed.\n• While NeurIPS does not require releasing code, the conference does require all submissions to provide some reasonable avenue for reproducibility, which may depend on the nature of the contribution. For example (a) If the contribution is primarily a new algorithm, the paper should make it clear how to reproduce that algorithm. (b) If the contribution is primarily a new model architecture, the paper should describe the architecture clearly and fully. (c) If the contribution is a new model (e.g., a large language model), then there should either be a way to access this model for reproducing the results or a way to reproduce the model (e.g., with an open-source dataset or instructions for how to construct the dataset). (d) We recognize that reproducibility may be tricky in some cases, in which case authors are welcome to describe the particular way they provide for reproducibility. In the case of closed-source models, it may be that access to the model is limited in some way (e.g., to registered users), but it should be possible for other researchers to have some path to reproducing or verifying the results.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Open access to data and code",
+      "text": "Guidelines:\n• The answer NA means that there is no societal impact of the work performed.\n• If the authors answer NA or No, they should explain why their work has no societal impact or why the paper does not address societal impact.\n• Examples of negative societal impacts include potential malicious or unintended uses (e.g., disinformation, generating fake profiles, surveillance), fairness considerations (e.g., deployment of technologies that could make decisions that unfairly impact specific groups), privacy considerations, and security considerations.\n• The conference expects that many papers will be foundational research and not tied to particular applications, let alone deployments. However, if there is a direct path to any negative applications, the authors should point it out. For example, it is legitimate to point out that an improvement in the quality of generative models could be used to generate deepfakes for disinformation. On the other hand, it is not needed to point out that a generic algorithm for optimizing neural networks could enable people to train models that generate Deepfakes faster.\n• The authors should consider possible harms that could arise when the technology is being used as intended and functioning correctly, harms that could arise when the technology is being used as intended but gives incorrect results, and harms following from (intentional or unintentional) misuse of the technology.\n• If there are negative societal impacts, the authors could also discuss possible mitigation strategies (e.g., gated release of models, providing defenses in addition to attacks, mechanisms for monitoring misuse, mechanisms to monitor how a system learns from feedback over time, improving the efficiency and accessibility of ML). 11.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Safeguards",
+      "text": "Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g., pretrained language models, image generators, or scraped datasets)? Answer: [NA] Justification: This paper merely addresses the Redundant Annotations problem in crossmodal hashing and does not involve these risks.\nGuidelines:\n• The answer NA means that the paper poses no such risks.\n• Released models that have a high risk for misuse or dual-use should be released with necessary safeguards to allow for controlled use of the model, for example by requiring that users adhere to usage guidelines or restrictions to access the model or implementing safety filters.\n• Datasets that have been scraped from the Internet could pose safety risks. The authors should describe how they avoided releasing unsafe images.\n• We recognize that providing effective safeguards is challenging, and many papers do not require this, but we encourage authors to take this into account and make a best faith effort. 12. Licenses for existing assets Question: Are the creators or original owners of assets (e.g., code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected? Answer: [Yes] Justification: We used open datasets and correctly referenced the papers.\nGuidelines:\n• The answer NA means that the paper does not use existing assets.\n• The authors should cite the original paper that produced the code package or dataset.\n• The authors should state which version of the asset is used and, if possible, include a URL.\n• The name of the license (e.g., CC-BY 4.0) should be included for each asset.\n• Depending on the country in which research is conducted, IRB approval (or equivalent) may be required for any human subjects research. If you obtained IRB approval, you should clearly state this in the paper.\n• We recognize that the procedures for this may vary significantly between institutions and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the guidelines for their institution.\n• For initial submissions, do not include any information that would break anonymity (if applicable), such as the institution conducting the review. 16. Declaration of LLM usage Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does not impact the core methodology, scientific rigorousness, or originality of the research, declaration is not required. Answer: [NA] Justification: The LLM is used only for writing. Guidelines: • The answer NA means that the core method development in this research does not involve LLMs as any important, original, or non-standard components. • Please refer to our LLM policy (https://neurips.cc/Conferences/2025/LLM)\nfor what should or should not be described.",
+      "publication_ref": [
+        "b15"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    }
+  ],
+  "references": [
+    {
+      "ref_id": "b0",
+      "title": "Graph regularized and feature aware matrix factorization for robust incomplete multi-view clustering",
+      "journal": "IEEE Transactions on Circuits and Systems for Video Technology",
+      "year": "2023",
+      "authors": "Jie Wen; Gehui Xu; Zhanyan Tang; Wei Wang; Lunke Fei; Yong Xu"
+    },
+    {
+      "ref_id": "b1",
+      "title": "Metavg: A meta-learning framework for visual grounding",
+      "journal": "IEEE Signal Processing Letters",
+      "year": "2023",
+      "authors": "Chao Su; Zhi Li; Tianyi Lei; Dezhong Peng; Xu Wang"
+    },
+    {
+      "ref_id": "b2",
+      "title": "Self-weighted contrastive fusion for deep multi-view clustering",
+      "journal": "IEEE Transactions on Multimedia",
+      "year": "2024",
+      "authors": "Song Wu; Yan Zheng; Yazhou Ren; Jing He; Xiaorong Pu; Shudong Huang; Zhifeng Hao; Lifang He"
+    },
+    {
+      "ref_id": "b3",
+      "title": "Graph and text multi-modal representation learning with momentum distillation on electronic health records. Knowledge-Based Systems",
+      "journal": "",
+      "year": "2024",
+      "authors": "Yu Cao; Xu Wang; Qian Wang; Zhong Yuan; Yongguo Shi; Dezhong Peng"
+    },
+    {
+      "ref_id": "b4",
+      "title": "Partial multiview incomplete multilabel learning via uncertainty-driven reliable dynamic fusion",
+      "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "year": "2025",
+      "authors": "Jie Wen; Jiang Long; Xiaohuan Lu; Chengliang Liu; Xiaozhao Fang; Yong Xu"
+    },
+    {
+      "ref_id": "b5",
+      "title": "Reliable representation learning for incomplete multi-view missing multi-label classification",
+      "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "year": "2025",
+      "authors": "Chengliang Liu; Jie Wen; Yong Xu; Bob Zhang; Liqiang Nie; Min Zhang"
+    },
+    {
+      "ref_id": "b6",
+      "title": "Variational graph generator for multiview graph clustering",
+      "journal": "IEEE Transactions on Neural Networks and Learning Systems",
+      "year": "2025",
+      "authors": "Jianpeng Chen; Yawen Ling; Jie Xu; Yazhou Ren; Shudong Huang; Xiaorong Pu; Zhifeng Hao; Philip S Yu; Lifang He"
+    },
+    {
+      "ref_id": "b7",
+      "title": "Rono: robust discriminative learning with noisy labels for 2d-3d cross-modal retrieval",
+      "journal": "",
+      "year": "2023",
+      "authors": "Yanglin Feng; Hongyuan Zhu; Dezhong Peng; Xi Peng; Peng Hu"
+    },
+    {
+      "ref_id": "b8",
+      "title": "Dida: Disambiguated domain alignment for cross-domain retrieval with partial labels",
+      "journal": "",
+      "year": "2024",
+      "authors": "Haoran Liu; Ying Ma; Ming Yan; Yingke Chen; Dezhong Peng; Xu Wang"
+    },
+    {
+      "ref_id": "b9",
+      "title": "Robust unsupervised multimodal learning with noisy pseudo labels",
+      "journal": "IEEE Transactions on Image Processing",
+      "year": "2024",
+      "authors": "Yongxiang Li; Yang Qin; Yuan Sun; Dezhong Peng; Xi Peng; Peng Hu; Romo"
+    },
+    {
+      "ref_id": "b10",
+      "title": "Dica: Disambiguated contrastive alignment for cross-modal retrieval with partial labels",
+      "journal": "",
+      "year": "2025",
+      "authors": "Chao Su; Huiming Zheng; Dezhong Peng; Xu Wang"
+    },
+    {
+      "ref_id": "b11",
+      "title": "Robust duality learning for unsupervised visible-infrared person re-identification",
+      "journal": "IEEE Transactions on Information Forensics and Security",
+      "year": "2025",
+      "authors": "Yongxiang Li; Yuan Sun; Yang Qin; Dezhong Peng; Xi Peng; Peng Hu"
+    },
+    {
+      "ref_id": "b12",
+      "title": "Multi-granularity confidence learning for unsupervised text-to-image person re-identification with incomplete modality",
+      "journal": "Knowledge-Based Systems",
+      "year": "2025",
+      "authors": "Yongxiang Li; Dezhong Peng; Haixiao Huang; Yizhi Liu; Huiming Zheng; Zheng Liu"
+    },
+    {
+      "ref_id": "b13",
+      "title": "Pointcloud-text matching: Benchmark dataset and baseline",
+      "journal": "IEEE Transactions on Multimedia",
+      "year": "2025",
+      "authors": "Yanglin Feng; Yang Qin; Dezhong Peng; Hongyuan Zhu; Xi Peng; Peng Hu"
+    },
+    {
+      "ref_id": "b14",
+      "title": "Roda: Robust domain alignment for cross-domain retrieval against label noise",
+      "journal": "",
+      "year": "2025",
+      "authors": "Yanglin Ziniu Yin; Ming Feng; Xiaomin Yan; Dezhong Song; Xu Peng; Wang"
+    },
+    {
+      "ref_id": "b15",
+      "title": "She: Streaming-media hashing retrieval",
+      "journal": "",
+      "year": "2025",
+      "authors": "Ruitao Pu; Yang Qin; Xiaomin Song; Dezhong Peng; Zhenwen Ren; Yuan Sun"
+    },
+    {
+      "ref_id": "b16",
+      "title": "Unsupervised generative adversarial cross-modal hashing",
+      "journal": "",
+      "year": "2018",
+      "authors": "Jian Zhang; Yuxin Peng; Mingkuan Yuan"
+    },
+    {
+      "ref_id": "b17",
+      "title": "Deep joint-semantics reconstructing hashing for large-scale unsupervised cross-modal retrieval",
+      "journal": "",
+      "year": "2019",
+      "authors": "Shupeng Su; Zhisheng Zhong; Chao Zhang"
+    },
+    {
+      "ref_id": "b18",
+      "title": "Deep semantic-alignment hashing for unsupervised cross-modal retrieval",
+      "journal": "",
+      "year": "2020",
+      "authors": "Dejie Yang; Dayan Wu; Wanqian Zhang; Haisu Zhang; Bo Li; Weiping Wang"
+    },
+    {
+      "ref_id": "b19",
+      "title": "Deep graph-neighbor coherence preserving network for unsupervised cross-modal hashing",
+      "journal": "",
+      "year": "2021",
+      "authors": "Jun Yu; Hao Zhou; Yibing Zhan; Dacheng Tao"
+    },
+    {
+      "ref_id": "b20",
+      "title": "Work together: Correlation-identity reconstruction hashing for unsupervised cross-modal retrieval",
+      "journal": "IEEE Transactions on Knowledge and Data Engineering",
+      "year": "2022",
+      "authors": "Lei Zhu; Xize Wu; Jingjing Li; Zheng Zhang; Weili Guan; Heng Tao Shen"
+    },
+    {
+      "ref_id": "b21",
+      "title": "Unsupervised contrastive cross-modal hashing",
+      "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "year": "2022",
+      "authors": "Peng Hu; Hongyuan Zhu; Jie Lin; Dezhong Peng; Yin-Ping Zhao; Xi Peng"
+    },
+    {
+      "ref_id": "b22",
+      "title": "Deep cross-modal hashing",
+      "journal": "",
+      "year": "2017",
+      "authors": "Qing-Yuan Jiang; Wu-Jun Li"
+    },
+    {
+      "ref_id": "b23",
+      "title": "Attention-aware deep adversarial hashing for crossmodal retrieval",
+      "journal": "",
+      "year": "2018",
+      "authors": "Xi Zhang; Hanjiang Lai; Jiashi Feng"
+    },
+    {
+      "ref_id": "b24",
+      "title": "Multi-task consistencypreserving adversarial hashing for cross-modal retrieval",
+      "journal": "IEEE Transactions on Image Processing",
+      "year": "2020",
+      "authors": "De Xie; Cheng Deng; Chao Li; Xianglong Liu; Dacheng Tao"
+    },
+    {
+      "ref_id": "b25",
+      "title": "Deep cross-modal hashing with hashing functions and unified hash codes jointly learning",
+      "journal": "IEEE Transactions on Knowledge and Data Engineering",
+      "year": "2020",
+      "authors": "Rong-Cheng Tu; Xian-Ling Mao; Bing Ma; Yong Hu; Tan Yan; Wei Wei; Heyan Huang"
+    },
+    {
+      "ref_id": "b26",
+      "title": "Modality-invariant asymmetric networks for cross-modal hashing",
+      "journal": "IEEE Transactions on Knowledge and Data Engineering",
+      "year": "2023",
+      "authors": "Zheng Zhang; Haoyang Luo; Lei Zhu; Guangming Lu; Heng Tao Shen"
+    },
+    {
+      "ref_id": "b27",
+      "title": "Long-tail cross modal hashing",
+      "journal": "",
+      "year": "2023",
+      "authors": "Zijun Gao; Jun Wang; Guoxian Yu; Zhongmin Yan; Carlotta Domeniconi; Jinglin Zhang"
+    },
+    {
+      "ref_id": "b28",
+      "title": "Deep cross-modal hashing with ranking learning for noisy labels",
+      "journal": "IEEE Transactions on Big Data",
+      "year": "2024",
+      "authors": "Zhenqiu Shu; Yibing Bai; Kailing Yong; Zhengtao Yu"
+    },
+    {
+      "ref_id": "b29",
+      "title": "Robust contrastive cross-modal hashing with noisy labels",
+      "journal": "",
+      "year": "2024",
+      "authors": "Longan Wang; Yang Qin; Yuan Sun; Dezhong Peng; Xi Peng; Peng Hu"
+    },
+    {
+      "ref_id": "b30",
+      "title": "Robust self-paced hashing for cross-modal retrieval with noisy labels",
+      "journal": "",
+      "year": "2025",
+      "authors": "Ruitao Pu; Yuan Sun; Yang Qin; Zhenwen Ren; Xiaomin Song; Huiming Zheng; Dezhong Peng"
+    },
+    {
+      "ref_id": "b31",
+      "title": "Global-local label correlation for partial multi-label learning",
+      "journal": "IEEE Transactions on Multimedia",
+      "year": "2022",
+      "authors": "Lijuan Sun; Songhe Feng; Jun Liu; Gengyu Lyu; Congyan Lang"
+    },
+    {
+      "ref_id": "b32",
+      "title": "Partial multi-label learning with noisy label identification",
+      "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "year": "2022",
+      "authors": "Ming-Kun Xie; Sheng-Jun Huang"
+    },
+    {
+      "ref_id": "b33",
+      "title": "Partial multi-label learning with probabilistic graphical disambiguation",
+      "journal": "Advances in Neural Information Processing Systems",
+      "year": "2023",
+      "authors": "Jun-Yi Hang; Min-Ling Zhang"
+    },
+    {
+      "ref_id": "b34",
+      "title": "Partial multilabel learning based on near-far neighborhood label enhancement and nonlinear guidance",
+      "journal": "",
+      "year": "2024",
+      "authors": "Yu Chen; Yanan Wu; Na Han; Xiaozhao Fang; Bingzhi Chen; Jie Wen"
+    },
+    {
+      "ref_id": "b35",
+      "title": "Hierarchical consensus hashing for cross-modal retrieval",
+      "journal": "IEEE Transactions on Multimedia",
+      "year": "2023",
+      "authors": "Yuan Sun; Zhenwen Ren; Peng Hu; Dezhong Peng; Xu Wang"
+    },
+    {
+      "ref_id": "b36",
+      "title": "Partial multi-label learning",
+      "journal": "",
+      "year": "2018-06",
+      "authors": "Ming-Kun Xie; Sheng-Jun Huang"
+    },
+    {
+      "ref_id": "b37",
+      "title": "Partial multi-label learning via probabilistic graph matching mechanism",
+      "journal": "",
+      "year": "2020",
+      "authors": "Gengyu Lyu; Songhe Feng; Yidong Li"
+    },
+    {
+      "ref_id": "b38",
+      "title": "Feature-induced partial multi-label learning",
+      "journal": "",
+      "year": "2018-11",
+      "authors": "Guoxian Yu; Xia Chen; Carlotta Domeniconi; Jun Wang; Zhao Li; Zili Zhang; Xindong Wu"
+    },
+    {
+      "ref_id": "b39",
+      "title": "Partial multi-label learning by low-rank and sparse decomposition",
+      "journal": "",
+      "year": "2019",
+      "authors": "Lijuan Sun; Songhe Feng; Tao Wang; Congyan Lang; Yi Jin"
+    },
+    {
+      "ref_id": "b40",
+      "title": "Prior knowledge regularized self-representation model for partial multilabel learning",
+      "journal": "IEEE Transactions on Cybernetics",
+      "year": "2023-03",
+      "authors": "Gengyu Lyu; Songhe Feng; Yi Jin; Tao Wang; Congyan Lang; Yidong Li"
+    },
+    {
+      "ref_id": "b41",
+      "title": "The mir flickr retrieval evaluation",
+      "journal": "",
+      "year": "2008",
+      "authors": "Mark J Huiskes; Michael S Lew"
+    },
+    {
+      "ref_id": "b42",
+      "title": "Nuswide: a real-world web image database from national university of singapore",
+      "journal": "",
+      "year": "2009",
+      "authors": "Tat-Seng Chua; Jinhui Tang; Richang Hong; Haojie Li; Zhiping Luo; Yantao Zheng"
+    },
+    {
+      "ref_id": "b43",
+      "title": "Microsoft coco: Common objects in context",
+      "journal": "Springer",
+      "year": "2014",
+      "authors": "Tsung-Yi Lin; Michael Maire; Serge Belongie; James Hays; Pietro Perona; Deva Ramanan; Piotr Dollár; C Lawrence; Zitnick"
+    },
+    {
+      "ref_id": "b44",
+      "title": "Very deep convolutional networks for large-scale image recognition",
+      "journal": "",
+      "year": "2014",
+      "authors": "Karen Simonyan; Andrew Zisserman"
+    },
+    {
+      "ref_id": "b45",
+      "title": "An empirical evaluation of doc2vec with practical insights into document embedding generation",
+      "journal": "",
+      "year": "2016",
+      "authors": "Han Jey; Timothy Lau; Baldwin"
+    },
+    {
+      "ref_id": "b46",
+      "title": "Lecture 6.5-rmsprop: Divide the gradient by a running average of its recent magnitude",
+      "journal": "",
+      "year": "2012",
+      "authors": "Tijmen Tieleman; Geoffrey Hinton"
+    },
+    {
+      "ref_id": "b47",
+      "title": "Pytorch: An imperative style, high-performance deep learning library",
+      "journal": "Advances in Neural Information Processing Systems",
+      "year": "2019",
+      "authors": "Adam Paszke; Sam Gross; Francisco Massa; Adam Lerer; James Bradbury; Gregory Chanan; Trevor Killeen; Zeming Lin"
+    },
+    {
+      "ref_id": "b48",
+      "title": "Privacy protection in deep multi-modal retrieval",
+      "journal": "",
+      "year": "2021",
+      "authors": "Peng-Fei Zhang; Yang Li; Zi Huang; Hongzhi Yin"
+    },
+    {
+      "ref_id": "b49",
+      "title": "Mutual quantization for crossmodal search with noisy labels",
+      "journal": "",
+      "year": "2022",
+      "authors": "Erkun Yang; Dongren Yao; Tongliang Liu; Cheng Deng"
+    }
+  ],
+  "figures": [
+    {
+      "figure_label": "1",
+      "figure_type": "figure",
+      "figure_id": "fig_0",
+      "figure_caption": "Figure 1 :1Figure1: The redundant annotations in cross-modal hashing. Among the annotations, the correct labels and redundant noisy labels are represented by green and red, respectively. Shared labels between the anchor sample pair and its neighbor sample pair are enclosed in dashed boxes.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "4",
+      "figure_type": "figure",
+      "figure_id": "fig_1",
+      "figure_caption": "Figure 4 :4Figure 4: The performance of NACD in terms of average MAP scores versus different values of λ, α, and β on COCO dataset with 128 bits.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "1",
+      "figure_type": "table",
+      "figure_id": "tab_0",
+      "figure_caption": "The performance comparison in terms of average MAP scores (%) of I2T and T2I tasks under different redundant rates and various bit lengths on the MIRFlickr-25K(Flickr), NUS-WIDE(NUS), and MS-COCO(COCO) datasets. The highest and second highest MAP scores among all methods are shown in bold and underline respectively.",
+      "figure_data": "Dataset MethodYear1.01.52.02.532bits 64bits 128bits 32bits 64bits 128bits 32bits 64bits 128bits 32bits 64bits 128bitsDJSRH201963.4 64.866.563.4 64.866.563.4 64.866.563.4 64.866.5DGCPN202169.2 70.571.169.2 70.571.169.2 70.571.169.2 70.571.1PIP202167.9 68.969.867.9 68.969.867.9 68.969.867.9 68.969.8CIRH202268.6 69.470.168.6 69.470.168.6 69.470.168.6 69.470.1UCCH202371.0 71.972.071.0 71.972.071.0 71.972.071.0 71.972.0FlickrCMMQ202263.6 64.165.566.5 67.669.163.6 63.965.663.6 63.864.8MIAN202371.1 71.873.067.6 68.468.061.5 62.863.261.6 61.360.2LtCMH202363.2 64.365.360.0 59.860.657.9 57.858.556.9 56.457.6DHRL202469.5 69.469.368.8 69.068.669.2 68.968.969.0 68.868.4NRCH202472.9 74.574.467.9 70.969.563.0 63.665.157.7 58.263.9RSHNL202571.8 72.272.569.2 69.570.566.5 67.567.964.4 65.066.0NACDOurs76.5 76.877.176.4 76.876.975.7 76.276.374.3 74.675.3DJSRH201946.7 49.552.146.7 49.552.146.7 49.552.146.7 49.552.1DGCPN202160.2 62.464.060.2 62.464.060.2 62.464.060.2 62.464.0PIP202157.3 59.159.957.3 59.159.957.3 59.159.957.3 59.159.9CIRH202257.2 59.360.457.2 59.360.457.2 59.360.457.2 59.360.4UCCH202362.3 63.463.962.3 63.463.962.3 63.463.962.3 63.463.9NUSCMMQ202257.7 57.758.352.5 52.552.744.8 44.244.136.9 36.436.8MIAN202363.5 63.664.158.9 60.261.257.4 58.159.257.1 56.558.6LtCMH202357.0 58.059.451.7 52.553.250.6 49.549.545.3 45.546.6DHRL202461.0 61.060.860.3 60.258.958.7 59.257.857.7 58.757.4NRCH202467.9 68.669.367.4 68.368.467.0 67.768.066.6 67.367.6RSHNL202559.3 59.760.357.8 57.757.555.5 55.555.754.4 54.053.0NACDOurs68.2 69.470.368.1 69.470.267.9 69.069.667.4 68.769.3DJSRH201951.6 54.157.051.6 54.157.051.6 54.157.051.6 54.157.0DGCPN202163.0 63.564.363.0 63.564.363.0 63.564.363.0 63.564.3PIP202155.7 57.858.255.7 57.858.255.7 57.858.255.7 57.858.2CIRH202263.0 63.564.263.0 63.564.263.0 63.564.263.0 63.564.2UCCH202360.4 61.461.860.4 61.461.860.4 61.461.860.4 61.461.8COCOCMMQ202243.9 44.144.639.8 39.840.235.9 35.535.533.7 33.733.7MIAN202361.0 63.864.860.8 62.963.659.2 60.260.557.3 59.458.7LtCMH202358.1 60.562.156.3 58.960.454.7 56.357.952.3 54.255.3DHRL202433.4 34.561.933.3 43.660.433.2 43.261.535.2 60.659.8NRCH202465.9 67.367.865.6 66.967.364.9 66.867.163.2 65.366.2RSHNL202560.7 60.360.261.1 61.561.759.9 59.961.760.7 59.160.3NACDOurs66.7 68.468.767.2 68.469.167.1 68.569.066.5 68.368.8"
+    },
+    {
+      "figure_label": "2",
+      "figure_type": "table",
+      "figure_id": "tab_1",
+      "figure_caption": "The ablation study results on NUS and COCO datasets with 128 bits and across various redundant rates. The highest scores are presented in bold.",
+      "figure_data": "MethodNUSCOCO1.01.52.02.51.01.52.02.5only Lnacr34.333.533.336.033.333.333.333.3only L crch63.363.063.163.264.964.965.665.7NACD w/o CM strategy69.269.169.269.067.266.967.167.1NACD with t k remains 0.570.069.569.368.967.968.368.368.0NACD w/o Lquant69.069.068.468.168.067.967.967.8NACD w/o warm-up69.369.268.668.468.068.168.268.1The full NACD70.370.270.269.668.769.169.068.8"
+    },
+    {
+      "figure_label": "3",
+      "figure_type": "table",
+      "figure_id": "tab_2",
+      "figure_caption": "Data split and basic information for Flickr, NUS, and COCO in our experiments.Dataset Test (query) Database Train Average length of GTs Classes",
+      "figure_data": "Flickr2,00018,01510,0003.7824NUS2,100188,32110,5002.0921COCO5,000117,21810,0002.7680"
+    },
+    {
+      "figure_label": "4",
+      "figure_type": "table",
+      "figure_id": "tab_3",
+      "figure_caption": "The performance comparison in terms of average MAP scores (%) of I2T and T2I tasks under different redundant rates and various bit lengths on the MIRFlickr-25K(Flickr), NUS-WIDE(NUS), and MS-COCO(COCO) datasets. The highest and second highest MAP scores among all methods are shown in bold and underline respectively.",
+      "figure_data": "DatasetMethodYear1.01.52.02.58bits 16bits 8bits 16bits 8bits 16bits 8bits 16bitsDJSRH201961.361.461.361.461.361.461.361.4DGCPN202169.067.969.067.969.067.969.067.9PIP202166.967.466.967.466.967.466.967.4CIRH202265.666.865.666.865.666.865.666.8UCCH202367.570.167.570.167.570.167.570.1Flickr"
+    },
+    {
+      "figure_label": "1",
+      "figure_type": "figure",
+      "figure_id": "fig_2",
+      "figure_caption": "Algorithm 11Optimization Algorithm for NACD Require: The redundant annotations training set D, the code length L, the network N = {f 1 (•, Θ 1 ), f 2 (•, Θ 2 )}, the learnable matrix W 1 , W 2 , the maximal epoch number T max , and the warm-up epoch number T warm ; 1: Randomly initialize network parameters {Θ i , W i } 2 i=1 ; 2: Use part of the multi-partial labels of each sample as the initial state of instance confidence, and set the threshold for each class to 0.5. 3: for epoch = 1 to T max do 4: for D n in mini-batches sampled from D do 5: Compute L f inal by Eq. (11); Network parameters {Θ i , W i } 2 i=1 .",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "",
+      "figure_type": "figure",
+      "figure_id": "fig_3",
+      "figure_caption": "(3) and Eq. (11), we conduct parameter analysis experiments on the Flickr and NUS datasets under different redundant rates. The results are illustrated in Fig.6. Specifically, for the Flickr dataset, the model achieves its peak performance when λ is within [0.1, 0.3], α within [0.1, 0.5], and β within [0.5, 1]. This indicates that relatively balanced tuning of these parameters is crucial to optimize the model's performance on this dataset. Similarly, for the NUS dataset, the model exhibits optimal performance when λ is within [0.05, 0.5], α within [0.3, 1], and β within [0.5, 1]. These findings highlight the necessity of dataset-specific parameter tuning to maximize model performance. 0 0.01 0.05 0.1 0.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "6",
+      "figure_type": "figure",
+      "figure_id": "fig_4",
+      "figure_caption": "Figure 6 :6The performance of NACD in terms of average MAP scores versus different values of λ , β and α on the Flickr and NUS datasets using 128 bits.",
+      "figure_data": ""
+    }
+  ],
+  "formulas": [
+    {
+      "formula_id": "formula_0",
+      "formula_text": "p j ← γp j + (1 -γ) 1 2 2 m=1 z m j • y j ,(1)",
+      "formula_coordinates": [
+        4.0,
+        233.91,
+        695.13,
+        270.76,
+        30.2
+      ]
+    },
+    {
+      "formula_id": "formula_1",
+      "formula_text": "q j = c∈Nj s jc p c c ′ ∈Nj s jc ′ , where s jc = 1 2 s 1 jc + s 2 jc ,(2)",
+      "formula_coordinates": [
+        5.0,
+        198.69,
+        153.22,
+        305.98,
+        26.82
+      ]
+    },
+    {
+      "formula_id": "formula_2",
+      "formula_text": "p j ← λq j + (1 -λ)p j ,(3)",
+      "formula_coordinates": [
+        5.0,
+        258.98,
+        238.67,
+        245.69,
+        9.65
+      ]
+    },
+    {
+      "formula_id": "formula_3",
+      "formula_text": "L nacr = - 1 2N 2 m=1 N j=1 K k=1 p jk log z m jk + (1 -p jk ) log 1 -z m jk ,(4)",
+      "formula_coordinates": [
+        5.0,
+        163.21,
+        284.88,
+        341.46,
+        30.55
+      ]
+    },
+    {
+      "formula_id": "formula_4",
+      "formula_text": "t k = 1 N k N j=1 p jk ,(5)",
+      "formula_coordinates": [
+        5.0,
+        270.41,
+        495.75,
+        234.25,
+        30.32
+      ]
+    },
+    {
+      "formula_id": "formula_5",
+      "formula_text": "ŷjk = 1, if p jk ≥ t k 0, otherwise ,(6)",
+      "formula_coordinates": [
+        5.0,
+        255.91,
+        598.27,
+        248.76,
+        22.05
+      ]
+    },
+    {
+      "formula_id": "formula_6",
+      "formula_text": "T ij = ŷi ∩ ŷj ŷi ∪ ŷj ,(7)",
+      "formula_coordinates": [
+        5.0,
+        276.18,
+        671.34,
+        228.48,
+        22.31
+      ]
+    },
+    {
+      "formula_id": "formula_7",
+      "formula_text": "N * ij = S * ij , if S * ij ≥ S ii -δ S * ij -ξ, otherwise ,(8)",
+      "formula_coordinates": [
+        6.0,
+        226.79,
+        149.33,
+        277.88,
+        25.44
+      ]
+    },
+    {
+      "formula_id": "formula_8",
+      "formula_text": "S 12 ij = h 1 i • h 2 j , S 21 ij = h 2 i •h 1 j .",
+      "formula_coordinates": [
+        6.0,
+        108.0,
+        182.59,
+        397.25,
+        25.38
+      ]
+    },
+    {
+      "formula_id": "formula_9",
+      "formula_text": "L crch = 1 n 2 n i=1 n j̸ =i I[T ij = 0] • * exp N * ij + I[T ij > 0] • exp(-S ij -T ij ) - 1 n n i=1 S ii ,(9)",
+      "formula_coordinates": [
+        6.0,
+        115.31,
+        225.39,
+        389.36,
+        41.46
+      ]
+    },
+    {
+      "formula_id": "formula_10",
+      "formula_text": "L quant = 1 n • L 2 m=1 n j=1 L l=1 h m jl -sign(h m jl ) ,(10)",
+      "formula_coordinates": [
+        6.0,
+        209.38,
+        469.36,
+        295.3,
+        30.55
+      ]
+    },
+    {
+      "formula_id": "formula_11",
+      "formula_text": "L = L nacr + αL crch + βL quant ,(11)",
+      "formula_coordinates": [
+        6.0,
+        238.38,
+        571.84,
+        266.29,
+        9.65
+      ]
+    }
+  ],
+  "doi": "",
+  "source_paper": {
+    "title": "Neighbor-aware Contrastive Disambiguation for Cross-Modal Hashing with Redundant Annotations",
+    "openreview_url": "https://openreview.net/forum?id=Bi1udlTjMb",
+    "openreview_id": "Bi1udlTjMb",
+    "venue": "NeurIPS",
+    "year": 2025
+  }
+}

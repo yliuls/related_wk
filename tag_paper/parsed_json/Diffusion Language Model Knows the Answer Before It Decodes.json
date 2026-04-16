@@ -1,0 +1,820 @@
+{
+  "title": "DIFFUSION LANGUAGE MODELS KNOW THE ANSWER BEFORE DECODING",
+  "authors": "Pengxiang Li; Yefan Zhou; Muhtar; Lu Yin; Shilin Yan; Li Shen; Soroush Vosoughi; Shiwei Liu",
+  "pub_date": "",
+  "abstract": "Diffusion language models (DLMs) have recently emerged as an alternative to autoregressive approaches, offering parallel sequence generation and flexible token orders. However, their inference remains slower than that of autoregressive models, primarily due to the cost of bidirectional attention and the large number of refinement steps required for high-quality outputs. In this work, we highlight and leverage an overlooked property of DLMs-early answer convergence: in many cases, the correct answer can be internally identified by half steps before the final decoding step, under both semi-autoregressive and random remasking schedules. For example, on GSM8K and MMLU, up to 97% and 99% of instances, respectively, can be decoded correctly using only half of the refinement steps. Building on this observation, we introduce Prophet, a training-free fast decoding paradigm that enables early commit decoding. Specifically, Prophet dynamically decides whether to continue refinement or to go \"all-in\" (i.e. decode all remaining tokens in one step), using the confidence gap between the top-2 prediction candidates as the criterion. It integrates seamlessly into existing DLM implementations, incurs negligible overhead, and requires no additional training. Empirical evaluations on LLaDA-8B and Dream-7B across multiple tasks show that Prophet reduces the number of decoding steps by up to 3.4× while preserving high generation quality, and yields additional speedups when combined with existing acceleration methods. These results recast DLM decoding as a problem of when to stop sampling, and demonstrate that early answer convergence provides a simple yet powerful mechanism for accelerating DLMs on reasoning, code, and planning tasks with identifiable answer regions. Our code is available at https://github.com/pixeli99/Prophet.",
+  "sections": [
+    {
+      "heading": "INTRODUCTION",
+      "text": "Along with the rapid evolution of diffusion models in various domains (Ho et al., 2020;Nichol & Dhariwal, 2021;Ramesh et al., 2021;Saharia et al., 2022;Jing et al., 2022), Diffusion language models (DLMs) have emerged as a compelling and competitively efficient alternative to autoregressive (AR) models for sequence generation (Austin et al., 2021a;Lou et al., 2023;Shi et al., 2024;Sahoo et al., 2024;Nie et al., 2025;Gong et al., 2024;Ye et al., 2025). Primary strengths of DLMs over AR models include, but are not limited to, efficient parallel decoding and flexible generation orders. More specifically, DLMs decode all tokens in parallel through iterative denoising and remasking steps. The remaining tokens are typically refined with low-confidence predictions over successive rounds (Nie et al., 2025).\nDespite the potential speedup of DLMs, the inference speed of DLMs is slower than that of AR models in practice, due to the lack of KV cache mechanisms and the significant performance degradation associated with fast parallel decoding (Israel et al., 2025a). Recent efforts have proposed excellent algorithms to enable the KV cache (Ma et al., 2025a;Liu et al., 2025a;Wu et al., 2025) and improve the performance of parallel decoding (Wu et al., 2025;Wei et al., 2025a;Hu et al., 2025).\nIn this paper, we aim to accelerate the inference of DLMs from a different perspective, motivated by an overlooked yet powerful phenomenon of DLMs-early answer convergence. Through extensive analysis, we observed that: a strikingly high proportion of samples can be correctly decoded during the early phase of decoding for both semi-autoregressive remasking and random remasking. This trend becomes more significant for random remasking. For example, on GSM8K and MMLU, up to 97% and 99% of instances, respectively, can be decoded correctly using only half of the refinement steps.\nMotivated by this finding, we introduce Prophet, a training-free fast decoding strategy designed to capitalize on early answer convergence. Prophet continuously monitors the confidence gap between the top-2 answer candidates throughout the decoding trajectory, and opportunistically decides whether it is safe to decode all remaining tokens at once. By doing so, Prophet achieves substantial inference speedup (up to 3.4×) while maintaining high generation quality. Our contributions are threefold:\n• Empirical observations of early answer convergence: We demonstrate that a strikingly high proportion of samples (up to 99%) can be correctly decoded during the early phase of decoding for both semi-autoregressive remasking and random remasking. This underscores a fundamental redundancy in conventional full-length slow decoding.\n• A fast decoding paradigm enabling early commit decoding: We propose Prophet, which evaluates at each step whether the remaining answer is accurate enough to be finalized immediately, which we call Early Commit Decoding. We find that the confidence gap between the top-2 answer candidates serves as an effective metric to determine the right time for early commit decoding. Using this metric, Prophet dynamically decides between continued refinement and immediate answer emission.\n• Substantial speedup gains with high-quality generation: Experiments across diverse reasoning, code, and planning benchmarks with identifiable answer regions reveal that Prophet delivers up to 3.4× reduction in decoding steps. Crucially, this acceleration incurs negligible degradation in accuracy-affirming that early commit decoding is not just computationally efficient but also semantically reliable for DLMs.\n2 RELATED WORK",
+      "publication_ref": [
+        "b17",
+        "b31",
+        "b34",
+        "b36",
+        "b23",
+        "b28",
+        "b39",
+        "b37",
+        "b32",
+        "b15",
+        "b50",
+        "b32",
+        "b47",
+        "b47",
+        "b19"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "DIFFUSION LARGE LANGUAGE MODEL",
+      "text": "The idea of adapting diffusion processes to discrete domains traces back to the pioneering works of Sohl-Dickstein et al. (2015); Hoogeboom et al. (2021). A general probabilistic framework was later developed in D3PM (Austin et al., 2021a), which modeled the forward process as a discretestate Markov chain progressively adding noise to the clean input sequence over time steps. The reverse process is parameterized to predict the clean text sequence based on the current noisy input by maximizing the Evidence Lower Bound (ELBO). This perspective was subsequently extended to the continuous-time setting. Campbell et al. (2022) reinterpreted the discrete chain within a continuoustime Markov chain (CTMC) formulation. An alternative line of work, SEDD (Lou et al., 2023), focused on directly estimating likelihood ratios and introduced a denoising score entropy criterion for training. Recent analyses in MDLM (Shi et al., 2024;Sahoo et al., 2024;Zheng et al., 2024) and RADD (Ou et al., 2024) demonstrate that multiple parameterizations of MDMs are in fact equivalent.\nMotivated by these groundbreaking breakthroughs, practitioners have successfully built productlevel DLMs. Notable examples include commercial releases such as Mercury (Labs et al., 2025), Gemini Diffusion (DeepMind, 2025), and Seed Diffusion (Song et al., 2025b), as well as open-source implementations including LLaDA (Nie et al., 2025) and Dream (Ye et al., 2025). However, DLMs face an efficiency-accuracy tradeoff that limits their practical advantages. While DLMs can theoretically decode multiple tokens per denoising step, increasing the number of simultaneously decoded tokens results in degraded quality. Conversely, decoding a limited number of tokens per denoising step leads to high inference latency compared to AR models, as DLMs cannot naively leverage key-value (KV) caching or other advanced optimization techniques due to their bidirectional nature.",
+      "publication_ref": [
+        "b40",
+        "b18",
+        "b6",
+        "b28",
+        "b39",
+        "b37",
+        "b52",
+        "b33",
+        "b24",
+        "b32",
+        "b50"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "ACCELERATION METHODS FOR DIFFUSION LANGUAGE MODELS",
+      "text": "Recent efforts to accelerate DLM inference while maintaining quality span several directions.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "KV Cache optimization.",
+      "text": "One line of work exploits the high similarity between hidden states across consecutive denoising steps to enable approximate caching (Ma et al., 2025b;Liu et al., 2025b;Hu et al., 2025). A related strategy restructures the denoising process in a semi-autoregressive or blockautoregressive manner, caching states from previous context or blocks, optionally with periodic cache refreshing (Wu et al., 2026;Arriola et al., 2025;Wang et al., 2025b;Song et al., 2025a).",
+      "publication_ref": [
+        "b19",
+        "b48",
+        "b1"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Token pruning.",
+      "text": "A second direction reduces attention cost by pruning redundant tokens (Xiao et al., 2026;Chen et al., 2026a). For example, DPad (Chen et al., 2026a) is a training-free method that treats suffix tokens as a computational scratchpad and prunes distant ones prior to computation.",
+      "publication_ref": [
+        "b49"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Sampling and decoding optimization.",
+      "text": "A third direction optimizes the sampling or decoding process, either by increasing the number of tokens decoded per step or by reducing the total number of denoising steps. Training-based approaches include reinforcement learning (Song et al., 2025b) and distillation (Wang et al., 2025a;Chen et al., 2026b). Our work is most closely related to the training-free approaches in this direction. Fast-dLLM (Wu et al., 2026) combines approximate block-wise KV caching with confidence-aware parallel decoding that commits tokens exceeding a confidence threshold. SlowFast (Wei et al., 2025a) proposes a dynamic scheme that alternates between a cautious exploratory phase and an accelerated phase guided by three principles: certainty, convergence, and position. WINO (Song et al., 2025a) introduces a revokable draft-and-verify process that aggressively drafts multiple tokens and remasks low-confidence ones via an auxiliary shadow block. Other relevant work studies better criteria and metrics for inference-time decisions, including analyses of denoising dynamics (Wei et al., 2025b;Huang & Tang, 2025), alignment with small autoregressive models (Israel et al., 2025b), and speculative decoding using the DLM itself as a draft model (Agrawal et al., 2025).\nPositioning of our study. The primary contribution of this work is to identify, formalize, and validate Early Answer Convergence, a fundamental property of the DLM denoising trajectory. The proposed method Prophet operationalizes this property by treating decoding as an optimal stopping problem over the answer region, deciding when to terminate further refinement based on answer confidence. Unlike methods such as Fast-dLLM that optimize the cost per step, Prophet reduces the total number of steps required. The two approaches are therefore orthogonal and can be combined for multiplicative speedups, as supported empirically in later sections. We note that Early Answer Convergence has been independently discovered in concurrent work (Wang et al., 2025a); however, their focus is on averaging predictions across time steps to improve accuracy, whereas we develop an early commit decoding method that reduces computational cost while maintaining quality.",
+      "publication_ref": [
+        "b48",
+        "b20",
+        "b0"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "PRELIMINARY",
+      "text": "",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "BACKGROUND ON DIFFUSION LANGUAGE MODELS",
+      "text": "Concretely, let x 0 ∼ p data (x 0 ) be a clean input sequence. At an intermediate noise level t ∈ [0, T ], we denote by x t the corrupted version obtained after applying a masking procedure to a subset of its tokens.\nForward process. The corruption mechanism can be expressed as a Markov chain\nq(x 1:T | x 0 ) = T t=1 q(x t | x t-1 ),(1)\nwhich gradually transforms the original sample x 0 into a maximally degraded representation x T . At each step, additional noise is injected, so that the sequence becomes progressively more masked as t increases.\nWhile the forward process in Eq.( 1) is straightforward, its exact reversal is typically inefficient because it unmasks only one position per step (Campbell et al., 2022;Lou et al., 2023). To accelerate generation, a common remedy is to use the τ -leaping approximation (Gillespie, 2001), which enables multiple masked positions to be recovered simultaneously. Concretely, transitioning from corruption level t to an earlier level s < t can be approximated as\nq s|t = n i=1 q s|t (x i s | x t ), q s|t (x i s | x t ) =        1, x i t ̸ = [MASK], x i s = x i t , s t , x i t = [MASK], x i s = [MASK], t-s t q 0|t (x i s | x t ), x i t = [MASK], x i s ̸ = [MASK].(2)\nHere, q 0|t (x i s | x t ) is a predictive distribution over the vocabulary, supplied by the model itself, whenever a masked location is to be unmasked. In conditional generation (e.g., producing a response x 0 given a prompt p), this predictive distribution additionally depends on p, i.e., q 0|t (x i s | x t , p).",
+      "publication_ref": [
+        "b6",
+        "b28"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Reverse generation.",
+      "text": "To synthesize text, one needs to approximate the reverse dynamics. The generative model is parameterized as\np θ (x 0:T ) = p θ (x T ) T t=1 p θ (x t-1 | x t ) = T t=1 q(x t-1 | x 0 ) p θ (x 0 | x t ).\n(\nThis reverse process naturally decomposes into two complementary components. (1) Prediction step. The model p θ (x 0 | x t ) attempts to reconstruct a clean sequence from the corrupted input at level t.\nWe denote the predicted sequence after this step by x t 0 , i.e.\nx t 0 = p θ (x 0 | x t ).\n(2) Remasking step. Once a candidate reconstruction x t 0 is obtained, the forward noising mechanism is reapplied in order to produce a partially corrupted sequence x t-1 that is less noisy than x t . This \"remasking\" can be implemented in various ways, such as masking tokens uniformly at random or selectively masking low-confidence positions (Nie et al., 2025). Through the interplay of these two steps-prediction and remasking-the model iteratively refines an initially noisy sequence into a coherent text output.",
+      "publication_ref": [
+        "b32"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "EARLY ANSWER CONVERGENCY",
+      "text": "In this section, we investigate the early emergence of correct answers in DLMs. We conduct a comprehensive analysis using LLaDA-8B (Nie et al., 2025) on two widely used benchmarks: GSM8K (Cobbe et al., 2021) and MMLU (Hendrycks et al., 2021). Specifically, we examine the decoding dynamics, that is, how the top-1 predicted token evolves across positions at each decoding step, and report the percentage of the full decoding process at which the top-1 predicted tokens first match the ground truth answer tokens. In this study, we only consider samples where the final output contains the ground truth answer.\nFor low confidence remasking, we set Answer length at 256 and Block length at 32 for GSM8K, and Answer length at 128 and Block length to 128 for MMLU. For random remasking, we set Answer length at 256 and Block length at 256 for GSM8K, and Answer length at 128 and Block length at 128 for MMLU. We present the results of GSM8K in Figure 1, and the MMLU results in Appendix B.",
+      "publication_ref": [
+        "b32",
+        "b11",
+        "b16"
+      ],
+      "figure_ref": [
+        "fig_0"
+      ],
+      "table_ref": []
+    },
+    {
+      "heading": "I. A high proportion of samples can be correctly decoded during the early phase of decoding.",
+      "text": "Figure 1a demonstrates that when remasking with the low-confidence strategy, 24.2% samples are already correctly predicted in the first half steps, and 7.9% samples can be correctly decoded in the first 25% steps. These two numbers will be further largely boosted to 97.2% and 88.5%, when shifted to random remasking as shown in Figure 1c. II. Our suffix prompt further amplifies the early emergence of correct answers. Adding the suffix prompt \"Answer:\" significantly improves early decoding. With low confidence remasking, the proportion of correct samples emerging by the 25% step rises from 7.9% to 59.7%, and by the 50% step from 24.2% to 75.8% (Figure 1b). Similarly, under random remasking, the 25% step proportion increases from 88.5% to 94.6%. We clarify that the suffix prompt acts as a semantic anchor rather than introducing oracle information. Since DLMs generate bidirectionally, this anchor explicitly conditions the model to locate the solution in the designated region, reducing the search space and accelerating convergence.\nIII. Decoding dynamics of chain-of-thought tokens. We further examine the decoding dynamics of chain-of-thought tokens in addition to answer tokens, as shown in Figure 2. First, most nonanswer tokens fluctuate frequently before being finalized. Second, answer tokens change far less often and tend to stabilize earlier, remaining unchanged for the rest of the decoding process.",
+      "publication_ref": [],
+      "figure_ref": [
+        "fig_0",
+        "fig_0",
+        "fig_0"
+      ],
+      "table_ref": []
+    },
+    {
+      "heading": "METHODOLOGY",
+      "text": "Based on the above findings, we introduce Prophet, a training-free fast decoding algorithm designed to accelerate the generation phase of DLMs. Prophet by committing to all remaining tokens in one shot and predicting answers as soon as the model's predictions have stabilized, which we call Early Commit Decoding. Unlike conventional fixed-step decoding, Prophet actively monitors the model's certainty at each step to make an informed, on-the-fly decision about when to finalize the generation.\nConfidence Gap as a Convergence Metric. The core mechanism of Prophet is the Confidence Gap, a simple yet effective metric for quantifying the model's conviction for a given token. Let N gen be the total generation length. In semi-autoregressive decoding, tokens are generated in blocks of size N block . Prophet focuses on monitoring the Answer Region A of length N ans within the current generation window. At any decoding step t, the DLM produces a logit matrix L t ∈ R N ×|V| , where N is the sequence length and |V| is the vocabulary size. For each position i, we identify the highest logit value, L (1) t,i , and the second-highest, L\n(2) t,i . The confidence gap g t,i is defined as their difference:\ng t,i = L (1) t,i -L (2) t,i .(4)\nThis value serves as a robust indicator of predictive certainty. A large probability gap signals that the prediction has likely converged, with the top-ranked token clearly outweighing all others. We calculate the average confidence gap ḡt exclusively over the answer region A (i.e., ḡt = 1 |A| i∈A g t,i ), rather than the entire sequence, to maximize sensitivity.\nEarly Commit Decoding. The decision of when to terminate the decoding loop can be framed as an optimal stopping problem. At each step, we must balance two competing costs: the computa-",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "No Change",
+      "text": "Token Change Token Decoded Correct Answer Token (a) Standard Full-Step Decoding\nt=0 t=2 t=4 t=6 t=10 [MASK] [MASK] [MASK] 3 sprints [MASK] 3×3=9, 9×60=[MASK] 3×3=9, 9×60=540 540 Chain-of-Thought Answer Tokens Output: 540 (b) Prophet with Early Commit Decoding [MASK] [MASK] [MASK] 3 sprints [MASK] 3×3=9, 9×60=[MASK] 3×3=9, 9×60=540 tional cost of performing additional refinement iterations versus the risk of error from a premature and potentially incorrect decision. The computational cost is a function of the remaining steps, whereas the risk of error is inversely correlated with the model's predictive certainty, for which the Confidence Gap serves as a robust proxy.\nProphet addresses this trade-off with an adaptive strategy that embodies a principle of time-varying risk aversion. Let denote p = (T max -t)/T max as the decoding progress, where T max is the total number of decoding steps, and τ (p) is the threshold for early commit decoding. In the early noisy stages of decoding (when progress p is small), the potential for significant improvement in prediction is high. Committing to an answer at this stage carries a high risk. Therefore, Prophet acts in a risk-averse manner, demanding an exceptionally high threshold (τ high ) to justify an early commit decoding, ensuring that such a decision is unequivocally safe. As the decoding process matures (as p increases), two things happen: the model's predictions stabilize, and the potential computational savings from stopping early diminish. Consequently, the cost of performing one more step becomes negligible compared to the benefit of finalizing the answer. Prophet thus becomes more risk-tolerant, requiring a progressively smaller threshold (τ low ) to confirm convergence.\nThis dynamic risk-aversion policy is instantiated through our staged threshold function, which maps the abstract trade-off between inference speed and generation certainty onto a concrete decision rule:\nḡt ≥ τ (p), where τ (p) =    τ high if p < 0.33 τ mid if 0.33 ≤ p < 0.67 τ low if p ≥ 0.67(5)\nOnce the exit condition is satisfied at step t * , the iterative loop is terminated. The final output is then constructed in a single parallel operation by filling any remaining [MASK] tokens with the argmax of the current logits L t * .",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Algorithm Summary.",
+      "text": "The complete Prophet decoding procedure is outlined in Algorithm 1. Integration of the confidence gap check adds negligible computational overhead to the standard DLM decoding loop. Prophet is model-agnostic, requires no retraining, and can be readily implemented as a wrapper around existing DLM inference code.\nAlgorithm 1 Prophet: Early Commit Decoding for Diffusion Language Models\n1: Input: Model M θ , prompt x prompt , max steps T max , total generation length N gen 2: Input: Threshold function τ (•), answer region A (where |A| = N ans ) 3: Initialize sequence x T ← concat(x prompt , [MASK] Ngen ) 4: Let M t be the set of masked positions at step t. 5: for t = T max , T max -1, . . . , 1 do 6: Compute logits: L t = M θ (x t ) 7: ▷ Prophet's Early-Commit-Decoding Check 8: Calculate average confidence gap ḡt over positions A using Eq. 4. 9: Calculate progress: p ← (T max -t)/T max 10: if ḡt ≥ τ (p) then ▷ Check condition from Eq. 5 11:\nx0 ← argmax(L t , dim = -1)\n12:\nx 0 ← x t .\nFill positions in M t with tokens from x0 .\n13: Return x 0 ▷ Terminate and finalize 14: end if 15: ▷ Standard DLM Refinement Step 16: Determine tokens to unmask U t ⊆ M t via a remasking strategy. 17: x0 ← argmax(L t , dim = -1) 18: Update x t-1 ← x t , replacing tokens at positions U t with those from x0 . 19: end for 20: Return x 0 ▷ Return result after full iterations if no early commit decoding",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "EXPERIMENTS",
+      "text": "We evaluate Prophet on DLMs to validate two key hypotheses: first, that Prophet can preserve the performance of full-budget decoding while using substantially fewer denoising steps; second, that our adaptive approach provides more reliable acceleration than naive static baselines. We demonstrate that Prophet achieves notable computational savings with negligible quality degradation through comprehensive experiments across diverse benchmarks.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "EXPERIMENTAL SETUP",
+      "text": "We conduct experiments on two state-of-the-art diffusion language models: LLaDA-8B (Nie et al., 2025) and Dream-7B (Ye et al., 2025). For each model, we compare two decoding strategies: Full uses the standard diffusion decoding with the complete step budget of T max and Prophet employs early commit decoding with dynamic threshold scheduling. The threshold parameters are set to τ high = 7.5, τ mid = 5.0, and τ low = 2.5, with transitions occurring at 33% and 67% of the decoding progress. These hyperparameters were selected through preliminary validation experiments.\nOur evaluation spans four capability domains to comprehensively assess Prophet's effectiveness. For general reasoning, we use MMLU (Hendrycks et al., 2021), ARC-Challenge (Clark et al., 2018), HellaSwag (Zellers et al., 2019), TruthfulQA (Lin et al., 2021), WinoGrande (Sakaguchi et al., 2021), and PIQA (Bisk et al., 2020). Mathematical and scientific reasoning are evaluated through GSM8K (Cobbe et al., 2021) and GPQA (Rein et al., 2023). For code generation, we employ HumanEval (Chen et al., 2021) and MBPP (Austin et al., 2021b). Finally, planning capabilities are assessed using Countdown and Sudoku tasks (Gong et al., 2024). We follow the prompt in simple-evals for LLaDA and Dream, making the model reason step by step. Concretely, we set the generation length L to 128 for general tasks, to 256 for GSM8K and GPQA, and to 512 for the code benchmarks. Unless otherwise noted, all baselines use a number of iterative steps equal to the specified generation length. All experiments employ greedy decoding to ensure deterministic and reproducible results.",
+      "publication_ref": [
+        "b32",
+        "b50",
+        "b16",
+        "b10",
+        "b51",
+        "b25",
+        "b38",
+        "b5",
+        "b11",
+        "b35",
+        "b7",
+        "b15"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "MAIN RESULTS AND ANALYSIS",
+      "text": "The results of our experiments are summarized in Table 1. Across the general reasoning tasks, Prophet demonstrates its ability to match or even exceed the performance of the full baseline. For example, using LLaDA-8B, Prophet achieves 54.0% on MMLU and 83.5% on ARC-C, both of which are statistically on par with the full step decoding. Interestingly, on HellaSwag, Prophet (70.9%) not only improves upon the full baseline (68.7%) but also the half baseline (70.5%), suggesting that early commit decoding can prevent the model from corrupting an already correct prediction in later, noisy refinement steps. Similarly, Dream-7B maintains competitive performance across benchmarks, with Prophet achieving 66.1% on MMLU compared to the full model's 67.6%-a minimal drop of 1.5% while delivering 2.47× speedup.\nProphet continues to prove its reliability in more complex reasoning tasks, including mathematics, science, and code generation. For the GSM8K dataset, Prophet with LLaDA-8B obtains an accuracy of 77.9%, outperforming the baseline's 77.1%. This reliability also extends to code generation benchmarks. For instance, on HumanEval, Prophet perfectly matches the full baseline's score with LLaDA-8B (30.5%) and even slightly improves it with Dream-7B (55.5% vs. 54.9%). Notably, the acceleration on these intricate tasks (e.g., 1.20× on HumanEval) is more conservative compared to general reasoning. This demonstrates Prophet's adaptive nature: it dynamically allocates more denoising steps when a task demands further refinement, thereby preserving accuracy on complex problems. This reinforces Prophet's role as a \"safe\" acceleration method that avoids the pitfalls of premature, static termination.\nIn summary, our empirical results strongly support the central hypothesis of this work: DLMs often determine the correct answer long before the final decoding step. Prophet successfully capitalizes on this phenomenon by dynamically monitoring the model's predictive confidence. It terminates the iterative refinement process as soon as the answer has stabilized, thereby achieving significant computational savings with negligible, and in some cases even positive, impact on task performance. This stands in stark contrast to static truncation methods, which risk cutting off the decoding process prematurely and harming accuracy. Prophet thus provides a robust and model-agnostic solution to accelerate DLM inference, enhancing its practicality for real-world deployment.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": [
+        "tab_0"
+      ]
+    },
+    {
+      "heading": "COMPARISON WITH OTHER ACCELERATION METHODS",
+      "text": "We compare Prophet with two DLM acceleration methods, demonstrating that Prophet is orthogonal to and compatible with both.\nComparison with distillation-based acceleration. We compare against Self-Distillation Through Time (Deschenaux & Gulcehre, 2025) (SDTT), a training-based method that reduces the number of inference steps. We implement a preliminary version of SDTT on LLaDA-8B-Instruct, distilling a standard 256-step teacher into a 128-step student model (2× acceleration) and evaluate on GSM8K. As shown in Table 2a, SDTT effectively maintains accuracy (76.9%) while halving inference steps. Prophet Prophet achieves a competitive 1.63× speedup with slightly higher accuracy (77.9%), without any retraining cost. Most importantly, our results demonstrate that Prophet and SDTT are orthogonal and complementary. Crucially, Prophet and SDTT are complementary: applying Prophet's early-exit strategy on top of the SDTT-distilled student (Row 4) yields a 3.21× speedup with negligible accuracy drop, demonstrating that distilled models retain the early answer convergence property that Prophet exploits.\nComparison with KV cache-based acceleration. We compare against Fast-dLLM (Wu et al., 2026), a training-free method that reduces per-step computation via approximate KV caching and parallel decoding. We apply Prophet's early-exit mechanism on top of Fast-dLLM using LLaDA-8B on GSM8K. As shown in Table 2b, while Fast-dLLM alone achieves a 6.82× speedup by reducing per-step cost, combining it with Prophet yields a 7.66× total speedup without quality degradation. This multiplicative effect arises because the two methods operate on orthogonal dimensions: Fast-dLLM reduces the cost per step, while Prophet reduces the total number of steps required.  Remasking strategy compatibility. Table 3b evaluates three off-the-shelf remasking heuristics (random, low-confidence, top-k margin). Prophet consistently outperforms their static counterparts, with the largest gain under random remasking (+2.8 points), aligning with our earlier observation that random schedules accentuate early answer convergence. The improvement persists under more informed heuristics (low-confidence: +1.4; top-k margin: +0.7), indicating that Prophet's stopping rule complements, rather than replaces, token-selection policies.",
+      "publication_ref": [
+        "b48"
+      ],
+      "figure_ref": [],
+      "table_ref": [
+        "tab_1",
+        "tab_2"
+      ]
+    },
+    {
+      "heading": "Granularity of semi-autoregressive refinement (block length).",
+      "text": "Table 4 shows that static block schedules are brittle: accuracy peaks around moderate blocks and collapses for large blocks (e.g., 59.9 at 64 and 33.1 at 128). Prophet markedly attenuates this brittleness, delivering consistent gains across the entire range, and especially at large blocks where over-aggressive parallel updates inject more noise. For instance, at block length 64 and 128, Prophet improves accuracy by +9.9 and +19.1 points, respectively. This robustness is a direct consequence of Prophet's time-varying risk-aversion: when coarse-grained updates raise uncertainty, the threshold schedule defers early commit; once predictions settle, Prophet exits promptly to avoid additional noisy revisions.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": [
+        "tab_3"
+      ]
+    },
+    {
+      "heading": "CONCLUSION",
+      "text": "In this work, we identified and leveraged a fundamental yet overlooked property of diffusion language models: early answer convergence. Our analysis revealed that up to 99% of instances can be correctly decoded using only half of the refinement steps, challenging the necessity of conventional full-length decoding. Building on this observation, we introduced Prophet, a training-free early commit decoding paradigm that dynamically monitors confidence gaps to determine optimal termination points. Experiments on LLaDA-8B and Dream-7B demonstrate that Prophet achieves a reduction of up to 3.4× reduction in decoding steps while maintaining generation quality. By recasting DLM decoding as an optimal stopping problem rather than a fixed-budget iteration, our work opens new avenues for efficient DLM inference in tasks with identifiable answer regions and suggests that early convergence is a core characteristic of how these models internally resolve uncertainty, across diverse tasks and settings. Figure 4: Distribution of early correct answer detection during decoding process. Histograms show when correct answers first emerge during diffusion decoding, measured as percentage of total decoding steps, using LLaDA 8B on MMLU. Red and orange dashed lines indicate 50% and 70% completion thresholds, with corresponding statistics showing substantial early convergence. Suffix prompting (b,d) dramatically accelerates convergence compared to standard prompting (a,c). This early convergence pattern demonstrates that correct answer tokens stabilize as top-1 candidates well before full decoding.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "B.2 QUALITATIVE ANALYSIS: DECODING TRAJECTORIES",
+      "text": "To validate that DLMs identify answers before reasoning chains are complete, we present real decoding trajectories in Table 5. In the \"Simple Arithmetic\" case, the model locks onto the answer \"3\" at only 50% of steps, while the intermediate calculation \"2/2 = 1\" is still masked. This confirms the efficacy of Prophet's early commit mechanism. Our observation is that DLMs often internally converge on the final result significantly earlier than they finalize the justification or Reasoning Chain. Therefore, when Prophet triggers an early commit, the answer tokens are already stable and correct. While the intermediate CoT region might retain some noise or lack the final polish of a full-step generation, we have not observed significant degradations in the fluency or grammatical correctness of the final output.\nTable 5: Qualitative Analysis: Decoding Dynamics. Visualization of the decoding trajectory for a simple arithmetic problem. Masked tokens are represented by MASK (note that sequences of consecutive masks are abbreviated for visual clarity). Crucially, even when the intermediate reasoning chain is incomplete, the model locks onto the correct final answer early in the process (highlighted in darker blue ). To find the total number of bolts , we need to add the amount of blue fiber and the amount of white fiber . The robe takes 2 bolts of blue fiber . It also takes half that much white fiber , so it takes 2 / 2 = 1 bolt of white fiber . To find the total number of bolts , we add the amount of blue fiber and the amount of white fiber : 2 ( blue fiber ) + 1 bolt ( white fiber ) = 3 bolts . Therefore , the robe takes a total of 3 bolts . Final Answer : The answer is 3",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "B.3 DISTRIBUTION OF INCORRECT ANSWERS",
+      "text": "We analyzed the decoding dynamics of incorrect samples. We conducted an additional analysis tracking the \"Last Change Step\" for samples that eventually resulted in incorrect answers on GSM8K. As illustrated in Figure 5, updates for incorrect answers are heavily right-skewed (occurring in the last 20% of steps). This indicates that when the model produces an incorrect answer, it is typically uncertain rather than overconfidently wrong. It continues to fluctuate and flip its prediction until the very end of the generation process. This behavior serves as a natural safety mechanism for Prophet. Since incorrect answers rarely exhibit early stability or high confidence, they fail to trigger the \"Early Commit\" criteria. Consequently, Prophet correctly forces the model to utilize the full step budget for these difficult cases, rather than exiting prematurely. This explains why our method achieves significant speedups (by catching the left-skewed correct answers) without compromising accuracy (by avoiding the unstable incorrect ones). C IMPLEMENTATION DETAILS C.1 ALGORITHM DESIGN",
+      "publication_ref": [],
+      "figure_ref": [
+        "fig_5"
+      ],
+      "table_ref": []
+    },
+    {
+      "heading": "Suffix prompt mechanism.",
+      "text": "The suffix prompt is inserted as a semantic anchor near the end of the generation window, followed by mask tokens reserved for the final answer. The resulting sequence structure is: [Question] [MASKs for Reasoning Chain] The answer is [MASKs for Final Result]. This mechanism accelerates convergence because diffusion models generate bidirectionally. Without an explicit cue, the model spends early denoising steps implicitly determining output format. The suffix prompt eliminates this ambiguity by conditioning the model to expect a solution in the designated region, allowing answer tokens to stabilize significantly earlier and enabling Prophet to trigger early exit sooner, as illustrated in Figure 1 and Figure 2.\nWe note that utilizing a suffix prompt does not constitute the use of oracle information. The answer region position is deterministically assigned by the input prompt rather than derived from groundtruth labels. We instruct the model where to place the answer, not what the answer is. Both Prophet and the baseline use identical suffix prompt configurations; the performance gains therefore stem from convergence detection rather than any structural advantage.",
+      "publication_ref": [],
+      "figure_ref": [
+        "fig_0"
+      ],
+      "table_ref": []
+    },
+    {
+      "heading": "Answer region determination.",
+      "text": "The answer region is defined based on the structural properties of each task:\n• Mathematical reasoning (e.g., GSM8K): The dataset provides a standard separator between the reasoning chain and the final result. We define the answer region as the tokens following this separator.\n• General reasoning (e.g., MMLU, ARC-C): These benchmarks consist of multiple-choice questions. The suffix prompt explicitly locates the position for the final prediction (e.g., \"A\" or \"B\"), and Prophet monitors the confidence gap over this single token.\n• Code generation (e.g., HumanEval): The answer region is defined as the generated function body, delimited by a pre-inserted code block separator (e.g., '''). The strict syntactic dependencies of code allow the model to converge on the correct program structure early, enabling safe acceleration without breaking syntax.\nRegarding answer region length, we acknowledge that this specific setting relies on task priors. For example, in GSM8K, the answer is typically a concise number, whereas more complex mathematical problems (like AIME) might require variable-length outputs. However, this is not a fundamental limitation; in more complex scenarios, the fixed window can be replaced by dynamic semantic extraction techniques (similar to Wang et al. (2025a)) to identify the answer span on the fly. We opted for a pre-defined region primarily for implementation simplicity and conciseness. Ultimately, our objective is to reveal and rigorously analyze the intrinsic phenomenon of Early Answer Convergence, not to compete with engineering-oriented SOTA acceleration frameworks by building a universally applicable tool.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "C.2 EVALUATION AND HYPERPARAMETER",
+      "text": "We re-implemented the evaluation of LLADA and DREAM on all reported datasets. Following standard practice, we generate and extract the final answer rather than comparing log probabilities in multiple-choice settings, which can slightly lower scores on some benchmarks when the model fails to produce a response in the expected format. Full experimental configurations are summarized in Table 6.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": [
+        "tab_4"
+      ]
+    },
+    {
+      "heading": "Confidence schedule design.",
+      "text": "Early commitment is governed by the three-stage confidence schedule defined in Eq. 5, designed around a principle of time-varying risk aversion. In early denoising steps, predictions are noisy, so we enforce a high threshold τ high to prevent premature commitment. As decoding progresses and the marginal gain of further computation decreases, we progressively lower the threshold to encourage earlier exit.\nHyperparameter robustness. We did not perform an extensive hyperparameter search. A light sweep on a small GSM8K validation set revealed that three uniform stages with the thresholds in Table 6 work consistently well across all tasks. The robustness of this fixed configuration suggests that the confidence gap is a model-agnostic metric that generalizes without sensitive per-task tuning.\nWe chose a staged schedule for its simplicity and ease of implementation. To verify that our results are not contingent on this specific functional form, we conduct an ablation comparing the staged schedule against a continuous linear decay τ (p) = 8.0 -4.5 × p covering the same threshold range [8.0, 3.5]. As shown in Table 7, the two schedules yield comparable accuracy and speedup, confirming that the observed gains stem from the inherent early convergence property of the model rather than from a carefully engineered controller. Continuous or learnable schedules remain a promising direction for future optimization. GSM8K L=256, T =256, B=32 (8.0, 5.0, 3.5) 33%, 67% GPQA L=256, T =256, B=32 (8.0, 5.0, 3.5) 33%, 67% HumanEval L=512, T =512, B=32 (7.5, 5.0, 4.5) 33%, 67% MBPP L=512, T =512, B=32 (7.5, 5.0, 4.5) 33%, 67% Sudoku L=24, T =24, B=24 (7.5, 5.0, 2.5) 33%, 67% Countdown L=32, T =32, B=32 (7.5, 5.0, 2.5) 33%, 67%",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": [
+        "tab_4",
+        "tab_5"
+      ]
+    }
+  ],
+  "references": [
+    {
+      "ref_id": "b0",
+      "title": "Multiplying diffusion llm acceleration via lossless speculative decoding",
+      "journal": "",
+      "year": "2025",
+      "authors": "Sudhanshu Agrawal; Risheek Garrepalli; Raghavv Goel; Mingu Lee; Christopher Lott; Fatih Porikli; Spiffy"
+    },
+    {
+      "ref_id": "b1",
+      "title": "Block diffusion: Interpolating between autoregressive and diffusion language models",
+      "journal": "",
+      "year": "2025",
+      "authors": "Marianne Arriola; Aaron Gokaslan; Justin T Chiu; Zhihan Yang; Zhixuan Qi; Jiaqi Han; Subham Sekhar Sahoo; Volodymyr Kuleshov"
+    },
+    {
+      "ref_id": "b2",
+      "title": "Structured denoising diffusion models in discrete state-spaces",
+      "journal": "Advances in neural information processing systems",
+      "year": "2021",
+      "authors": "Jacob Austin; Jonathan Daniel D Johnson; Daniel Ho; Rianne Tarlow; Van Den; Berg"
+    },
+    {
+      "ref_id": "b3",
+      "title": "Program synthesis with large language models",
+      "journal": "",
+      "year": "2021",
+      "authors": "Jacob Austin; Augustus Odena; Maxwell Nye; Maarten Bosma; Henryk Michalewski; David Dohan; Ellen Jiang; Carrie Cai; Michael Terry; Quoc Le"
+    },
+    {
+      "ref_id": "b4",
+      "title": "Judge decoding: Faster speculative sampling requires going beyond model alignment",
+      "journal": "",
+      "year": "",
+      "authors": "Gregor Bachmann; Sotiris Anagnostidis; Albert Pumarola; Markos Georgopoulos; Artsiom Sanakoyeu; Yuming Du; Edgar Schönfeld; Ali Thabet; Jonas K Kohler"
+    },
+    {
+      "ref_id": "b5",
+      "title": "Piqa: Reasoning about physical commonsense in natural language",
+      "journal": "",
+      "year": "2020",
+      "authors": "Yonatan Bisk; Rowan Zellers; Jianfeng Gao; Yejin Choi"
+    },
+    {
+      "ref_id": "b6",
+      "title": "A continuous time framework for discrete denoising models",
+      "journal": "Advances in Neural Information Processing Systems",
+      "year": "2022",
+      "authors": "Andrew Campbell; Joe Benton; Valentin De Bortoli; Thomas Rainforth; George Deligiannidis; Arnaud Doucet"
+    },
+    {
+      "ref_id": "b7",
+      "title": "Evaluating large language models trained on code",
+      "journal": "",
+      "year": "2021",
+      "authors": "Mark Chen; Jerry Tworek; Heewoo Jun; Qiming Yuan; Henrique Ponde De Oliveira Pinto; Jared Kaplan; Harri Edwards; Yuri Burda; Nicholas Joseph; Greg Brockman"
+    },
+    {
+      "ref_id": "b8",
+      "title": "DPad: Efficient diffusion language models with suffix dropout",
+      "journal": "",
+      "year": "2026",
+      "authors": "Xinhua Chen; Sitao Huang; Cong Guo; Chiyue Wei; Yintao He; Jianyi Zhang; Hai; Helen Li; Yiran Chen"
+    },
+    {
+      "ref_id": "b9",
+      "title": "Learnable parallel decoding for dLLMs",
+      "journal": "",
+      "year": "2026",
+      "authors": "Zigeng Chen; Gongfan Fang; Xinyin Ma; Ruonan Yu; Xinchao Wang"
+    },
+    {
+      "ref_id": "b10",
+      "title": "Think you have solved question answering? try arc, the ai2 reasoning challenge",
+      "journal": "",
+      "year": "2018",
+      "authors": "Peter Clark; Isaac Cowhey; Oren Etzioni; Tushar Khot; Ashish Sabharwal; Carissa Schoenick; Oyvind Tafjord"
+    },
+    {
+      "ref_id": "b11",
+      "title": "Training verifiers to solve math word problems",
+      "journal": "",
+      "year": "2021",
+      "authors": "Karl Cobbe; Vineet Kosaraju; Mohammad Bavarian; Mark Chen; Heewoo Jun; Lukasz Kaiser; Matthias Plappert; Jerry Tworek; Jacob Hilton; Reiichiro Nakano"
+    },
+    {
+      "ref_id": "b12",
+      "title": "Gemini-diffusion",
+      "journal": "",
+      "year": "2025",
+      "authors": "Google Deepmind"
+    },
+    {
+      "ref_id": "b13",
+      "title": "Beyond autoregression: Fast LLMs via self-distillation through time",
+      "journal": "",
+      "year": "2025",
+      "authors": "Justin Deschenaux; Caglar Gulcehre"
+    },
+    {
+      "ref_id": "b14",
+      "title": "Approximate accelerated stochastic simulation of chemically reacting systems",
+      "journal": "The Journal of chemical physics",
+      "year": "2001",
+      "authors": "Daniel T Gillespie"
+    },
+    {
+      "ref_id": "b15",
+      "title": "Scaling diffusion language models via adaptation from autoregressive models",
+      "journal": "",
+      "year": "2024",
+      "authors": "Shansan Gong; Shivam Agarwal; Yizhe Zhang; Jiacheng Ye; Lin Zheng; Mukai Li; Chenxin An; Peilin Zhao; Wei Bi; Jiawei Han"
+    },
+    {
+      "ref_id": "b16",
+      "title": "Measuring mathematical problem solving with the math dataset",
+      "journal": "",
+      "year": "2021",
+      "authors": "Dan Hendrycks; Collin Burns; Saurav Kadavath; Akul Arora; Steven Basart; Eric Tang; Dawn Song; Jacob Steinhardt"
+    },
+    {
+      "ref_id": "b17",
+      "title": "Denoising diffusion probabilistic models",
+      "journal": "",
+      "year": "2020",
+      "authors": "Jonathan Ho; Ajay Jain; Pieter Abbeel"
+    },
+    {
+      "ref_id": "b18",
+      "title": "Argmax flows and multinomial diffusion: Learning categorical distributions",
+      "journal": "Advances in Neural Information Processing Systems",
+      "year": "2021",
+      "authors": "Emiel Hoogeboom; Didrik Nielsen; Priyank Jaini; Patrick Forré; Max Welling"
+    },
+    {
+      "ref_id": "b19",
+      "title": "Accelerating diffusion language model inference via efficient kv caching and guided diffusion",
+      "journal": "",
+      "year": "2025",
+      "authors": "Zhanqiu Hu; Jian Meng; Yash Akhauri; Mohamed S Abdelfattah; Jae-Sun Seo; Zhiru Zhang; Udit Gupta"
+    },
+    {
+      "ref_id": "b20",
+      "title": "Ctrldiff: Boosting large diffusion language models with dynamic block prediction and controllable generation",
+      "journal": "",
+      "year": "2025",
+      "authors": "Chihan Huang; Hao Tang"
+    },
+    {
+      "ref_id": "b21",
+      "title": "Accelerating diffusion llms via adaptive parallel decoding",
+      "journal": "",
+      "year": "2025",
+      "authors": "Daniel Israel; Guy Van Den; Aditya Broeck; Grover"
+    },
+    {
+      "ref_id": "b22",
+      "title": "Accelerating diffusion llms via adaptive parallel decoding",
+      "journal": "",
+      "year": "2025",
+      "authors": "Daniel Israel; Guy Van Den; Aditya Broeck; Grover"
+    },
+    {
+      "ref_id": "b23",
+      "title": "Torsional diffusion for molecular conformer generation",
+      "journal": "",
+      "year": "2022",
+      "authors": "Bowen Jing; Gabriele Corso; Jeffrey Chang; Regina Barzilay; Tommi Jaakkola"
+    },
+    {
+      "ref_id": "b24",
+      "title": "Mercury: Ultra-fast language models based on diffusion",
+      "journal": "",
+      "year": "2025",
+      "authors": "Inception Labs; Samar Khanna; Siddhant Kharbanda; Shufan Li; Harshit Varma; Eric Wang; Sawyer Birnbaum; Ziyang Luo; Yanis Miraoui; Akash Palrecha; Stefano Ermon; Aditya Grover; Volodymyr Kuleshov"
+    },
+    {
+      "ref_id": "b25",
+      "title": "Measuring how models mimic human falsehoods",
+      "journal": "",
+      "year": "2021",
+      "authors": "Stephanie Lin; Jacob Hilton; Owain Evans; Truthfulqa"
+    },
+    {
+      "ref_id": "b26",
+      "title": "dllm-cache: Accelerating diffusion large language models with adaptive caching",
+      "journal": "",
+      "year": "2025",
+      "authors": "Zhiyuan Liu; Yicun Yang; Yaojie Zhang; Junjie Chen; Chang Zou; Qingyuan Wei; Shaobo Wang; Linfeng Zhang"
+    },
+    {
+      "ref_id": "b27",
+      "title": "dllm-cache: Accelerating diffusion large language models with adaptive caching",
+      "journal": "",
+      "year": "2025",
+      "authors": "Zhiyuan Liu; Yicun Yang; Yaojie Zhang; Junjie Chen; Chang Zou; Qingyuan Wei; Shaobo Wang; Linfeng Zhang"
+    },
+    {
+      "ref_id": "b28",
+      "title": "Discrete diffusion language modeling by estimating the ratios of the data distribution",
+      "journal": "",
+      "year": "2023",
+      "authors": "Aaron Lou; Chenlin Meng; Stefano Ermon"
+    },
+    {
+      "ref_id": "b29",
+      "title": "The cache for diffusion language models",
+      "journal": "",
+      "year": "2025",
+      "authors": "Xinyin Ma; Runpeng Yu; Gongfan Fang; Xinchao Wang"
+    },
+    {
+      "ref_id": "b30",
+      "title": "dKV-cache: The cache for diffusion language models",
+      "journal": "",
+      "year": "",
+      "authors": "Xinyin Ma; Runpeng Yu; Gongfan Fang; Xinchao Wang"
+    },
+    {
+      "ref_id": "b31",
+      "title": "Improved denoising diffusion probabilistic models",
+      "journal": "",
+      "year": "2021",
+      "authors": "Alexander Quinn; Nichol; Prafulla Dhariwal"
+    },
+    {
+      "ref_id": "b32",
+      "title": "Large language diffusion models",
+      "journal": "",
+      "year": "2025",
+      "authors": "Shen Nie; Fengqi Zhu; Zebin You; Xiaolu Zhang; Jingyang Ou; Jun Hu; Jun Zhou; Yankai Lin; Ji-Rong Wen; Chongxuan Li"
+    },
+    {
+      "ref_id": "b33",
+      "title": "Your absorbing discrete diffusion secretly models the conditional distributions of clean data",
+      "journal": "",
+      "year": "2024",
+      "authors": "Jingyang Ou; Shen Nie; Kaiwen Xue; Fengqi Zhu; Jiacheng Sun; Zhenguo Li; Chongxuan Li"
+    },
+    {
+      "ref_id": "b34",
+      "title": "Zero-shot text-to-image generation",
+      "journal": "Pmlr",
+      "year": "2021",
+      "authors": "Aditya Ramesh; Mikhail Pavlov; Gabriel Goh; Scott Gray; Chelsea Voss; Alec Radford; Mark Chen; Ilya Sutskever"
+    },
+    {
+      "ref_id": "b35",
+      "title": "Gpqa: A graduate-level google-proof q&a benchmark",
+      "journal": "",
+      "year": "2023",
+      "authors": "David Rein; Betty Li Hou; Asa Cooper Stickland; Jackson Petty; Richard Yuanzhe Pang; Julien Dirani; Julian Michael; Samuel R Bowman"
+    },
+    {
+      "ref_id": "b36",
+      "title": "Image super-resolution via iterative refinement",
+      "journal": "",
+      "year": "2022",
+      "authors": "Chitwan Saharia; Jonathan Ho; William Chan; Tim Salimans; David J Fleet; Mohammad Norouzi"
+    },
+    {
+      "ref_id": "b37",
+      "title": "Simple and effective masked diffusion language models",
+      "journal": "Advances in Neural Information Processing Systems",
+      "year": "2024",
+      "authors": "Subham Sahoo; Marianne Arriola; Yair Schiff; Aaron Gokaslan; Edgar Marroquin; Justin Chiu; Alexander Rush; Volodymyr Kuleshov"
+    },
+    {
+      "ref_id": "b38",
+      "title": "Winogrande: An adversarial winograd schema challenge at scale",
+      "journal": "Communications of the ACM",
+      "year": "2021",
+      "authors": "Keisuke Sakaguchi; Le Ronan; Chandra Bras; Yejin Bhagavatula; Choi"
+    },
+    {
+      "ref_id": "b39",
+      "title": "Simplified and generalized masked diffusion for discrete data",
+      "journal": "",
+      "year": "2024",
+      "authors": "Jiaxin Shi; Kehang Han; Zhe Wang; Arnaud Doucet; Michalis K Titsias"
+    },
+    {
+      "ref_id": "b40",
+      "title": "Deep unsupervised learning using nonequilibrium thermodynamics",
+      "journal": "",
+      "year": "2015",
+      "authors": "Jascha Sohl-Dickstein; Eric Weiss; Niru Maheswaranathan; Surya Ganguli"
+    },
+    {
+      "ref_id": "b41",
+      "title": "Sparse-dllm: Accelerating diffusion llms with dynamic cache eviction",
+      "journal": "",
+      "year": "2025",
+      "authors": "Yuerong Song; Xiaoran Liu; Ruixiao Li; Zhigeng Liu; Zengfeng Huang; Qipeng Guo; Ziwei He; Xipeng Qiu"
+    },
+    {
+      "ref_id": "b42",
+      "title": "Seed diffusion: A large-scale diffusion language model with high-speed inference",
+      "journal": "",
+      "year": "2025",
+      "authors": "Yuxuan Song; Zheng Zhang; Cheng Luo; Pengyang Gao; Fan Xia; Hao Luo; Zheng Li; Yuehang Yang; Hongli Yu; Xingwei Qu; Yuwei Fu; Jing Su; Ge Zhang; Wenhao Huang; Mingxuan Wang; Lin Yan; Xiaoying Jia; Jingjing Liu; Wei-Ying Ma; Ya-Qin Zhang; Yonghui Wu; Hao Zhou"
+    },
+    {
+      "ref_id": "b43",
+      "title": "Time is a feature: Exploiting temporal dynamics in diffusion language models",
+      "journal": "",
+      "year": "2025",
+      "authors": "Wen Wang; Bozhen Fang; Chenchen Jing; Yongliang Shen; Yangyi Shen; Qiuyu Wang; Hao Ouyang; Chen Hao; Chunhua Shen"
+    },
+    {
+      "ref_id": "b44",
+      "title": "Diffusion llms can do faster-than-ar inference via discrete diffusion forcing",
+      "journal": "",
+      "year": "2025-08",
+      "authors": "Xu Wang; Chenkai Xu; Yijie Jin; Jiachun Jin; Hao Zhang; Zhijie Deng"
+    },
+    {
+      "ref_id": "b45",
+      "title": "Accelerating diffusion large language models with slowfast: The three golden principles",
+      "journal": "",
+      "year": "2025",
+      "authors": "Qingyan Wei; Yaojie Zhang; Zhiyuan Liu; Dongrui Liu; Linfeng Zhang"
+    },
+    {
+      "ref_id": "b46",
+      "title": "Accelerating diffusion large language models with slowfast sampling: The three golden principles",
+      "journal": "",
+      "year": "2025",
+      "authors": "Qingyan Wei; Yaojie Zhang; Zhiyuan Liu; Dongrui Liu; Linfeng Zhang"
+    },
+    {
+      "ref_id": "b47",
+      "title": "Fast-dllm: Training-free acceleration of diffusion llm by enabling kv cache and parallel decoding",
+      "journal": "",
+      "year": "2025",
+      "authors": "Chengyue Wu; Hao Zhang; Shuchen Xue; Zhijian Liu; Shizhe Diao; Ligeng Zhu; Ping Luo; Song Han; Enze Xie"
+    },
+    {
+      "ref_id": "b48",
+      "title": "Fast-dLLM: Training-free acceleration of diffusion LLM by enabling KV cache and parallel decoding",
+      "journal": "",
+      "year": "2026",
+      "authors": "Chengyue Wu; Hao Zhang; Shuchen Xue; Zhijian Liu; Shizhe Diao; Ligeng Zhu; Ping Luo; Song Han; Enze Xie"
+    },
+    {
+      "ref_id": "b49",
+      "title": "treamingdllm: Accelerating diffusion llms via suffix pruning and dynamic decoding",
+      "journal": "",
+      "year": "2026",
+      "authors": "Zhongyu Xiao; Zhiwei Hao; Jianyuan Guo; Yong Luo; Jia Liu; Jie Xu; Han Hu"
+    },
+    {
+      "ref_id": "b50",
+      "title": "Diffusion large language models",
+      "journal": "",
+      "year": "2025",
+      "authors": "Jiacheng Ye; Zhihui Xie; Lin Zheng; Jiahui Gao; Zirui Wu; Xin Jiang; Zhenguo Li; Lingpeng Kong"
+    },
+    {
+      "ref_id": "b51",
+      "title": "Hellaswag: Can a machine really finish your sentence?",
+      "journal": "",
+      "year": "2019",
+      "authors": "Rowan Zellers; Ari Holtzman; Yonatan Bisk; Ali Farhadi; Yejin Choi"
+    },
+    {
+      "ref_id": "b52",
+      "title": "Masked diffusion models are secretly time-agnostic masked models and exploit inaccurate categorical sampling",
+      "journal": "",
+      "year": "2024",
+      "authors": "Kaiwen Zheng; Yongxin Chen; Hanzi Mao; Ming-Yu Liu; Jun Zhu; Qinsheng Zhang"
+    }
+  ],
+  "figures": [
+    {
+      "figure_label": "1",
+      "figure_type": "figure",
+      "figure_id": "fig_0",
+      "figure_caption": "Figure 1 :1Figure1: Distribution of early correct answer detection during decoding process.. Histograms show when correct answers first emerge during diffusion decoding, measured as percentage of total decoding steps, using LLaDA 8B on GSM8K. Red and orange dashed lines indicate 50% and 70% completion thresholds, with corresponding statistics showing substantial early convergence. Suffix prompting (b,d) dramatically accelerates convergence compared to standard prompting (a,c). This early convergence pattern demonstrates that correct answer tokens stabilize as top-1 candidates well before full decoding.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "",
+      "figure_type": "figure",
+      "figure_id": "fig_1",
+      "figure_caption": "Figure 2: Decoding dynamics across all positions based on maximum-probability predictions. Heatmaps track how the top-1 token changes at each position, if it is decoded at the current step, over the course of decoding. (a) Without our suffix prompts, correct answer tokens reach maximum probability at step 119. (b) With our suffix prompts, this occurs earlier at step 88, showing that the model internally identifies correct answers well before the final output. Results are shown for LLaDA 8B solving problem index 700 from GSM8K under low-confidence decoding. Gray indicates positions where the top-1 prediction remains unchanged, orange marks positions where the prediction changes to a different token, blue denotes the step at which the corresponding y-axis position is actually decoded, and green box highlights the answer region where the correct answer remains stable as the top-1 token and can be safely decoded without further changes as the decoding process progresses.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "3",
+      "figure_type": "figure",
+      "figure_id": "fig_2",
+      "figure_caption": "Figure 3 :3Figure3: An illustration of the Prophet's early-commit-decoding mechanism. (a) Standard full-step decoding completes all predefined steps (e.g., 10 steps), incurring redundant computations after the answer has stabilized (at t=6). (b) Prophet dynamically monitors the model's confidence (the \"Confidence Gap\"). It triggers an early commit decoding as soon as the answer converges, saving a significant portion of the decoding steps (in this case, 55%) without compromising the output quality.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "",
+      "figure_type": "figure",
+      "figure_id": "fig_3",
+      "figure_caption": "MMLU w/ suffix prompt (random)",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "",
+      "figure_type": "figure",
+      "figure_id": "fig_4",
+      "figure_caption": "MASK add the MASK of blue MASK MASK the MASK of white MASK MASK MASK MASK 3 bolts . MASK MASK Answer : The answer is 3 Prophet(∼50% steps) To find the total number of bolts , we need to add the MASK of blue fiber and the amount of white fiber . The robe takes 2 bolts of blue fiber . It also takes half that much white fiber , MASK MASK MASK 3 bolts . Final Answer : The answer is 3 Full(100% steps)",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "5",
+      "figure_type": "figure",
+      "figure_id": "fig_5",
+      "figure_caption": "Figure 5 :5Figure 5: Distribution of the \"Last Change Step\" for incorrect answers. The right-skewed distribution ensures Prophet acts conservatively on uncertain samples.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "1",
+      "figure_type": "table",
+      "figure_id": "tab_0",
+      "figure_caption": "Benchmark results on LLaDA-8B-Instruct and Dream-7B-Instruct. We report Accuracy (%) for both Full-step decoding and Prophet. The numbers in parentheses indicate the Accuracy Gain (∆) compared to the baseline. Sudoku and Countdown are evaluated using 8-shot setting; all other benchmarks use zero-shot evaluation. Detailed configuration is listed in the Appendix C.",
+      "figure_data": "BenchmarkLLaDA-8BDream-7BFull (%) Prophet (∆) Speedup Full (%) Prophet (∆) SpeedupGeneral TasksMMLU54.154.0 (-0.1)2.34×67.666.1 (-1.5)2.47×ARC-C83.283.5 (+0.3)1.88×88.187.9 (-0.2)2.61×Hellaswag68.770.9 (+2.2)2.14×81.281.9 (+0.7)2.55×TruthfulQA34.446.1 (+11.7)2.31×55.653.2 (-2.4)1.83×WinoGrande73.870.5 (-3.3)1.71×62.562.0 (-0.5)1.45×PIQA80.981.9 (+1.0)1.98×86.186.6 (+0.5)2.29×Mathematics & ScientificGSM8K77.177.9 (+0.8)1.63×75.375.2 (-0.1)1.71×GPQA25.225.7 (+0.5)1.82×27.026.6 (-0.4)1.66×Code GenerationHumanEval30.530.5 (0.0)1.20×54.955.5 (+0.6)1.44×MBPP37.637.4 (-0.2)1.35×54.054.6 (+0.6)1.33×Planning TasksCountdown15.315.3 (0.0)2.67×14.614.6 (0.0)2.37×Sudoku35.038.0 (+3.0)2.46×89.089.0 (0.0)3.40×"
+    },
+    {
+      "figure_label": "2",
+      "figure_type": "table",
+      "figure_id": "tab_1",
+      "figure_caption": "Comparison between Prophet and acceleration baselines on GSM8K.",
+      "figure_data": "(b) Comparison with Fast-dLLM.MethodAccuracy (%) Steps (Avg) SpeedupMethodAccuracy (%) SpeedupLLaDA (Teacher)77.12561.00×Baseline (LLaDA-8B)77.11.00×SDTT (Distilled)76.91282.00×Fast-dLLM (KV Cache + Parallel)76.66.82×Prophet (Ours)77.91601.63×Prophet (Ours)77.91.63×SDTT + Prophet76.4793.21×Fast-dLLM + Prophet77.37.66×5.4 ABLATION STUDIES"
+    },
+    {
+      "figure_label": "3",
+      "figure_type": "table",
+      "figure_id": "tab_2",
+      "figure_caption": "Ablation study on step budget and remasking strategy.. (a) Accuracy vs. step budget under two generation lengths L. Prophet stops early (average steps in parentheses) yet matches/exceeds the full-budget baseline. (b) Accuracy under different remasking strategies; Prophet complements token-selection policies.",
+      "figure_data": "(a) Accuracy vs. step budget and generation length.(b) Remasking strategy.Step Budget (T max )StrategyBaseline Ours (Prophet)L163264128 Prophet (Avg Steps) FullRandom63.866.6256 7.7 22.5 58.8 76.2 128 21.8 50.3 67.9 71.377.9 (≈160) 72.7 (≈74)77.1 71.3Low-confidence Top-k margin71.3 72.472.7 73.1"
+    },
+    {
+      "figure_label": "4",
+      "figure_type": "table",
+      "figure_id": "tab_3",
+      "figure_caption": "Sensitivity to block length on GSM8K (semi-autoregressive updates). Prophet is less brittle to coarse-grained updates and yields larger gains as block length increases.Accuracy vs. step budget under different L. Table3asummarizes GSM8K accuracy as we vary the number of refinement steps under two generation lengths (L = 256 and L = 128). Accuracy under a static step cap rises monotonically with more steps (e.g., 7.7% → 22.5% → 58.8% → 76.2% for 16/32/64/128 at L = 256), but still underperforms either the full-budget decoding or Prophet.",
+      "figure_data": "Block length8163264128Baseline67.1 68.7 71.3 59.933.1Ours (Prophet) 72.8 73.3 72.7 69.852.2∆ (Abs.)+5.7 +4.6 +1.4 +9.9 +19.1"
+    },
+    {
+      "figure_label": "6",
+      "figure_type": "table",
+      "figure_id": "tab_4",
+      "figure_caption": "Configurations used in our runs. We keep only parameters relevant to our method: base budget (L, T, B) and PROPHET's confidence schedule defined in Eq. 5BenchmarkBase Budget (L, T, B) PROPHET Thresholds (τ high , τ mid , τ low ) Transition Points",
+      "figure_data": "MMLUL=64, T =64, B=16(7.5, 5.0, 2.5)33%, 67%ARC-CL=64, T =64, B=16(7.5, 5.0, 2.5)33%, 67%HellaswagL=64, T =64, B=16(7.5, 5.0, 2.5)33%, 67%TruthfulQAL=64, T =64, B=16(7.5, 5.0, 2.5)33%, 67%WinoGrandeL=64, T =64, B=16(7.5, 5.0, 2.5)33%, 67%PIQAL=64, T =64, B=16(7.5, 5.0, 2.5)33%, 67%"
+    },
+    {
+      "figure_label": "7",
+      "figure_type": "table",
+      "figure_id": "tab_5",
+      "figure_caption": "Comparison of threshold schedules on GSM8K (LLaDA-8B).",
+      "figure_data": "Schedule TypeAccuracy (%) Avg StepsStaged (Ours)77.9160Linear (Ablation)77.4154"
+    }
+  ],
+  "formulas": [
+    {
+      "formula_id": "formula_0",
+      "formula_text": "q(x 1:T | x 0 ) = T t=1 q(x t | x t-1 ),(1)",
+      "formula_coordinates": [
+        3.0,
+        238.49,
+        614.78,
+        265.51,
+        30.2
+      ]
+    },
+    {
+      "formula_id": "formula_1",
+      "formula_text": "q s|t = n i=1 q s|t (x i s | x t ), q s|t (x i s | x t ) =        1, x i t ̸ = [MASK], x i s = x i t , s t , x i t = [MASK], x i s = [MASK], t-s t q 0|t (x i s | x t ), x i t = [MASK], x i s ̸ = [MASK].(2)",
+      "formula_coordinates": [
+        4.0,
+        115.23,
+        101.64,
+        388.77,
+        59.04
+      ]
+    },
+    {
+      "formula_id": "formula_2",
+      "formula_text": "p θ (x 0:T ) = p θ (x T ) T t=1 p θ (x t-1 | x t ) = T t=1 q(x t-1 | x 0 ) p θ (x 0 | x t ).",
+      "formula_coordinates": [
+        4.0,
+        167.4,
+        243.97,
+        277.2,
+        12.66
+      ]
+    },
+    {
+      "formula_id": "formula_4",
+      "formula_text": "x t 0 = p θ (x 0 | x t ).",
+      "formula_coordinates": [
+        4.0,
+        347.01,
+        290.27,
+        72.7,
+        12.2
+      ]
+    },
+    {
+      "formula_id": "formula_5",
+      "formula_text": "g t,i = L (1) t,i -L (2) t,i .(4)",
+      "formula_coordinates": [
+        5.0,
+        267.69,
+        634.82,
+        236.32,
+        14.07
+      ]
+    },
+    {
+      "formula_id": "formula_6",
+      "formula_text": "ḡt ≥ τ (p), where τ (p) =    τ high if p < 0.33 τ mid if 0.33 ≤ p < 0.67 τ low if p ≥ 0.67(5)",
+      "formula_coordinates": [
+        7.0,
+        189.91,
+        204.64,
+        314.09,
+        37.11
+      ]
+    },
+    {
+      "formula_id": "formula_7",
+      "formula_text": "x 0 ← x t .",
+      "formula_coordinates": [
+        7.0,
+        154.82,
+        485.19,
+        38.06,
+        9.68
+      ]
+    }
+  ],
+  "doi": "",
+  "source_paper": {
+    "title": "Diffusion Language Model Knows the Answer Before It Decodes",
+    "openreview_url": "https://openreview.net/forum?id=g88nt4ieTG",
+    "openreview_id": "g88nt4ieTG",
+    "venue": "ICLR",
+    "year": 2026
+  }
+}

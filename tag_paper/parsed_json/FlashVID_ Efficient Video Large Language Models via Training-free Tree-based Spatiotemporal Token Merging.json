@@ -1,0 +1,1371 @@
+{
+  "title": "FLASHVID: EFFICIENT VIDEO LARGE LANGUAGE MODELS VIA TRAINING-FREE TREE-BASED SPA-TIOTEMPORAL TOKEN MERGING",
+  "authors": "Ziyang Fan; Keyu Chen; Ruilong Xing; Yulin Li; Li Jiang; Zhuotao Tian",
+  "pub_date": "",
+  "abstract": "Although Video Large Language Models (VLLMs) have shown remarkable capabilities in video understanding, they are required to process high volumes of visual tokens, causing significant computational inefficiency. Existing VLLMs acceleration frameworks usually compress spatial and temporal redundancy independently, which overlooks the spatiotemporal relationships, thereby leading to suboptimal spatiotemporal compression. The highly correlated visual features are likely to change in spatial position, scale, orientation, and other attributes over time due to the dynamic nature of video. Building on this insight, we introduce FlashVID, a training-free inference acceleration framework for VLLMs. Specifically, FlashVID utilizes Attention and Diversity-based Token Selection (ADTS) to select the most representative tokens for basic video representation, then applies Tree-based Spatiotemporal Token Merging (TSTM) for fine-grained spatiotemporal redundancy elimination. Extensive experiments conducted on three representative VLLMs across five video understanding benchmarks demonstrate the effectiveness and generalization of our method. Notably, by retaining only 10% of visual tokens, FlashVID preserves 99.1% of the performance of LLaVA-OneVision. Consequently, FlashVID can serve as a training-free and plug-and-play module for extending long video frames, which enables a 10× increase in video frame input to Qwen2.5-VL, resulting in a relative improvement of 8.6% within the same computational budget. Code is available at https://github.com/Fanziyang-v/FlashVID.",
+  "sections": [
+    {
+      "heading": "INTRODUCTION",
+      "text": "Recent advances in Video Large Language Models (VLLMs) (Li et al., 2025a;Zhang et al., 2024;Bai et al., 2025b;Comanici et al., 2025) have demonstrated promising capabilities in video understanding tasks. However, processing large numbers of visual tokens incurs substantial computational and memory overhead, as the attention mechanism scales quadratically with sequence length, limiting practical deployment. To address this challenge, visual token compression (Chen et al., 2024;Yang et al., 2025c;Zhang et al., 2025e) has emerged as a promising approach, leveraging the inherent redundancy in visual inputs to reduce sequence length by removing or merging less informative tokens, thereby enabling efficient inference without significant performance degradation.\nWhile advances have been achieved in visual token compression for images (Bolya et al., 2023;Chen et al., 2024;Yang et al., 2025c;Zhang et al., 2025e), extending these methods to video remains largely underexplored. Videos inherently exhibit both spatial redundancy within frames and temporal redundancy across frames, rendering frame-wise compression strategies suboptimal due to their neglect of temporal dynamics and correlations. This gap highlights the need for compression techniques specifically designed for the spatiotemporal structure of video inputs in VLLMs.\nMotivation. Recent VLLM acceleration methods (Huang et al., 2025;Shen et al., 2025;Shao et al., 2025a) typically adopt a three-stage pipeline: (1) video partition, grouping consecutive frames with similar semantics to avoid information mixing;\n(2) frame-wise token selection, identifying informative tokens-often guided by [CLS] attention-for basic video representation; and (3) spatiotemporal compression, further reducing redundancy at the segment level.\nHowever, previous methods typically compress temporal and spatial redundancy independently. Such decoupled strategies overlook the intrinsic spatiotemporal relationships in videos. Moreover, temporal redundancy is commonly defined as the consistency of visual features at fixed spatial locations across consecutive frames. Due to the dynamic nature of video, the most semantically similar visual elements are likely to experience changes in spatial position, scale, orientation, and other attributes over time. Consequently, the most correlated visual features in adjacent frames may not reside at the same spatial location. As depicted in Fig. 1a, the Temporal Token Merging (TTM) strategy fails to capture video dynamics, erroneously merging less correlated tokens and distorting the video representations. Relying on such a rigid spatial correspondence for temporal redundancy compression may introduce noise, further misleading the model. So, a natural question arises: \"How can we achieve a decent spatiotemporal compression by jointly modeling spatial and temporal redundancy, while accounting for the dynamic characteristics of video?\"\nOur Solution. To address this challenge, we introduce FlashVID, a novel training-free acceleration framework for VLLMs that effectively reduces spatiotemporal redundancy while preserving critical visual content. Specifically, at the core of FlashVID is the Tree-based Spatiotemporal Token Merging (TSTM) mechanism, which explicitly models both spatial and temporal redundancy through hierarchical spatiotemporal redundancy trees. TSTM enables structured token merging across frames and within frames, allowing for joint spatiotemporal compression that respects the natural structure of video data. However, directly constructing spatiotemporal trees based on the raw video features with excessive noise and redundancy may not focus on the most representative visual information in each frame, or even be biased towards the major but unimportant visual information, thereby affecting the final performance. To alleviate this issue, we further introduce the Attention and Diversity-based Token Selection (ADTS) module, which prioritizes representative tokens in each frame. To this end, through the initial filtering of informative tokens using ADTS and subsequent merging via TSTM, FlashVID accomplishes efficient compression that adjusts to the dynamic attributes of video content while preserving crucial semantics.",
+      "publication_ref": [
+        "b81",
+        "b7",
+        "b6",
+        "b4",
+        "b6",
+        "b21",
+        "b51"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Vision Encoder Compression",
+      "text": "What activities do students engage in within the room?",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Tokenizer",
+      "text": "Large Language Model\nVisual Tokens Text Tokens Question Extensive experiments have been conducted on five video understanding benchmarks (Fu et al., 2025a;Mangalam et al., 2023;Wu et al., 2024;Li et al., 2024a;Zhou et al., 2025) and three representative VLLMs, i.g., LLaVA-OneVision (Li et al., 2025a), LLaVA-Video (Zhang et al., 2024), and Qwen2.5-VL (Bai et al., 2025b). As shown in Fig. 1b and Fig. 1c, FlashVID outperforms previous state-of-the-art methods by a large margin across all settings. Notably, FlashVID achieves 99.1% relative accuracy to vanilla LLaVA-OneVision while pruning 90% visual tokens. When integrated into Qwen2.5-VL, FlashVID enables processing of up to 10× more video frames, yielding an 8.6% performance gain over the vanilla model with 16 sampled frames under the same computational budget, highlighting its ability to unlock longer temporal context for better video understanding.\nTo summarize, our main contributions are threefold:\n• In this work, we identify that existing token compression methods fail to effectively model the dynamic and evolving nature of video content, leading to suboptimal performance.\n• We propose FlashVID, a training-free VLLMs acceleration method that introduces the Tree-based Spatiotemporal Token Merging (TSTM) to jointly model spatial and temporal redundancy across frames, complemented by Attention and Diversity-based Token Selection (ADTS) to obtain the semantically representative content within each frame.\n• Extensive experiments show that FlashVID improves inference efficiency with negligible performance drop, and enables the use of longer input sequences for better video understanding within the constrained computational budget.",
+      "publication_ref": [
+        "b39",
+        "b66",
+        "b82",
+        "b81"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "BACKGROUND AND MOTIVATION",
+      "text": "In this section, we provide a brief overview of the underlying concepts in this study in Sec. 2.1, and highlight the key observations in Sec. 2.2, which offer valuable insights for our approach.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "PRELIMINARIES",
+      "text": "VLLMs inference pipeline. The inference of VLLMs consists of three stages: (1) Encoding.\nA vision encoder (e.g., CLIP (Radford et al., 2021) and SigLIP (Zhai et al., 2023)) processes each frame independently, producing N v visual embeddings per frame, which are projected into text space via a modality connector to form H v ∈ R F ×Nv×d . Text queries are embedded as H t ∈ R Nt×d . (2) Prefilling. Each LLM layer l computes self-attention over H via:\nQ l = H l W l Q , K l = H l W l K , V l = H l W l V ,(1)\nwith\nW l Q , W l K , W l V ∈ R d×d\n. The key-value pairs are stored in the KV Cache for decoding acceleration. (3) Decoding. Response tokens are generated auto-regressively. At step t, only the new #Merged Tokens in TTM #Merged Tokens in TSTM Average Merged Similarities Difference #Merged Tokens in TTM #Merged Tokens in TSTM Frame Index Frame Index token h t is projected to (K t , V t ), which update the cache:\nK ← concat[K, K t ], V ← concat[V, V t ].(2)\nSuch a caching mechanism substantially improves decoding efficiency.",
+      "publication_ref": [
+        "b46",
+        "b75"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Efficiency bottleneck analysis.",
+      "text": "While VLLMs have achieved remarkable performance on video understanding tasks, their efficiency remains a key challenge due to the heavy computational and memory overhead when processing a large number of visual tokens. Most of this cost stems from the LLM backbone, where the self-attention mechanism and Feed-Forward Networks (FFNs) dominate the computational complexity. Given a model with L Transformer layers, the total Floating Point Operations (FLOPs) can be formulated as:\nFLOPs = L × (4nd 2 + 2n 2 d + 2ndm),(3)\nwith n denoting the sequence length, d the hidden dimension, and m the intermediate dimension of FFNs. In video understanding, the number of visual tokens n v dominates the sequence length n, typically exceeding textual tokens n t by orders of magnitude. This imbalance underscores the necessity to compress visual tokens for efficient inference in VLLMs.\nEfficient inference paradigms. As illustrated in Fig. 2, visual token compression frameworks can be grouped into three paradigms: Before-LLM, Inner-LLM, and Hybrid Compression. Compressing tokens only inside the LLM is inefficient, as all visual tokens must still be processed in the shallow layers; thus, reducing tokens before the LLM is critical for reducing overhead. Existing methods (Yang et al., 2025c;Shen et al., 2025) adopt single-stage compression before the LLM, but extreme compression risks losing important visual information. Hybrid compression provides a balance: it retains sufficient tokens as LLM input while further pruning within the LLM to meet computational budget. Training-based approaches (Zhang et al., 2025d;Cai et al., 2025;Hu et al., 2024;Shao et al., 2025b) can mitigate this inefficiency but demand substantial computing resources; in this work, we focus on training-free strategies. A more comprehensive review is provided in Appendix D.",
+      "publication_ref": [
+        "b51",
+        "b5",
+        "b20"
+      ],
+      "figure_ref": [
+        "fig_1"
+      ],
+      "table_ref": []
+    },
+    {
+      "heading": "KEY OBSERVATIONS",
+      "text": "We summarize two key observations about spatiotemporal redundancy in videos: (1) Temporal redundancy is not bound to fixed spatial locations. Semantically consistent elements in videos often\nLarge Language Model Vision Encoder Tokenizer What activities do students engage in within the room? Compression Question Text Tokens Compressed Visual Tokens Representative Visual Tokens Calibrate Calibrated Distance Matrices Select Attention and Diversity-based Token Selection (ADTS) Intra-Frame Distance Spatiotemporal Redundancy Tree Adjacent Frame Similarities Construct Aggregate Tree-based Spatiotemporal Token Merging (TSTM) Figure 4: Overview of our FlashVID. FlashVID compresses visual tokens by two synergistic modules: (1) ADTS prioritizes spatiotemporally informative tokens while ensuring feature diversity by solving a calibrated Max-Min Diversity Problem (MMDP); (2) TSTM models redundancy by spatiotemporal redundancy trees, which effectively capture fine-grained video dynamics.\nshift in spatial position, scale, or appearance due to motion and scene dynamics, making rigid spatial correspondence across frames unreliable (Huang et al., 2025). (2) Spatial and temporal redundancy are inherently coupled. Redundant regions within a single frame frequently persist across multiple frames. Decoupled spatiotemporal redundancy compression overlooks the intrinsic spatiotemporal relationships, leading to suboptimal compression.\nThese insights suggest that existing frameworks lack a unified, structure-aware mechanism to capture spatiotemporal relationships under dynamic video conditions, which motivates our hierarchical tree-based spatiotemporal redundancy compression. A conceptual comparison with prior approaches is illustrated in Fig. 3, highlighting the unique advantages of our design.",
+      "publication_ref": [
+        "b21"
+      ],
+      "figure_ref": [
+        "fig_2"
+      ],
+      "table_ref": []
+    },
+    {
+      "heading": "METHODOLOGY",
+      "text": "3.1 OVERVIEW As illustrated in Fig. 4, FlashVID integrates two synergistic modules: 1) Attention and Diversitybased Token Selection (ADTS), which first selects informative and diverse tokens for robust video representations; 2) Tree-based Spatiotemporal Token Merging (TSTM), which further minimizes spatiotemporal redundancy while preserving critical visual information.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "TREE-BASED SPATIOTEMPORAL TOKEN MERGING",
+      "text": "Videos exhibit dynamic variations in spatial position, scale, and appearance, posing challenges for spatiotemporal redundancy compression. To alleviate this, we propose Tree-based Spatiotemporal Token Merging (TSTM), which models the video redundancy via spatiotemporal redundancy trees.\nConstruct spatiotemporal redundancy trees. Given video features E v ∈ R F ×Nv×d , TSTM progressively builds spatiotemporal redundancy trees. First, we compute the cosine similarity matrix between visual features in adjacent frames:\nS (f ) = cos(E (f ) v , E (f +1) v ) ∈ R Nv×Nv ,(4)\nwhere S (f ) (j, k) measures the feature similarity between j-th token in frame f and k-th token in frame (f +1). Each token links to its most similar counterpart in the previous frame if their similarity exceeds a merging threshold T τ . This gradually forms redundancy trees that capture fine-grained temporal variations while avoiding merging dissimilar tokens.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Compress spatiotemporal redundancy.",
+      "text": "Once the redundancy trees are constructed, tokens within each tree are aggregated:\nc (i) = Agg(T (i) ),(5)\nAlgorithm 1 FlashVID Compression Require: Video features E v ∈ R F ×Nv×d ; similarity function sim(•, •); merging threshold T τ Ensure: Compressed token set X 1: Stage 1: Attention and Diversity-based Token Selection (ADTS) 2: for f = 1 to F do 3: Compute pairwise distance D (f ) , [CLS] attention A (f ) [CLS] , event relevance S(f) e 4: I (f ) ← MMDP(D (f ) , A (f ) [CLS] , S(f) e ) 5: R (f ) ← E (f ) v \\ I (f ) 6: end for 7: Stage 2: Tree-based Spatiotemporal Token Merging (TSTM) 8: Initialize each token in R (f ) as a root node and let C be an empty token set. 9: for f = 2 to F do ▷ Build spatiotemporal redundancy trees 10:\nfor each token r f i ∈ R (f ) do 11:\np * ← arg max p∈R (f -1) sim(r f i , p) 12: if sim(r f i , p * ) ≥ T τ then 13: Connect r f i to p * 14:\nend if 15:\nend for 16: end for 17: for each tree T do ▷ Aggregate redundancy trees 18:\nC ← C ∪ Agg(T ) 19: end for 20: return X ← C ∪ ( F f =1 I (f ) )\nwhere T (i) denotes the i-th spatiotemporal redundancy tree and Agg(•) represents an aggregation function (e.g., mean pooling), producing compact yet informative spatiotemporal representations.\nThe quality of redundancy trees is critical for fine-grained compression. Although we've explored constraining tree depth and breadth to prevent merging spatiotemporally distant tokens, it yielded negligible gains; thus, no such constraints are applied in practice (see Appendix A.3 for details.)",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "ATTENTION AND DIVERSITY-BASED TOKEN SELECTION",
+      "text": "Although TSTM effectively compresses spatiotemporal redundancy, it may discard important tokens in noisy and high-volume inputs. To mitigate this, we introduce the Attention and Diversity-based Token Selection (ADTS) module, which prioritizes spatiotemporally informative tokens within each frame while ensuring feature diversity for robust video representations. ADTS formulates token selection as a frame-wise Max-Min Diversity Problem (MMDP) (Alvar et al., 2025). Given video features E v ∈ R F ×Nv×d , we first compute the frame-wise cosine distance matrix:\nD (f ) = 1 -cos(E (f ) v , E (f ) v ),(6)\nwhere D (f ) ∈ R Nv×Nv denotes the pairwise feature dissimilarities in frame f . Solving MMDP on D (f ) yields a diverse token subset in frame f with the maximal minimum distance. However, diversity alone may overlook the most informative visual tokens. To address this issue, we introduce two calibration terms: 1) [CLS] attention and 2) event relevance.\n[CLS] attention calibration. We extract the attention matrices from the vision encoder. For those encoders without an explicit [CLS] token (e.g., SigLIP (Zhai et al., 2023)), we derive it from the attention matrix:\nA = Softmax(QK T / √ d) ∈ R F ×Nv×Nv ,(7)\nand compute A [CLS] ∈ R F ×Nv by averaging attention weights each token receives within its frame. This calibration highlights informative tokens in each frame.",
+      "publication_ref": [
+        "b1",
+        "b75"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Event relevance calibration.",
+      "text": "Event relevance measures a token's correlation with the current video context. We obtain frame embeddings f v = GAP(E v ) ∈ R F ×d by global average pooling and compute the event similarity matrices:\nSe = 1 F F i=1 (E v • f v ⊤ )[:, :, i] ∈ R F ×Nv .(8)\nThis calibration emphasizes the tokens most relevant to the video event. Finally, spatiotemporally informative tokens are selected by solving:\nI = MMDP(D, A [CLS] , Se ).(9)\nAs summarized in Alg. 1, FlashVID compresses video redundancy in two stages: ADTS first selects spatiotemporally informative tokens by solving a calibrated Max-Min Diversity Problem (see Appendix C.2 for details), then TSTM merges redundant tokens across frames through spatiotemporal redundancy trees, yielding compact yet informative visual features.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "EXPERIMENTS",
+      "text": "In this section, we conduct extensive experiments across multiple benchmarks and VLLMs. We provide a brief introduction to the experimental settings in Sec. 4.1, present the main experimental results in Sec. 4.2, and discuss essential ablation studies in Sec. 4.3.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "EXPERIMENTAL SETTINGS",
+      "text": "Benchmarks. We evaluate our method on five widely-used video understanding benchmarks: VideoMME (Fu et al., 2025a), EgoSchema (Mangalam et al., 2023), LongVideoBench (Wu et al., 2024), MVBench (Li et al., 2024a), and MLVU (Zhou et al., 2025). Notably, these benchmarks cover a wide range of video durations and complex scenarios, providing a comprehensive evaluation of our method's effectiveness and generalization. Additional details can be found in Appendix B.",
+      "publication_ref": [
+        "b39",
+        "b66",
+        "b82"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Compared baselines.",
+      "text": "We compare FlashVID with four state-of-the-art training-free VLLM acceleration methods: 1) FastV (Chen et al., 2024), which selects prompt-relevant tokens via textto-visual attention at the prefilling stage; 2) VisionZip (Yang et al., 2025c), pruning tokens using [CLS] attention and spatial merging before the LLM; 3) PruneVID (Huang et al., 2025), combining spatiotemporal token merging with attention-based selection in the LLM; and 4) FastVID (Shen et al., 2025), compressing redundant tokens via density-based spatiotemporal pruning.",
+      "publication_ref": [
+        "b6",
+        "b21",
+        "b51"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Implementation details.",
+      "text": "We evaluate our method on three representative VLLMs: LLaVA-OneVision (Li et al., 2025a), LLaVA-Video (Zhang et al., 2024), and Qwen2.5-VL (Bai et al., 2025b), which cover diverse architectures to ensure generality. Following the official setting, LLaVA-OneVision and LLaVA-Video uniformly sample 32 and 64 frames, producing 32 × 196 and 64 × 169 visual tokens, respectively. For LLaVA-Video, we adopt frame token setting, facilitating adaptation for different acceleration frameworks. To ensure a fair comparison, we align the average token budget per transformer layer. Since TSTM compresses redundancy via thresholding, we further apply frame-wise token compression based on DPC-kNN to meet the predefined token budget. Unless otherwise specified, we utilize the same set of hyperparameters for all experiments.\nAll the experiments are conducted on NVIDIA A800 80G GPUs using LMMs-Eval (Zhang et al., 2025b). Additional implementation details are provided in Appendix C.",
+      "publication_ref": [
+        "b81"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "MAIN RESULTS",
+      "text": "We evaluate FlashVID against state-of-the-art baselines on three representative VLLMs with distinct architectures under various retention ratios R. degradation at 15%, 10% due to excessive loss from aggressive spatial compression. FastV shows the weakest performance, as early-layer pruning is unstable. In contrast, FlashVID achieves the best results across all retention ratios, preserving 99.1% of the vanilla model's accuracy even at R = 10%. Moreover, when R ∈ {25%, 20%, 15%}, FlashVID surpasses the vanilla LLaVA-OneVision with full visual tokens input, revealing a \"less is more\" pattern where excessively redundant tokens may degrade performance.\nResults on LLaVA-Video. LLaVA-Video employs a specialized design by inserting newline tokens to inject spatiotemporal positional information. Unlike the official grid token setting, we apply the frame token in LLaVA-Video, which facilitates adaptation for different acceleration frameworks, where we found that these two settings lead to similar performance. In Tab. 1, we evaluate our method against other methods on LLaVA-Video. Notably, our FlashVID outperforms all baselines under various retention ratios.\nResults on Qwen2.5-VL In addition to LLaVA-OneVision and LLaVA-Video, we also evaluate our FlashVID against other methods on Qwen2.5-VL, which shows significantly different archi- Results on Qwen2.5-VL under fixed token budget. Due to computational and memory constraints, existing VLLMs typically process only a small number of sampled frames, often missing important visual cues. To assess the benefit of longer temporal context under a fixed computational budget, we apply token compression to enable models to process more frames. As shown in Tab. 3, Qwen2.5-VL achieves consistent improvements over its vanilla 16-frame baseline when equipped with token compression frameworks. Among them, FlashVID delivers the largest performance gains, highlighting its ability to unlock longer video sequences and demonstrating superior efficiency in constrained settings.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "ABLATION STUDIES",
+      "text": "In this section, we conduct ablation studies on the ADTS module and the retained ratio α of ADTS and TSTM using LLaVA-OneVision. Additional ablation studies are provided in Appendix. A.3.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Ablation study on ADTS module.",
+      "text": "ADTS is proposed to select both important and diverse tokens. As shown in Tab. 4, we compare our ADTS with ATS and DTS, i.e., attention-based and diversity-based token selection. Our ADTS outperforms other token selection methods based solely on [CLS] attention (ATS) and feature diversity (DTS) by a large margin, demonstrating that ADTS can effectively identify the important visual tokens.\nTo realize a comprehensive ablation study on ADTS, we further ablate the calibration terms used in ADTS. Tab. 4 reveals that both [CLS] attention and event relevance calibration improve performance, while the optimal performance is yielded at the combination of the two. Ablation study on α. As illustrated in Tab. 5, we conduct an ablation study on merging threshold α, which controls the ratio of visual tokens retained between ADTS and TSTM compression. In particular, α = 0 and α = 1 denote TSTM and ADTS only, respectively. The experimental results show that ADTS alone (α = 1) outperforms TSTM alone (α = 0). However, the peak performance is achieved at α = 0.7, implying that a balanced integration of these two modules (i.e., ADTS and TSTM) is necessary to maintain the model performance.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "EFFICIENCY ANALYSIS",
+      "text": "Although token compression can effectively improve the inference efficiency of VLLMs, it can also be a time-consuming operation. In Tab. 6, we conduct an efficiency experiment on LLaVA-OneVision using a single NVIDIA A100 GPU compared to FastVID on VideoMME. Remarkably, FlashVID preserves 99.1% relative accuracy at R = 10%, while FastVID achieves a similar performance at R = 25%. Consequently, FlashVID enables 6.3× prefilling and 2.1× Time-To-First-Token (TTFT) speedups, largely outperforming FastVID. Additional efficiency experimental results on LLaVA-Video can be found in Appendix. A.2.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "CONCLUSION",
+      "text": "In this work, we introduce FlashVID, a training-free and plug-and-play acceleration framework for VLLMs. FlashVID combines Attention and Diversity-based Token Selection (ADTS) for representative token filtering with Tree-based Spatiotemporal Token Merging (TSTM) for fine-grained redundancy elimination, effectively compressing spatiotemporal redundancy while preserving essential visual information. Extensive experiments on three VLLMs across five video understanding benchmarks demonstrate that FlashVID achieves superior performance in both efficiency and accuracy. In particular, it can serve as a plug-and-play module, enabling VLLMs to process significantly longer video sequences under a constrained computational budget.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "A MORE EXPERIMENTAL RESULTS",
+      "text": "We present comprehensive experimental results of our method. In the Appendix. A.1, we evaluate our FlashVID against previous state-of-the-art-methods on Qwen2.5-VL (Bai et al., 2025b). In the Appendix. A.2, we present additional experimental results on LLaVA-Video. In the Appendix. A.3, we provide additional ablation studies on FlashVID.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "A.1 ADDITIONAL EXPERIMENTS ON QWEN2.5-VL",
+      "text": "",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Results on Qwen2.5-VL.",
+      "text": "To further demonstrate the generalizability of our method, we evaluate it against other methods on Qwen2.5-VL (Bai et al., 2025b), which shows significant differences relative to LLaVA-OneVision and LLaVA-Video. Tab. 2 presents a part of the experimental results on Qwen2.5-VL under retention ratios R ∈ {20%, 10%}. Additional experimental results when R ∈ {25%, 15%} on Qwen2.5-VL are provided in Tab. 7. Notably, our method consistently surpasses previous state-of-the-art methods under various retention ratios, demonstrating strong generalization across different VLLMs.\nResults on Qwen2.5-VL under fixed token budget. By applying visual token compression, VLLMs can achieve performance gains by processing more video frames while maintaining the overall computational budget. As discussed in Sec. 4.2, we explore extending the number of input frames under a fixed token budget. Tab. 3 reports results with 5× and 10× frames, demonstrating that VLLMs benefit from longer temporal context without increasing computational cost. Additional results with 3× and 4× frames are presented in Tab. 8, revealing a consistent improvement trend. It highlights that FlashVID effectively compresses visual tokens and preserves compact yet informative representations.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Additional efficiency analysis",
+      "text": "As illustrated in Tab. 6, we test the efficiency of our FlashVID on LLaVA-OneVision (Li et al., 2025a), comparing to FastVID (Shen et al., 2025). In Tab. 10, we further evaluate the efficiency of our FlashVID on LLaVA-Video (Zhang et al., 2024). We report the detailed prefilling time and Time-To-First-Token (TTFT). Notably, our FlashVID enables 5.3× prefilling and 1.9× Time-to-First-Token (TTFT) speedups over the vanilla LLaVA-Video while maintaining 95.9% relative accuracy at 10% retention ratio.",
+      "publication_ref": [
+        "b51",
+        "b81"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "A.3 ADDITIONAL ABLATION STUDIES",
+      "text": "Ablation study on T τ . The merging threshold T τ plays an important role in the Tree-based Spatiotemporal Token Merging (TSTM) module. T τ directly influences the compression quality, in which increasing T τ reduces the merging strength and better preserves temporal details, whereas lowering T τ promotes aggressive compression but may merge less correlated tokens, probably introducing noise to the compact representation. As illustrated in Tab. 13, we conduct an ablation study on merging threshold T τ on LLaVA-OneVision and LLaVA-Video at R = 10%. FlashVID consistently achieves the best performance under different VLLMs when merging threshold T τ = 0.8.\nAblation study on tree depth and breadth constraints. In TSTM, video redundancy is jointly modeled by spatiotemporal redundancy trees, which connect the highly correlated spatiotemporal visual information. Intuitively, applying proper depth and breadth constraints avoids the merge of spatiotemporally distant tokens, which may improve the compression quality. In addition to the threshold parameter T τ , we also test with two extra parameters: 1) depth constraint: aims to maintain the temporal dynamics, preventing tokens from spanning an excessively long temporal range in the same tree; 2) breadth constraint: seeks to preserve the spatial locality, avoiding merging across overly large spatial regions. The detailed implementation of TSTM with depth and breadth constraints is provided in Alg. 2. However, as illustrated in Tab. 11 and Tab. 12, we conduct ablation studies on tree depth and breadth using LLaVA-OneVision. Experimental results show that depth and breadth constraints don't bring performance gains. We hypothesize that the merging threshold T τ delivers a similar effect.\nAblation study on f e . FlashVID retains more visual tokens input to the LLM while pruning within the LLM to satisfy the overall computational budget, avoiding the loss of important visual information. f e controls the expansion ratio, in which a large f e may lead to computational inefficiency, while a low value may lose critical information. In Tab. 14, we conduct an ablation study on f e on LLaVA-OneVision. FlashVID achieves the best performance (99.1% relative accuracy) when the expansion factor f e ∈ {1.25, 1.30}. We adopt f e = 1.25 for better efficiency.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "B EVALUATION BENCHMARKS",
+      "text": "The experiments are conducted on the following widely used video understanding benchmarks.\nVideoMME. VideoMME (Fu et al., 2025a) is a comprehensive multi-modal evaluation benchmark on video understanding capabilities of VLLMs. It features 900 videos spanning 6 diverse domains and 30 subcategories, with durations ranging from 11 seconds to 1 hour. Each video is accompanied by high-quality human annotations, including 2,700 multiple-choice question-answer pairs.\nLongVideoBench. LongVideoBench (Wu et al., 2024) is a comprehensive benchmark designed to evaluate VLLMs on long-context, interleaved video-language understanding. It characterizes 3,763 videos with durations ranging from 8 seconds to 1 hour. This benchmark comprises 6,678 humanannotated multiple-choice questions based on a novel \"referring-reasoning\" task, where models must retrieve and reason over specific multimodal contexts referenced in the questions, categorized into 17 fine-grained types across perception and relation levels.\nMVBench. MVBench (Li et al., 2024a) is a comprehensive benchmark designed to evaluate temporal understanding in multi-modal video tasks, addressing the limitations of existing image-focused",
+      "publication_ref": [
+        "b66"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Algorithm 2 Tree-based Spatiotemporal Token Merging with Depth and Breadth Constraints",
+      "text": "Require: Token sequences {R (foot_0) , R (foot_1) , . . . , R (F ) } from F frames; similarity function sim(•, •); tree depth function depth(•); merging threshold T τ ; max tree depth d max ; neighborhood size k Ensure: Compressed token set C 1: Initialize each token in R (f ) as a root node and let C be an empty token set. 2: for f = 2 to F do ▷ Construct candidate edges 3:\nfor each token r f i ∈ R (f ) do 4: N (r f i ) ← candidate parents in R (f -1) within neighborhood k 5: p * ← arg max p∈N (r f i ) sim(r f i , p) 6: if sim(r f i , p * ) ≥ T τ then 7: Connect r f i to p * 8:\nend if 9:\nend for 10: end for 11: for f = F down to 2 do ▷ Backward depth pruning 12:\nfor each token r f i ∈ R\n(f ) do 13: if depth(r f i ) = d max then 14:\nDisconnect r f i from its parent 15: Mark r f i as a new root 16: end if 17: end for 18: end for 19: for each tree T do ▷ Aggregate redundancy trees 20:\nC ← C ∪ Agg(T ) 21: end for 22: return C benchmarks. It consists of 20 systematically constructed tasks that require complex temporal reasoning skills, generated via static-to-dynamic transformation of static tasks.\nEgoSchema. EgoSchema (Mangalam et al., 2023) consists of approximately 5,000 five-choice multiple-choice questions derived from 250 hours of egocentric video. It emphasizes long-form temporal reasoning, as each of its 289 three-minute clips requires tracking objects and actions over time spans that are 5-10× longer than those in previous datasets, thereby posing significant challenges for both spatial perception and extended temporal coherence.\nMLVU. MLVU (Zhou et al., 2025) contains 3,102 multiple-choice questions across nine diverse long-video understanding tasks. It challenges models with videos ranging from 3 minutes to 2 hours, requiring reasoning over plot, temporal order, and event retrieval, thereby jointly testing fine-grained spatial recognition and long-range temporal reasoning.",
+      "publication_ref": [
+        "b39",
+        "b82"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "C IMPLEMENTATION DETAILS",
+      "text": "",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "C.1 REPRODUCTION DETAILS OF COMPARED BASELINES",
+      "text": "Unless otherwise specified, all the experiments are conducted on NVIDIA A800 80G GPUs on LMMs-Eval (Zhang et al., 2025b) 1 . We evaluate all methods on three representative VLLMs with distinct architectures and characteristics: LLaVA-OneVision (Li et al., 2025a) and LLaVA-Video (Zhang et al., 2024) 2 , and Qwen2.5-VL (Bai et al., 2025b) foot_2 . All baseline methods are reimplemented in LMMs-Eval, following their official implementations:\n• FastV (Chen et al., 2024) foot_3 (ECCV 2024). FastV prunes tokens at the K-th layer of the LLM using cross-modal attention scores, with a pruning ratio r. We follow the official settings with K = 2, using r ∈ {75%, 80%, 85%, 90%} for LLaVA-OneVision in Tab. 1 and Qwen2.5-VL in Tab. 2, while setting r ∈ {80%, 90%} for LLaVA-Video in Tab. 1.\n• VisionZip (Yang et al., 2025c) foot_4 (CVPR 2025). VisionZip prunes visual tokens at the output of the vision encoder, conflicting with pooling operations in VLLMs and resulting in performance degradation. Following (Shen et al., 2025), we instead apply pruning after pooling for VisionZip. We follow the official setting by retaining both dominant and contextual ratios at a 54:10 ratio in each frame. We set R to {25%, 20%, 15%, 10%} for LLaVA-OneVision in Tab. 1 and Qwen2.5-VL in Tab. 2, while setting R to {20%, 10%} and {25%, 15%} for LLaVA-Video in Tab. 1 and Tab. 9, respectively.\n• PruneVID (Huang et al., 2025) foot_5 (ACL 2025). PruneVID contains both before-LLM compression and inner-LLM pruning during the prefilling stage, along with a KV Cache compression at the decoding stage. Following the official settings, we set the threshold τ = 0.8, the temporal segment ratio γ = 0.25, the token selection ratio α = 0.4, and the pruning layer K = 10. We control the token budget by cluster ratio β. We use β ∈ {40.7%, 32.5%, 24.4%, 16.3%} in Tab. 1.\n• FastVID (Shen et al., 2025) foot_6 (NeurIPS 2025). FastVID prunes visual tokens based on spatiotemporal DPC-kNN. It begins with a dynamic segmentation based on transition similarities, followed by a frame-wise salient token selection based on [CLS] attention scores. Finally, it compresses the remaining tokens by spatiotemporal redundancy elimination based on DPC-kNN. Following the official settings, we set the minimum number of segments c = 8, the segment threshold τ = 0.9, the salient token ratio d = 0.4, the anchor frame step p = 4, and the merging factor α = 0.6. We set R to {25%, 20%, 15%, 10%} for LLaVA-OneVision in Tab. 1 and Qwen2.5-VL in Tab. 2, while setting R to {20%, 10%} and {25%, 15%} for LLaVA-Video in Tab. 1 and Tab. 9, respectively.",
+      "publication_ref": [
+        "b81",
+        "b6",
+        "b51",
+        "b21",
+        "b51"
+      ],
+      "figure_ref": [],
+      "table_ref": [
+        "tab_0",
+        "tab_1"
+      ]
+    },
+    {
+      "heading": "C.2 REPRODUCTION DETAILS OF FLASHVID",
+      "text": "In addition to ADTS and TSTM modules, FlashVID employs two design choices: 1) video partition and 2) Inner-LLM Pruning for better performance.\nVideo Partition. State-of-the-art VLLM acceleration methods (Shen et al., 2025;Shao et al., 2025a;Huang et al., 2025;Tao et al., 2025) commonly apply video partitioning before token compression, aiming to avoid information mixing and building upon DySeg (Shen et al., 2025), FlashVID partitions consecutive similar frames into the same segment based on the transition similarities. Instead of using [CLS] token embeddings, we compute transition similarities based on pooled video features. Given video features E v ∈ R F ×Nv×d , we apply global average pooling to obtain the frame embeddings:\nf e = GAP(E v ) ∈ R F ×d . (10\n) The transition similarities are defined as the cosine similarity of frame embeddings of adjacent frames:\nt i = cos(f i , f i+1 ), i = 1, 2, • • • , F -1, T = {t 1 , t 2 , • • • , t F -1 } (11\n)\nwhere t i denotes the transition similarity between i-th and (i + 1)-th frame. A low transition similarity indicates a significant scene change. Following DySeg, we set the segment threshold S τ = 0.9 and the minimum number of segments M s = 8.",
+      "publication_ref": [
+        "b51",
+        "b21",
+        "b53",
+        "b51"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Calibrated Max-Min Diversity Problem.",
+      "text": "As discussed in Sec.\n3.3, FlashVID utilizes the Attention and Diversity-based Token Selection (ADTS) module to identify the spatiotemporally informative tokens within each frame. Specifically, ADTS formulates frame-wise token selection as Algorithm 3 Calibrated Max-Min Diversity Problem (MMDP) Require: Pairwise distance D (f ) ∈ R Nv×Nv ; [CLS] attention A (f ) [CLS] ∈ R Nv ; event relevance S(f) e ∈ R Nv Ensure: Spatiotemporally informative token indices I (f ) 1: Initialize selected indices I (f ) ← ∅ and R ← {0, 1, ...N v -1} 2: Let 1 Nv ∈ R Nv be an all-ones vector 3: D (f ) ← D (f ) ⊙ A (f ) [CLS] ⊗ 1 Nv ⊙ S(f) e ⊗ 1 Nv ) ▷ Calibrate pairwise distance 4: for i ∈ R do ▷ Select the first token 5: d min [i] ← min j∈R,j̸ =i D (f ) i,j 6: end for 7: k ← arg max d min 8: Move k from R to I (f ) 9: while |I (f ) | < M do ▷ Iteratively add the subsequent tokens 10: Initialize d min ← inf 11: for i ∈ R do 12: d min [i] ← min j∈I (f ) D (f ) i,j 13: end for 14: k ← arg max d min 15: Move k from R to I (f ) 16: end while 17: return I (f )\na Max-Min Diversity Problem (MMDP), calibrated by [CLS] attention and event relevance. The detailed implementation is provided in Alg. 3.\nInner-LLM Pruning. As illustrated in Sec. 2.1, the hybrid compression framework balances efficiency and performance, which preserves sufficient visual information input to the LLM, preventing the loss of important information. FlashVID employs this design for better performance, which retains more visual tokens before the LLM and prunes at a relatively high layer. We set the pruning layer K = 20 and the expansion factor f e = 1.25 without careful tuning for LLaVA-OneVision, LLaVA-Video, and Qwen2.5-VL.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "C.3 TOKEN BUDGET ALIGNMENT",
+      "text": "To ensure a fair comparison, we employ a simple and effective strategy that aligns the average number of visual tokens processed by each Transformer layer to meet a similar computational cost, following (Shao et al., 2025b). Eq. 3 presents the Floating Point Operations (FLOPs) formula of the standard Transformer architecture for generality. In this paper, we evaluate three representative VLLMs: LLaVA-OneVision (Li et al., 2025a), LLaVA-Video (Zhang et al., 2024), Qwen2.5-VL (Bai et al., 2025b), which share similar LLM architectures that employ Group Query Attention (Ainslie et al., 2023) and SwiGLU (Dauphin et al., 2017) non-linear activation. The computational FLOPs of these three LLMs can be formulated as:\nFLOPs = L × (2nd 2 (1 + g/h) + 2n 2 d + 3ndm), (12\n)\nwhere n is sequence length, d the hidden dimension, m the intermediate dimension of FFNs, g the number of key/value heads, and h the number of attention heads. Since the number of visual tokens n v dominates the sequence length n, the sequence length n can be approximated by n v .\nTo clarify how visual token numbers are determined at each stage. We provide a detailed explanation. Let R be the average retained visual tokens per Transformer layer, M be the number of tokens entering the LLM (after before-LLM compression), K be the pruning layer index, L be the number of Transformer layers in LLM, and R be the number of retained visual tokens (after inner-LLM pruning). Then we have the following equation.\nRL = M K + R(L -K).(13)\nWe introduces an expansion factor f e such that M = f e R ; thus, we have:\nR = R(L -f e K) L -K .(14)\nAnd the inner-LLM pruning ratio r becomes:\nr = R M = L -f e K f e (L -K) .(15)\nSuch a simple token budget alignment strategy enables fair comparisons between different acceleration frameworks.",
+      "publication_ref": [
+        "b81",
+        "b0"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "D RELATED WORK",
+      "text": "Multimodal Large Language Models. Recent advances in deep learning (He et al., 2016;Vaswani et al., 2017;Devlin et al., 2019;Dosovitskiy et al., 2021;Radford et al., 2021;He et al., 2022;Cui et al., 2022;2023;Peng et al., 2024a;Yang et al., 2024c;Wang et al., 2024a) have benefited traditional computer vision tasks, such as semantic segmentation and object detection (Tian et al., 2020;Lai et al., 2021;Jiang et al., 2021;Peng et al., 2023;Tian et al., 2022b;Luo et al., 2023;Peng et al., 2024b;Tian et al., 2022a;2019;2023;Ning et al., 2023;Shao et al., 2024;Wang et al., 2025a;b). In particular, transformer-based architectures and large-scale pretraining have increasingly driven the success of Large Language Models (LLMs) (Touvron et al., 2023;Grattafiori et al., 2024;Yang et al., 2024a;b;2025a;Lai et al., 2024b;Peng et al., 2025;Liu et al., 2024a;Guo et al., 2025), exhibiting strong generalization and reasoning capabilities. Building upon LLMs, Multimodal Large Language Models (MLLMs) (Liu et al., 2023;2024b;c;Dai et al., 2023;Li et al., 2023;Comanici et al., 2025;Bai et al., 2025b;a;Wang et al., 2025c;Li et al., 2025c) extend the input modality from text to multimodalities (such as image, audio, and video) by coupling modality encoders with LLM backbones. So far, MLLMs have revolutionized traditional computer vision tasks. For example, representative works like LISA (Lai et al., 2024a) and LISA++ (Yang et al., 2023) study reasoning segmentation powered by MLLMs.\nVideo Large Language Models. With the rapid advancement of MLLMs, Video Large Language Models (VLLMs) (Li et al., 2025a;Zhang et al., 2024;Bai et al., 2025b;a;Shen et al., 2024;Li et al., 2024b;Maaz et al., 2024;Comanici et al., 2025) have gained increasing attention. Mainstream VLLMs directly process raw video tokens with an optional pooling operation. LLaVA-OneVision (Li et al., 2025a) demonstrates strong video understanding capabilities through task transfer from images. To achieve fine-grained spatiotemporal modeling, some VLLMs employ elaborate designs. LLaVA-Video (Zhang et al., 2024) introduces newline tokens to distinguish spatiotemporal positions. Qwen2-VL (Wang et al., 2024b) and Qwen2.5-VL (Bai et al., 2025b) use Multimodal Rotary Position Embedding (MRoPE). Qwen3-VL (Bai et al., 2025a) employs the Deepstack mechanism (Meng et al., 2024), which extracts visual tokens from intermediate layers of the visual encoder and injects them into the LLM, preserving rich visual information.\nTo achieve a comprehensive evaluation, we evaluate our method on three representative VLLMs (i.e., LLaVA-OneVision, LLaVA-Video, and Qwen2.5-VL) with significantly different architectures and characteristics.",
+      "publication_ref": [
+        "b18",
+        "b60",
+        "b12",
+        "b13",
+        "b46",
+        "b19",
+        "b8",
+        "b55",
+        "b24",
+        "b23",
+        "b42",
+        "b37",
+        "b41",
+        "b49",
+        "b59",
+        "b16",
+        "b45",
+        "b34",
+        "b10",
+        "b28",
+        "b7",
+        "b72",
+        "b81",
+        "b52",
+        "b38",
+        "b7",
+        "b81",
+        "b40"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "Visual Token Compression.",
+      "text": "Token compression has emerged as an effective technique that reduces computational complexity in transformer architectures, such as Vision Transformers (ViTs) (Dosovitskiy et al., 2021) and Large Language Models (LLMs). ToMe (Bolya et al., 2023) gradually merges similar tokens in ViTs. FastV (Chen et al., 2024) identifies text-relevant visual tokens based on text-to-visual attention in the LLM. PyaramidDrop (Xing et al., 2024) and SparseVLM (Zhang et al., 2025e) progressively prunes visual tokens. VisionZip (Yang et al., 2025c), LLaVA-PruMerge (Shang et al., 2025), and VisPruner (Zhang et al., 2025c) filter salient visual tokens via [CLS] attention, while DivPrune (Alvar et al., 2025) selects based on diversity. TopV (Yang et al., 2025b) formulates token selection as an optimization problem. VScan (Zhang et al., 2025a) combines global and local scans for informative visual token selection.\nHowever, the above methods only focus on spatial redundancy compression. To address this, several token compression frameworks for VLLMs have been proposed. DyCoke (Tao et al., 2025) merges redundant tokens in each segment. PruneVID (Huang et al., 2025) distinguishes static and dynamic tokens. STTM (Hyun et al., 2025) models video redundancy by a quadtree. FrameFusion (Fu et al., 2025b) performs both merging and pruning in the LLM. HoliTom (Shao et al., 2025a) combines global redundancy-aware video partition with spatial and inner-LLM compression. FastVID (Shen et al., 2025) employs density-based token pruning. DyTok (Li et al., 2025b) dynamically allocates token budget to each frame or segment, serving as a plug-and-play module for existing token compression methods.",
+      "publication_ref": [
+        "b13",
+        "b4",
+        "b6",
+        "b67",
+        "b47",
+        "b53",
+        "b21",
+        "b22",
+        "b51"
+      ],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "E MORE VISUALIZATIONS E.1 TREE-BASED SPATIOTEMPORAL TOKEN MERGING",
+      "text": "Due to the dynamic and evolving nature of video, the most semantically correlated visual features in adjacent frames are likely to experience variation in position, scale, orientation, and other attributes over time. To address this challenge, we propose the Tree-based Spatiotemporal Token Merging (TSTM) mechanism, which models video redundancy by spatiotemporal redundancy trees in a unified way. It enables capturing fine-grained video dynamics. Fig. 5 presents more visualizations of TSTM, highlighting the unique advantages of our TSTM for better spatiotemporal redundancy compression.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "E.2 QUALITATIVE ANALYSIS ON LLAVA-ONEVISION",
+      "text": "As illustrated in Tab. 1, we evaluate our FlashVID on LLaVA-OneVision at R ∈ {25%, 20%, 15%, 10%}. Notably, at higher retention ratios (i.e., R = 25%, 20%, 15%), FlashVID surpasses the vanilla LLaVA-OneVision, indicating a \"less is more\" pattern where excessively redundant tokens may degrade performance. Additionally, FlashVID preserves performance of 99.1% under extreme compression (e.g., R = 10%). In this work, we explore extending VLLMs to process more video frames under a fixed computational budget through visual token compression. As reported in Tab. 3 and Tab. 8, VLLMs benefit from longer temporal context. Fig. 7 presents four qualitative examples comparing Qwen2.5-VL with and without FlashVID, highlighting its ability to capture richer temporal information. FlashVID enables Qwen2.5-VL (Bai et al., 2025b) to process 10× more frames (160 vs. 16) within the same computational cost, providing compact yet informative video representations and improving the model performance.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "E.4 VISUALIZATIONS OF ADTS",
+      "text": "As shown in fig. 8, we compare token selection results by ADTS with and without event relevance calibration. Event relevance calibration helps identify the key visual tokens, thereby improving the performance of those tasks requiring fine-grained understanding.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "E.5 VISUALIZATIONS OF FAILURE CASES IN TSTM",
+      "text": "As illustrated in Fig. 9, we present visualizations of failure cases in our Tree-based Spatiotemporal Token Merging (TSTM). Although TSTM enables fine-grained spatiotemporal redundancy compression, it might result in merging operations with semantic confusion such as merging tokens from different entities with similar semantic information.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "E.6 VISUAL PERCEPTION LAYERS",
+      "text": "We empirically found that certain transformer layers (deep layers) of VLLMs possess strong visual perception capabilities. These visual perception layers can typically identify keyframes. Fig. (a) Visualization of TSTM (Example 1) (b) Visualization of TSTM (Example 2) Figure 9: Visualizations of failure cases in TSTM.\npresents several visualizations of visual perception layers. Building upon this insight, we hypothesize that token compression at these layers yields negligible performance degradation.\nTo balance efficiency and performance, FlashVID adopts a hybrid compression paradigm that retains more visual tokens and prunes visual tokens in the LLM to control the overall computational budget. Hence, we consistently set the pruning layer K = 20 (a relatively high layer for LLaVA-OneVision, LLaVA-Video, and Qwen2.5-VL at 7B scale) without careful tuning.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    },
+    {
+      "heading": "F USAGE OF LARGE LANGUAGE MODELS",
+      "text": "In this work, Large Language Models (LLMs) are only used for polishing the paper writing. They are not involved in research ideation, experimental design, data analysis, or the formulation of conclusions. All substantive intellectual contributions are made by the authors.",
+      "publication_ref": [],
+      "figure_ref": [],
+      "table_ref": []
+    }
+  ],
+  "references": [
+    {
+      "ref_id": "b0",
+      "title": "GQA: training generalized multi-query transformer models from multi-head checkpoints",
+      "journal": "",
+      "year": "2023",
+      "authors": "Joshua Ainslie; James Lee-Thorp; Michiel De Jong; Yury Zemlyanskiy; Federico Lebrón; Sumit Sanghai"
+    },
+    {
+      "ref_id": "b1",
+      "title": "Divprune: Diversitybased visual token pruning for large multimodal models",
+      "journal": "",
+      "year": "2025",
+      "authors": "Gursimran Saeed Ranjbar Alvar; Mohammad Singh; Yong Akbari; Zhang"
+    },
+    {
+      "ref_id": "b2",
+      "title": "",
+      "journal": "",
+      "year": "2025-06",
+      "authors": "Shuai Bai; Yuxuan Cai; Ruizhe Chen; Keqin Chen; Xionghui Chen; Zesen Cheng; Lianghao Deng; Wei Ding; Chang Gao; Chunjiang Ge; Wenbin Ge; Zhifang Guo; Qidong Huang; Jie Huang; Fei Huang; Binyuan Hui; Shutong Jiang; Zhaohai Li; Mingsheng Li; Mei Li; Kaixin Li; Zicheng Lin; Junyang Lin; Xuejing Liu; Jiawei Liu; Chenglong Liu; Yang Liu; Dayiheng Liu; Shixuan Liu; Dunjie Lu; Ruilin Luo; Chenxu Lv; Rui Men; ; Tang; Jianhong Tu; Jianqiang Wan; Peng Wang; Pengfei Wang; Qiuyue Wang; Yuxuan Wang; Tianbao Xie; Yiheng Xu; Haiyang Xu; Jin Xu; Zhibo Yang; Mingkun Yang; Jianxin Yang; An Yang; Bowen Yu; Fei Zhang; Hang Zhang; Xi Zhang; Bo Zheng; Humen Zhong; Jingren Zhou"
+    },
+    {
+      "ref_id": "b3",
+      "title": "Qwen2.5-vl technical report",
+      "journal": "",
+      "year": "2025",
+      "authors": "Shuai Bai; Keqin Chen; Xuejing Liu; Jialin Wang; Wenbin Ge; Sibo Song; Kai Dang; Peng Wang; Shijie Wang; Jun Tang; Humen Zhong; Yuanzhi Zhu; Mingkun Yang; Zhaohai Li; Jianqiang Wan; Pengfei Wang; Wei Ding; Zheren Fu; Yiheng Xu; Jiabo Ye; Xi Zhang; Tianbao Xie; Zesen Cheng; Hang Zhang; Zhibo Yang; Haiyang Xu; Junyang Lin"
+    },
+    {
+      "ref_id": "b4",
+      "title": "Token merging: Your vit but faster",
+      "journal": "",
+      "year": "2023",
+      "authors": "Daniel Bolya; Cheng-Yang Fu; Xiaoliang Dai; Peizhao Zhang; Christoph Feichtenhofer; Judy Hoffman"
+    },
+    {
+      "ref_id": "b5",
+      "title": "Matryoshka multimodal models",
+      "journal": "",
+      "year": "2025",
+      "authors": "Mu Cai; Jianwei Yang; Jianfeng Gao; Yong Jae Lee"
+    },
+    {
+      "ref_id": "b6",
+      "title": "An image is worth 1/2 tokens after layer 2: Plug-and-play inference acceleration for large visionlanguage models",
+      "journal": "",
+      "year": "2024",
+      "authors": "Liang Chen; Haozhe Zhao; Tianyu Liu; Shuai Bai; Junyang Lin; Chang Zhou; Baobao Chang"
+    },
+    {
+      "ref_id": "b7",
+      "title": "Gemini 2.5: Pushing the frontier with advanced reasoning, multimodality, long context, and next generation agentic capabilities",
+      "journal": "",
+      "year": "2025",
+      "authors": "Gheorghe Comanici; Eric Bieber; Mike Schaekermann; Ice Pasupat; Noveen Sachdeva; Inderjit Dhillon; Marcel Blistein; Ori Ram; Dan Zhang; Evan Rosen"
+    },
+    {
+      "ref_id": "b8",
+      "title": "Reslt: Residual learning for long-tailed recognition",
+      "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "year": "2022",
+      "authors": "Jiequan Cui; Shu Liu; Zhuotao Tian; Zhisheng Zhong; Jiaya Jia"
+    },
+    {
+      "ref_id": "b9",
+      "title": "Generalized parametric contrastive learning",
+      "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "year": "2023",
+      "authors": "Jiequan Cui; Zhisheng Zhong; Zhuotao Tian; Shu Liu; Bei Yu; Jiaya Jia"
+    },
+    {
+      "ref_id": "b10",
+      "title": "Instructblip: Towards general-purpose vision-language models with instruction tuning",
+      "journal": "",
+      "year": "2023",
+      "authors": "Wenliang Dai; Junnan Li; Dongxu Li; Anthony Tiong; Junqi Zhao; Weisheng Wang; Boyang Li; Pascale N Fung; Steven Hoi"
+    },
+    {
+      "ref_id": "b11",
+      "title": "Language modeling with gated convolutional networks",
+      "journal": "",
+      "year": "2017",
+      "authors": "Angela Yann N Dauphin; Michael Fan; David Auli; Grangier"
+    },
+    {
+      "ref_id": "b12",
+      "title": "Bert: Pre-training of deep bidirectional transformers for language understanding",
+      "journal": "the Association for Computational Linguistics",
+      "year": "2019",
+      "authors": "Jacob Devlin; Ming-Wei Chang; Kenton Lee; Kristina Toutanova"
+    },
+    {
+      "ref_id": "b13",
+      "title": "An image is worth 16x16 words: Transformers for image recognition at scale",
+      "journal": "",
+      "year": "2021",
+      "authors": "Alexey Dosovitskiy; Lucas Beyer; Alexander Kolesnikov; Dirk Weissenborn; Xiaohua Zhai; Thomas Unterthiner; Mostafa Dehghani; Matthias Minderer; Georg Heigold; Sylvain Gelly; Jakob Uszkoreit; Neil Houlsby"
+    },
+    {
+      "ref_id": "b14",
+      "title": "Video-mme: The first-ever comprehensive evaluation benchmark of multi-modal llms in video analysis",
+      "journal": "",
+      "year": "2025",
+      "authors": "Chaoyou Fu; Yuhan Dai; Yongdong Luo; Lei Li; Shuhuai Ren; Renrui Zhang; Zihan Wang; Chenyu Zhou; Yunhang Shen; Mengdan Zhang"
+    },
+    {
+      "ref_id": "b15",
+      "title": "Framefusion: Combining similarity and importance for video token reduction on large visual language models",
+      "journal": "",
+      "year": "2025",
+      "authors": "Tianyu Fu; Tengxuan Liu; Qinghao Han; Guohao Dai; Shengen Yan; Huazhong Yang; Xuefei Ning; Yu Wang"
+    },
+    {
+      "ref_id": "b16",
+      "title": "The llama 3 herd of models",
+      "journal": "",
+      "year": "2024",
+      "authors": "Aaron Grattafiori; Abhimanyu Dubey; Abhinav Jauhri; Abhinav Pandey; Abhishek Kadian; Ahmad Al-Dahle; Aiesha Letman; Akhil Mathur; Alan Schelten; Alex Vaughan"
+    },
+    {
+      "ref_id": "b17",
+      "title": "Deepseek-r1: Incentivizing reasoning capability in llms via reinforcement learning",
+      "journal": "",
+      "year": "2025",
+      "authors": "Dejian Daya Guo; Haowei Yang; Junxiao Zhang; Ruoyu Song; Runxin Zhang; Qihao Xu; Shirong Zhu; Peiyi Ma; Xiao Wang; Bi"
+    },
+    {
+      "ref_id": "b18",
+      "title": "Deep residual learning for image recognition",
+      "journal": "",
+      "year": "2016",
+      "authors": "Kaiming He; Xiangyu Zhang; Shaoqing Ren; Jian Sun"
+    },
+    {
+      "ref_id": "b19",
+      "title": "Masked autoencoders are scalable vision learners",
+      "journal": "",
+      "year": "2022",
+      "authors": "Kaiming He; Xinlei Chen; Saining Xie; Yanghao Li; Piotr Dollár; Ross Girshick"
+    },
+    {
+      "ref_id": "b20",
+      "title": "Matryoshka query transformer for large vision-language models",
+      "journal": "",
+      "year": "2024",
+      "authors": "Wenbo Hu; Zi-Yi Dou; Liunian Harold Li; Amita Kamath; Nanyun Peng; Kai-Wei Chang"
+    },
+    {
+      "ref_id": "b21",
+      "title": "Prunevid: Visual token pruning for efficient video large language models",
+      "journal": "Association for Computational Linguistics",
+      "year": "2025",
+      "authors": "Xiaohu Huang; Hao Zhou; Kai Han"
+    },
+    {
+      "ref_id": "b22",
+      "title": "Multi-granular spatio-temporal token merging for training-free acceleration of video llms",
+      "journal": "",
+      "year": "2025",
+      "authors": "Jeongseok Hyun; Sukjun Hwang; Su Ho Han; Taeoh Kim; Inwoong Lee; Dongyoon Wee; Joon-Young Lee; Seon Joo Kim; Minho Shim"
+    },
+    {
+      "ref_id": "b23",
+      "title": "Guided point contrastive learning for semi-supervised point cloud semantic segmentation",
+      "journal": "",
+      "year": "2021",
+      "authors": "Li Jiang; Shaoshuai Shi; Zhuotao Tian; Xin Lai; Shu Liu; Chi-Wing Fu; Jiaya Jia"
+    },
+    {
+      "ref_id": "b24",
+      "title": "Semisupervised semantic segmentation with directional context-aware consistency",
+      "journal": "",
+      "year": "2021",
+      "authors": "Xin Lai; Zhuotao Tian; Li Jiang; Shu Liu; Hengshuang Zhao; Liwei Wang; Jiaya Jia"
+    },
+    {
+      "ref_id": "b25",
+      "title": "Lisa:reasoning segmentation via large language model",
+      "journal": "",
+      "year": "2024",
+      "authors": "Xin Lai; Zhuotao Tian; Yukang Chen; Yanwei Li; Yuhui Yuan; Shu Liu; Jiaya Jia"
+    },
+    {
+      "ref_id": "b26",
+      "title": "Step-dpo: Stepwise preference optimization for long-chain reasoning of llms",
+      "journal": "",
+      "year": "2024",
+      "authors": "Xin Lai; Zhuotao Tian; Yukang Chen; Senqiao Yang; Xiangru Peng; Jiaya Jia"
+    },
+    {
+      "ref_id": "b27",
+      "title": "Llava-onevision: Easy visual task transfer",
+      "journal": "Transactions on Machine Learning Research",
+      "year": "2025",
+      "authors": "Bo Li; Yuanhan Zhang; Dong Guo; Renrui Zhang; Feng Li; Hao Zhang; Kaichen Zhang; Peiyuan Zhang; Yanwei Li; Ziwei Liu; Chunyuan Li"
+    },
+    {
+      "ref_id": "b28",
+      "title": "Blip-2: Bootstrapping language-image pre-training with frozen image encoders and large language models",
+      "journal": "",
+      "year": "2023",
+      "authors": "Junnan Li; Dongxu Li; Silvio Savarese; Steven Hoi"
+    },
+    {
+      "ref_id": "b29",
+      "title": "Mvbench: A comprehensive multi-modal video understanding benchmark",
+      "journal": "",
+      "year": "2024",
+      "authors": "Kunchang Li; Yali Wang; Yinan He; Yizhuo Li; Yi Wang; Yi Liu; Zun Wang; Jilan Xu; Guo Chen; Ping Luo"
+    },
+    {
+      "ref_id": "b30",
+      "title": "Llama-vid: An image is worth 2 tokens in large language models",
+      "journal": "",
+      "year": "2024",
+      "authors": "Yanwei Li; Chengyao Wang; Jiaya Jia"
+    },
+    {
+      "ref_id": "b31",
+      "title": "Less is more, but where? dynamic token compression via llm-guided keyframe prior",
+      "journal": "",
+      "year": "2025",
+      "authors": "Yulin Li; Haokun Gui; Ziyang Fan; Junjie Wang; Bin Kang; Bin Chen; Zhuotao Tian"
+    },
+    {
+      "ref_id": "b32",
+      "title": "Perception, reason, think, and plan: A survey on large multimodal reasoning models",
+      "journal": "",
+      "year": "2025",
+      "authors": "Yunxin Li; Zhenyu Liu; Zitao Li; Xuanyu Zhang; Zhenran Xu; Xinyu Chen; Haoyuan Shi; Shenyuan Jiang; Xintong Wang; Jifang Wang"
+    },
+    {
+      "ref_id": "b33",
+      "title": "Deepseek-v3 technical report",
+      "journal": "",
+      "year": "2024",
+      "authors": "Aixin Liu; Bei Feng; Bing Xue; Bingxuan Wang; Bochao Wu; Chengda Lu; Chenggang Zhao; Chengqi Deng; Chenyu Zhang; Chong Ruan"
+    },
+    {
+      "ref_id": "b34",
+      "title": "Visual instruction tuning",
+      "journal": "",
+      "year": "2023",
+      "authors": "Haotian Liu; Chunyuan Li; Qingyang Wu; Yong Jae Lee"
+    },
+    {
+      "ref_id": "b35",
+      "title": "Improved baselines with visual instruction tuning",
+      "journal": "",
+      "year": "2024",
+      "authors": "Haotian Liu; Chunyuan Li; Yuheng Li; Yong Jae Lee"
+    },
+    {
+      "ref_id": "b36",
+      "title": "Llava-next: Improved reasoning, ocr, and world knowledge, 2024c",
+      "journal": "",
+      "year": "",
+      "authors": "Haotian Liu; Chunyuan Li; Yuheng Li; Bo Li; Yuanhan Zhang; Sheng Shen; Yong Jae Lee"
+    },
+    {
+      "ref_id": "b37",
+      "title": "Pfenet++: Boosting few-shot semantic segmentation with the noise-filtered context-aware prior mask",
+      "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "year": "2023",
+      "authors": "Xiaoliu Luo; Zhuotao Tian; Taiping Zhang; Bei Yu; Yuan; Yan Tang; Jiaya Jia"
+    },
+    {
+      "ref_id": "b38",
+      "title": "Video-chatgpt: Towards detailed video understanding via large vision @ and language models",
+      "journal": "",
+      "year": "2024",
+      "authors": "Muhammad Maaz; Hanoona Abdul Rasheed; Salman Khan; Fahad Khan"
+    },
+    {
+      "ref_id": "b39",
+      "title": "Egoschema: A diagnostic benchmark for very long-form video language understanding",
+      "journal": "",
+      "year": "2023",
+      "authors": "Karttikeya Mangalam; Raiymbek Akshulakov; Jitendra Malik"
+    },
+    {
+      "ref_id": "b40",
+      "title": "Deeply stacking visual tokens is surprisingly simple and effective for lmms",
+      "journal": "",
+      "year": "2024",
+      "authors": "Lingchen Meng; Jianwei Yang; Rui Tian; Xiyang Dai; Zuxuan Wu; Jianfeng Gao; Yu-Gang Jiang; Deepstack"
+    },
+    {
+      "ref_id": "b41",
+      "title": "Boosting few-shot 3d point cloud segmentation via query-guided enhancement",
+      "journal": "",
+      "year": "2023",
+      "authors": "Zhenhua Ning; Zhuotao Tian; Guangming Lu; Wenjie Pei"
+    },
+    {
+      "ref_id": "b42",
+      "title": "Hierarchical dense correlation distillation for few-shot segmentation",
+      "journal": "",
+      "year": "2023",
+      "authors": "Bohao Peng; Zhuotao Tian; Xiaoyang Wu; Chengyao Wang; Shu Liu; Jingyong Su; Jiaya Jia"
+    },
+    {
+      "ref_id": "b43",
+      "title": "Scalable language model with generalized continual learning",
+      "journal": "",
+      "year": "2024",
+      "authors": "Bohao Peng; Zhuotao Tian; Shu Liu; Mingchang Yang; Jiaya Jia"
+    },
+    {
+      "ref_id": "b44",
+      "title": "Oa-cnns: Omni-adaptive sparse cnns for 3d semantic segmentation",
+      "journal": "",
+      "year": "2024",
+      "authors": "Bohao Peng; Xiaoyang Wu; Li Jiang; Yukang Chen; Hengshuang Zhao; Zhuotao Tian; Jiaya Jia"
+    },
+    {
+      "ref_id": "b45",
+      "title": "Mitigating object hallucinations via sentence-level early intervention",
+      "journal": "",
+      "year": "2025",
+      "authors": "Shangpin Peng; Senqiao Yang; Li Jiang; Zhuotao Tian"
+    },
+    {
+      "ref_id": "b46",
+      "title": "Learning transferable visual models from natural language supervision",
+      "journal": "",
+      "year": "2021",
+      "authors": "Alec Radford; Jong Wook Kim; Chris Hallacy; Aditya Ramesh; Gabriel Goh; Sandhini Agarwal; Girish Sastry; Amanda Askell; Pamela Mishkin; Jack Clark"
+    },
+    {
+      "ref_id": "b47",
+      "title": "Llava-prumerge: Adaptive token reduction for efficient large multimodal models",
+      "journal": "",
+      "year": "2025",
+      "authors": "Yuzhang Shang; Mu Cai; Bingxin Xu; Yong; Jae Lee; Yan Yan"
+    },
+    {
+      "ref_id": "b48",
+      "title": "Holitom: Holistic token merging for fast video large language models",
+      "journal": "",
+      "year": "2025",
+      "authors": "Kele Shao; Keda Tao; Can Qin; Haoxuan You; Yang Sui; Huan Wang"
+    },
+    {
+      "ref_id": "b49",
+      "title": "Explore the potential of clip for trainingfree open vocabulary semantic segmentation",
+      "journal": "",
+      "year": "2024",
+      "authors": "Tong Shao; Zhuotao Tian; Hang Zhao; Jingyong Su"
+    },
+    {
+      "ref_id": "b50",
+      "title": "Growing a twig to accelerate large vision-language models",
+      "journal": "",
+      "year": "2025",
+      "authors": "Zhenwei Shao; Mingyang Wang; Zhou Yu; Wenwen Pan; Yan Yang; Tao Wei; Hongyuan Zhang; Ning Mao; Wei Chen; Jun Yu"
+    },
+    {
+      "ref_id": "b51",
+      "title": "Fastvid: Dynamic density pruning for fast video large language models",
+      "journal": "",
+      "year": "2025",
+      "authors": "Leqi Shen; Guoqiang Gong; Tao He; Yifeng Zhang; Pengzhang Liu; Sicheng Zhao; Guiguang Ding"
+    },
+    {
+      "ref_id": "b52",
+      "title": "Spatiotemporal adaptive compression for long video-language understanding",
+      "journal": "",
+      "year": "2024",
+      "authors": "Xiaoqian Shen; Yunyang Xiong; Changsheng Zhao; Lemeng Wu; Jun Chen; Chenchen Zhu; Zechun Liu; Fanyi Xiao; Balakrishnan Varadarajan; Florian Bordes; Zhuang Liu; Hu Xu; Hyunwoo J Kim; Bilge Soran; Raghuraman Krishnamoorthi; Mohamed Elhoseiny; Vikas Chandra; Longvu"
+    },
+    {
+      "ref_id": "b53",
+      "title": "Dycoke: Dynamic compression of tokens for fast video large language models",
+      "journal": "",
+      "year": "2025",
+      "authors": "Keda Tao; Can Qin; Haoxuan You; Yang Sui; Huan Wang"
+    },
+    {
+      "ref_id": "b54",
+      "title": "Learning shape-aware embedding for scene text detection",
+      "journal": "",
+      "year": "2019",
+      "authors": "Zhuotao Tian; Michelle Shu; Pengyuan Lyu; Ruiyu Li; Chao Zhou; Xiaoyong Shen; Jiaya Jia"
+    },
+    {
+      "ref_id": "b55",
+      "title": "Prior guided feature enrichment network for few-shot segmentation",
+      "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "year": "2020",
+      "authors": "Zhuotao Tian; Hengshuang Zhao; Michelle Shu; Zhicheng Yang; Ruiyu Li; Jiaya Jia"
+    },
+    {
+      "ref_id": "b56",
+      "title": "Adaptive perspective distillation for semantic segmentation",
+      "journal": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "year": "2022",
+      "authors": "Zhuotao Tian; Pengguang Chen; Xin Lai; Li Jiang; Shu Liu; Hengshuang Zhao; Bei Yu; Ming-Chang Yang; Jiaya Jia"
+    },
+    {
+      "ref_id": "b57",
+      "title": "Generalized few-shot semantic segmentation",
+      "journal": "",
+      "year": "2022",
+      "authors": "Zhuotao Tian; Xin Lai; Li Jiang; Shu Liu; Michelle Shu; Hengshuang Zhao; Jiaya Jia"
+    },
+    {
+      "ref_id": "b58",
+      "title": "Learning context-aware classifier for semantic segmentation",
+      "journal": "",
+      "year": "2023",
+      "authors": "Zhuotao Tian; Jiequan Cui; Li Jiang; Xiaojuan Qi; Xin Lai; Yixin Chen; Shu Liu; Jiaya Jia"
+    },
+    {
+      "ref_id": "b59",
+      "title": "Llama 2: Open foundation and fine-tuned chat models",
+      "journal": "",
+      "year": "2023",
+      "authors": "Hugo Touvron; Louis Martin; Kevin Stone; Peter Albert; Amjad Almahairi; Yasmine Babaei; Nikolay Bashlykov; Soumya Batra; Prajjwal Bhargava; Shruti Bhosale"
+    },
+    {
+      "ref_id": "b60",
+      "title": "Attention is all you need",
+      "journal": "",
+      "year": "2017",
+      "authors": "Ashish Vaswani; Noam Shazeer; Niki Parmar; Jakob Uszkoreit; Llion Jones; Aidan N Gomez; Łukasz Kaiser; Illia Polosukhin"
+    },
+    {
+      "ref_id": "b61",
+      "title": "Groupcontrast: Semantic-aware self-supervised representation learning for 3d understanding",
+      "journal": "",
+      "year": "2024",
+      "authors": "Chengyao Wang; Li Jiang; Xiaoyang Wu; Zhuotao Tian; Bohao Peng; Hengshuang Zhao; Jiaya Jia"
+    },
+    {
+      "ref_id": "b62",
+      "title": "Declip: Decoupled learning for open-vocabulary dense perception",
+      "journal": "",
+      "year": "2025",
+      "authors": "Junjie Wang; Bin Chen; Yulin Li; Bin Kang; Yichi Chen; Zhuotao Tian"
+    },
+    {
+      "ref_id": "b63",
+      "title": "Generalized decoupled learning for enhancing open-vocabulary dense perception",
+      "journal": "",
+      "year": "2025",
+      "authors": "Junjie Wang; Keyu Chen; Yulin Li; Bin Chen; Hengshuang Zhao; Xiaojuan Qi; Zhuotao Tian"
+    },
+    {
+      "ref_id": "b64",
+      "title": "Qwen2-vl: Enhancing vision-language model's perception of the world at any resolution",
+      "journal": "",
+      "year": "2024",
+      "authors": "Peng Wang; Shuai Bai; Sinan Tan; Shijie Wang; Zhihao Fan; Jinze Bai; Keqin Chen; Xuejing Liu; Jialin Wang; Wenbin Ge; Yang Fan; Kai Dang; Mengfei Du; Xuancheng Ren; Rui Men; Dayiheng Liu; Chang Zhou; Jingren Zhou; Junyang Lin"
+    },
+    {
+      "ref_id": "b65",
+      "title": "Internvl3. 5: Advancing open-source multimodal models in versatility, reasoning, and efficiency",
+      "journal": "",
+      "year": "2025",
+      "authors": "Weiyun Wang; Zhangwei Gao; Lixin Gu; Hengjun Pu; Long Cui; Xingguang Wei; Zhaoyang Liu; Linglin Jing; Shenglong Ye; Jie Shao"
+    },
+    {
+      "ref_id": "b66",
+      "title": "Longvideobench: A benchmark for long-context interleaved video-language understanding",
+      "journal": "",
+      "year": "2024",
+      "authors": "Haoning Wu; Dongxu Li; Bei Chen; Junnan Li"
+    },
+    {
+      "ref_id": "b67",
+      "title": "Pyramiddrop: Accelerating your large vision-language models via pyramid visual redundancy reduction",
+      "journal": "",
+      "year": "2024",
+      "authors": "Long Xing; Qidong Huang; Xiaoyi Dong; Jiajie Lu; Pan Zhang; Yuhang Zang; Yuhang Cao; Conghui He; Jiaqi Wang; Feng Wu"
+    },
+    {
+      "ref_id": "b68",
+      "title": "Qwen2 technical report",
+      "journal": "",
+      "year": "2024",
+      "authors": "An Yang; Baosong Yang; Binyuan Hui; Bo Zheng; Bowen Yu; Chang Zhou; Chengpeng Li; Chengyuan Li; Dayiheng Liu; Fei Huang; Guanting Dong; Haoran Wei; Huan Lin; Jialong Tang; Jialin Wang; Jian Yang; Jianhong Tu; Jianwei Zhang; Jianxin Ma; Jin Xu; Jingren Zhou; Jinze Bai; Jinzheng He; Junyang Lin; Kai Dang; Keming Lu; Keqin Chen; Kexin Yang; Mei Li; Mingfeng Xue; Na Ni; Pei Zhang; Peng Wang; Ru Peng; Rui Men; Ruize Gao; Runji Lin; Shijie Wang; Shuai Bai; Sinan Tan; Tianhang Zhu; Tianhao Li; Tianyu Liu; Wenbin Ge; Xiaodong Deng; Xiaohuan Zhou; Xingzhang Ren; Xinyu Zhang; Xipin Wei; Xuancheng Ren; Yang Fan; Yang Yao; Yichang Zhang; Yu Wan; Yunfei Chu; Yuqiong Liu; Zeyu Cui; Zhenru Zhang; Zhihao Fan"
+    },
+    {
+      "ref_id": "b69",
+      "title": "Qwen2.5 technical report",
+      "journal": "",
+      "year": "2024",
+      "authors": "An Yang; Baosong Yang; Beichen Zhang; Binyuan Hui; Bo Zheng; Bowen Yu; Chengyuan Li; Dayiheng Liu; Fei Huang; Haoran Wei; Huan Lin; Jian Yang; Jianhong Tu; Jianwei Zhang; Jianxin Yang; Jiaxi Yang; Jingren Zhou; Junyang Lin; Kai Dang; Keming Lu; Keqin Bao; Kexin Yang; Le Yu; Mei Li; Mingfeng Xue; Pei Zhang; Qin Zhu; Rui Men; Runji Lin; Tianhao Li; Tingyu Xia; Xingzhang Ren; Xuancheng Ren; Yang Fan; Yang Su; Yichang Zhang; Yu Wan; Yuqiong Liu; Zeyu Cui; Zhenru Zhang; Zihan Qiu"
+    },
+    {
+      "ref_id": "b70",
+      "title": "Qwen3 technical report",
+      "journal": "",
+      "year": "2025",
+      "authors": "An Yang; Anfeng Li; Baosong Yang; Beichen Zhang; Binyuan Hui; Bo Zheng; Bowen Yu; Chang Gao; Chengen Huang; Chenxu Lv; Chujie Zheng; Dayiheng Liu; Fan Zhou; Fei Huang; Feng Hu; Hao Ge; Haoran Wei; Huan Lin; Jialong Tang; Jian Yang; Jianhong Tu; Jianwei Zhang; Jianxin Yang; Jiaxi Yang; Jing Zhou; Jingren Zhou; Junyang Lin; Kai Dang; Keqin Bao; Kexin Yang; Le Yu; Lianghao Deng; Mei Li; Mingfeng Xue; Mingze Li; Pei Zhang; Peng Wang; Qin Zhu; Rui Men; Ruize Gao; Shixuan Liu; Shuang Luo; Tianhao Li; Tianyi Tang; Wenbiao Yin; Xingzhang Ren; Xinyu Wang; Xinyu Zhang; Xuancheng Ren; Yang Fan; Yang Su; Yichang Zhang; Yinger Zhang; Yu Wan; Yuqiong Liu; Zekun Wang; Zeyu Cui; Zhenru Zhang; Zhipeng Zhou; Zihan Qiu"
+    },
+    {
+      "ref_id": "b71",
+      "title": "Topv: Compatible token pruning with inference time optimization for fast and low-memory multimodal vision language model",
+      "journal": "",
+      "year": "2025",
+      "authors": "Cheng Yang; Yang Sui; Jinqi Xiao; Lingyi Huang; Yu Gong; Chendi Li; Jinghua Yan; Yu Bai; Ponnuswamy Sadayappan; Xia Hu; Bo Yuan"
+    },
+    {
+      "ref_id": "b72",
+      "title": "Lisa++: An improved baseline for reasoning segmentation with large language model",
+      "journal": "",
+      "year": "2023",
+      "authors": "Senqiao Yang; Tianyuan Qu; Xin Lai; Zhuotao Tian; Bohao Peng; Shu Liu; Jiaya Jia"
+    },
+    {
+      "ref_id": "b73",
+      "title": "Unified language-driven zero-shot domain adaptation",
+      "journal": "",
+      "year": "2024",
+      "authors": "Senqiao Yang; Zhuotao Tian; Li Jiang; Jiaya Jia"
+    },
+    {
+      "ref_id": "b74",
+      "title": "Visionzip: Longer is better but not necessary in vision language models",
+      "journal": "",
+      "year": "2025",
+      "authors": "Senqiao Yang; Yukang Chen; Zhuotao Tian; Chengyao Wang; Jingyao Li; Bei Yu; Jiaya Jia"
+    },
+    {
+      "ref_id": "b75",
+      "title": "Sigmoid loss for language image pre-training",
+      "journal": "",
+      "year": "2023",
+      "authors": "Xiaohua Zhai; Basil Mustafa; Alexander Kolesnikov; Lucas Beyer"
+    },
+    {
+      "ref_id": "b76",
+      "title": "Vscan: Rethinking visual token reduction for efficient large vision-language models",
+      "journal": "Advances in Neural Information Processing Systems",
+      "year": "2025",
+      "authors": "Ce Zhang; Kaixin Ma; Tianqing Fang; Wenhao Yu; Hongming Zhang; Zhisong Zhang; Yaqi Xie; Katia Sycara; Haitao Mi; Dong Yu"
+    },
+    {
+      "ref_id": "b77",
+      "title": "Lmms-eval: Reality check on the evaluation of large multimodal models",
+      "journal": "NAACL",
+      "year": "2025",
+      "authors": "Kaichen Zhang; Bo Li; Peiyuan Zhang; Fanyi Pu; Joshua; Adrian Cahyono; Kairui Hu; Shuai Liu; Yuanhan Zhang; Jingkang Yang; Chunyuan Li; Ziwei Liu"
+    },
+    {
+      "ref_id": "b78",
+      "title": "Beyond text-visual attention: Exploiting visual cues for effective token pruning in vlms",
+      "journal": "",
+      "year": "2025",
+      "authors": "Qizhe Zhang; Aosong Cheng; Ming Lu; Renrui Zhang; Zhiyong Zhuo; Jiajun Cao; Shaobo Guo; Qi She; Shanghang Zhang"
+    },
+    {
+      "ref_id": "b79",
+      "title": "Llava-mini: Efficient image and video large multimodal models with one vision token",
+      "journal": "",
+      "year": "2025",
+      "authors": "Shaolei Zhang; Qingkai Fang; Zhe Yang; Yang Feng"
+    },
+    {
+      "ref_id": "b80",
+      "title": "Sparsevlm: Visual token sparsification for efficient vision-language model inference",
+      "journal": "",
+      "year": "2025",
+      "authors": "Yuan Zhang; Chun-Kai Fan; Junpeng Ma; Wenzhao Zheng; Tao Huang; Kuan Cheng; Denis Gudovskiy; Tomoyuki Okuno; Yohei Nakata; Kurt Keutzer"
+    },
+    {
+      "ref_id": "b81",
+      "title": "Video instruction tuning with synthetic data",
+      "journal": "Transactions on Machine Learning Research",
+      "year": "2024",
+      "authors": "Yuanhan Zhang; Jinming Wu; Wei Li; Bo Li; Zejun Ma; Ziwei Liu; Chunyuan Li"
+    },
+    {
+      "ref_id": "b82",
+      "title": "Mlvu: Benchmarking multi-task long video understanding",
+      "journal": "",
+      "year": "2025",
+      "authors": "Junjie Zhou; Yan Shu; Bo Zhao; Boya Wu; Zhengyang Liang; Shitao Xiao; Minghao Qin; Xi Yang; Yongping Xiong; Bo Zhang"
+    }
+  ],
+  "figures": [
+    {
+      "figure_label": "",
+      "figure_type": "figure",
+      "figure_id": "fig_0",
+      "figure_caption": "Figure 1: Performance of FlashVID. (a) TTM may merge less correlated visual tokens, failing to capture fine-grained video dynamics. (b) FlashVID can enable Qwen2.5-VL to process 10× video frames, significantly improving the relative performance by 8.6% while maintaining overall computational budget. (c) FlashVID significantly outperforms current SOTA acceleration frameworks (e.g., FastV, VisionZip, FastVID) on three representative VLLMs.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "2",
+      "figure_type": "figure",
+      "figure_id": "fig_1",
+      "figure_caption": "Figure 2 :2Figure 2: Efficient inference paradigms. State-of-the-art acceleration frameworks can be mainly divided into three categories: 1) Before-LLM Compression; 2) Inner-LLM Pruning; and 3) Hybrid Compression, where the hybrid compression can be viewed as a trade-off of the Before-LLM Compression and Inner-LLM Pruning strategy.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "3",
+      "figure_type": "figure",
+      "figure_id": "fig_2",
+      "figure_caption": "Figure 3 :3Figure 3: Comparison of spatiotemporal redundancy compression. (a) TSTM merges more tokens than TTM under the same threshold and achieves higher inter-frame merging similarity by flexibly capturing fine-grained video dynamics. (b) TTM enforces rigid spatial correspondences, often overlooking dynamic variations in videos and merging less correlated visual tokens. (c) TSTM models video redundancy via spatiotemporal redundancy trees, capturing fine-grained spatiotemporal relationships. More visualizations are provided in Appendix E.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "",
+      "figure_type": "figure",
+      "figure_id": "fig_3",
+      "figure_caption": "Fig. 6 presents four qualitative examples comparing LLaVA-OneVision with and without FlashVID, which indicates FlashVID enables fine-grained spatiotemporal redundancy compression, providing compact yet informative video representation. E.3 QUALITATIVE ANALYSIS ON QWEN2.5-VL",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "59",
+      "figure_type": "figure",
+      "figure_id": "fig_4",
+      "figure_caption": "Figure 5 :Figure 9 :59Figure5: Visualizations of Tree-based Spatiotemporal Token Merging (TSTM). We select three consecutive video frames that show obvious variations in spatial locations, scale, and orientation for each case to illustrate the advantages of our TSTM in FlashVID. TSTM jointly models spatial and temporal redundancy via spatiotemporal redundancy trees for capturing fine-grained spatiotemporal relationships; thus, it achieves better spatiotemporal redundancy compression.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "1",
+      "figure_type": "table",
+      "figure_id": "tab_0",
+      "figure_caption": "Comparison of state-of-the-art methods on LLaVA-OneVision and LLaVA-Video.Our FlashVID consistently outperforms previous state-of-the-art methods by a large margin under different retention ratios across multiple benchmarks and VLLMs. Notably, FlashVID surpasses vanilla LLaVA-OneVision with full visual tokens input when R ∈ {15%, 20%, 25%}.",
+      "figure_data": "MethodRetention Ratio RVideoMME Short Medium Long Overall Subset Total EgoSchema LongVideo BenchMVBenchAvg. Score Rel. Acc (%)LLaVA-OneVisionVanilla100%69.956.748.9 58.562.2 60.356.658.358.4100.0FastV68.154.746.8 56.560.4 57.855.456.456.596.7VisionZip68.857.348.2 58.163.0 60.456.457.858.299.7PruneVID25%67.354.847.2 56.461.0 58.155.456.856.797.1FastVID69.956.347.4 57.961.2 59.555.958.157.899.0FlashVID71.257.049.3 59.263.4 60.456.858.058.6100.3FastV66.353.946.9 55.760.6 57.656.056.056.396.4VisionZip68.657.048.3 58.062.0 60.055.457.657.798.8PruneVID20%67.253.948.2 56.463.2 60.255.256.257.097.6FastVID69.956.347.4 57.961.2 59.555.958.157.999.1FlashVID70.155.448.9 58.263.0 60.158.558.258.7100.5FastV64.654.045.3 54.659.8 56.654.855.055.294.5VisionZip FastVID15%63.8 69.754.6 55.848.3 55.6 47.7 57.762.8 60.0 58.8 58.954.1 56.753.5 58.255.8 57.995.5 99.1PruneVID67.252.846.7 56.161.6 57.754.555.155.795.4FlashVID69.656.048.9 58.262.8 60.457.557.958.5100.2FastV60.952.244.9 52.759.0 56.052.453.453.691.8VisionZip60.352.946.7 53.361.6 58.549.454.854.092.5PruneVID10%65.952.845.6 54.760.0 57.254.053.754.994.0FastVID68.155.747.8 57.258.8 58.755.757.057.197.8FlashVID67.357.149.0 57.862.4 60.056.557.457.999.1LLaVA-VideoVanilla100%77.062.153.3 64.259.4 57.359.561.960.7100.0FastV69.358.349.9 59.254.8 54.156.058.456.993.7VisionZip FastVID20%72.3 74.659.6 60.853.3 61.7 52.3 62.659.0 56.4 57.0 55.058.0 57.159.8 60.259.0 58.797.2 96.7FlashVID74.160.052.3 62.258.4 56.458.759.859.397.7FastV64.353.849.2 55.850.6 51.153.656.254.289.3VisionZip FastVID10%69.4 71.857.9 57.351.2 59.5 50.2 59.854.4 53.9 54.8 52.454.5 56.958.5 59.356.6 57.193.2 94.1FlashVID72.259.151.2 60.957.2 54.957.759.358.295.9"
+    },
+    {
+      "figure_label": "2",
+      "figure_type": "table",
+      "figure_id": "tab_1",
+      "figure_caption": "Comparison of state-of-the-art methods on Qwen2.5-VL. The best performance among those with similar retention ratios R is highlighted in bold.",
+      "figure_data": "MethodRetention Ratio RVideoMME Short Medium Long Overall Subset Total EgoSchema LongVideo BenchMVBenchAvg. Score Rel. Acc (%)Vanilla100%72.661.449.9 61.360.2 58.358.968.061.6100.0FastV69.457.051.2 59.260.2 57.154.266.859.396.3VisionZip FastVID20%69.6 69.957.2 56.350.2 59.0 49.7 58.658.6 56.6 57.2 56.456.3 57.866.4 64.759.6 59.496.8 96.4FlashVID70.458.649.7 59.659.2 56.858.166.560.297.7FastV63.754.749.3 55.958.6 54.951.163.657.391.6VisionZip FastVID10%67.0 66.354.7 53.647.6 56.4 49.0 56.355.8 55.5 56.0 55.654.5 55.464.3 62.357.7 57.493.7 93.2FlashVID68.154.749.0 57.357.4 55.957.165.558.995.6"
+    },
+    {
+      "figure_label": "3",
+      "figure_type": "table",
+      "figure_id": "tab_2",
+      "figure_caption": "Comparison of state-of-the-art methods on Qwen2.5-VL under a fixed token budget.Our FlashVID enables Qwen2.5-VL processing 10× video frames, improving the overall performance of 8.6% within the same computational memory budget.",
+      "figure_data": "Method #FramesRetention Ratio RVideoMME Short Medium Long Overall Subset Total EgoSchema LongVideo BenchMLVUAvg. Score Rel. Acc (%)Vanilla16 (1x)100%66.456.448.2 57.058.2 55.656.940.6 52.6100.0VisionZip74.260.052.1 62.160.0 58.257.443.1 55.2104.9FastVID80 (5x)20%73.059.951.7 61.561.2 58.458.044.4 55.6105.7FlashVID74.260.852.2 62.461.4 58.658.945.0 56.2106.8VisionZip70.760.153.9 61.661.8 59.656.845.1 55.8106.1FastVID160 (10x)10%71.260.653.8 61.961.2 59.158.043.8 55.7105.9FlashVID71.462.253.7 62.461.2 59.558.947.5 57.1108.6tecture and characteristics. As illustrated in Tab. 2, our method significantly surpasses previousstate-of-the-art methods under various retention ratios, demonstrating strong generalization acrossdifferent VLLMs."
+    },
+    {
+      "figure_label": "4",
+      "figure_type": "table",
+      "figure_id": "tab_3",
+      "figure_caption": "Ablation study on ADTS. ATS, DTS, and ADTS denote attention-, diversity-, and attention-diversity-based token selection, respectively.'C.A' and 'E.R.' denote [CLS] attention and event relevance calibration terms in ADTS.",
+      "figure_data": "Method VideoMME EgoSchemaLongVideo BenchMVBenchRel. Acc.ATS55.559.555.056.296.9DTS55.760.355.355.597.1w/ E.R.56.060.255.156.897.6w/ C.A.57.359.755.757.398.5ADTS57.860.056.557.499.1"
+    },
+    {
+      "figure_label": "5",
+      "figure_type": "table",
+      "figure_id": "tab_4",
+      "figure_caption": "Ablation study on α in visual token compression before LLM. α controls the retained ratio of ADTS and TSTM, where α = 0 and α = 1 indicate TSTM and ADTS only.",
+      "figure_data": "αVideoMME EgoSchemaLongVideo BenchMVBenchRel. Acc.0.0/TSTM56.760.255.355.697.40.256.259.855.356.597.40.456.460.055.157.297.90.657.060.455.857.098.50.757.860.056.557.499.10.857.260.156.357.198.81.0/ADTS56.960.155.657.698.5"
+    },
+    {
+      "figure_label": "6",
+      "figure_type": "table",
+      "figure_id": "tab_5",
+      "figure_caption": "Efficiency of our FlashVID. We conduct the efficiency analysis on LLaVA-OneVision, and report the prefilling time and Time-To-First-Token (TTFT) in milliseconds (ms).",
+      "figure_data": "MethodRetention Ratio RTFLOPsVision EncodingPrefilling Time Compression LLM ForwardTotalTTFTAvg. Score Rel. Acc (%)Vanilla100%113.4785.0-1220.81220.8 (1.0×) 2005.8 (1.0×) 58.9100.0FastVID25%22.4785.028.6273.2301.8 (4.0×) 1086.8 (1.8×) 58.098.5FlashVID10%8.6785.060.2133.1193.3 (6.3×) 978.3 (2.1×) 58.499.1"
+    },
+    {
+      "figure_label": "7",
+      "figure_type": "table",
+      "figure_id": "tab_6",
+      "figure_caption": "Comparison of state-of-the-art methods on Qwen2.5-VL. The best performance among those with similar retention ratios R is highlighted in bold.",
+      "figure_data": "MethodRetention Ratio RVideoMME Short Medium Long Overall Subset Total EgoSchema LongVideo BenchMVBenchAvg. Score Rel. Acc (%)Vanilla100%72.661.449.9 61.360.2 58.358.968.061.6100.0FastV71.257.851.6 60.260.2 57.254.667.459.897.1VisionZip FastVID25%70.7 71.257.9 57.851.2 59.9 49.9 59.658.6 57.0 58.2 56.757.1 58.067.3 65.560.3 60.097.9 97.4FlashVID71.158.749.1 59.659.4 57.258.167.160.598.2FastV67.455.251.1 57.959.6 56.552.265.958.194.3VisionZip FastVID15%68.8 68.256.7 56.949.1 58.2 49.4 58.256.2 55.7 56.6 56.056.3 56.866.0 63.659.0 58.695.8 95.1FlashVID69.857.149.3 58.757.6 56.456.866.659.696.8"
+    },
+    {
+      "figure_label": "8",
+      "figure_type": "table",
+      "figure_id": "tab_7",
+      "figure_caption": "Comparison of state-of-the-art methods on Qwen2.5-VL under a fixed token budget.Our FlashVID enables Qwen2.5-VL processing 10× video frames, improving the overall performance of 8.6% within the same computational memory budget.",
+      "figure_data": "Method #FramesRetention Ratio RVideoMME Short Medium Long Overall Subset Total EgoSchema LongVideo BenchMLVUAvg. Score Rel. Acc (%)Vanilla16 (1x)100%66.456.448.2 57.058.2 55.656.940.6 52.6100.0VisionZip74.059.652.9 62.259.4 57.656.142.2 54.5103.6FastVID48 (3x)33.373.260.051.7 61.659.4 57.857.243.1 54.9104.4FlashVID73.060.252.4 61.959.6 57.857.045.1 55.4105.3VisionZip72.360.151.6 61.361.0 58.557.844.7 55.6105.7FastVID64 (4x)25.071.058.350.6 60.061.4 58.157.745.0 55.2104.9FlashVID73.059.350.3 60.960.2 58.458.445.0 55.7105.9"
+    },
+    {
+      "figure_label": "9",
+      "figure_type": "table",
+      "figure_id": "tab_8",
+      "figure_caption": "Comparison of state-of-the-art methods on LLaVA-Video.We employ frame token setting for adaptation to different acceleration frameworks.",
+      "figure_data": "MethodRetention Ratio RVideoMME Short Medium Long Overall Subset Total EgoSchema LongVideo BenchMVBenchAvg. Score Rel. Acc (%)Vanilla100%77.062.153.3 64.259.4 57.359.561.960.7100.0FastV71.759.250.9 60.656.0 54.856.459.157.795.1VisionZip FastVID25%74.0 74.760.3 60.152.9 62.4 53.6 62.859.0 57.0 57.4 55.458.3 58.260.0 60.559.4 59.297.9 97.5FlashVID74.261.451.6 62.459.2 56.659.160.259.698.2FastV67.956.950.8 58.552.8 53.154.557.555.992.1VisionZip FastVID15%72.9 73.458.1 58.151.9 61.0 51.8 61.158.6 55.7 56.8 54.157.2 57.759.6 60.358.4 58.396.2 96.0FlashVID73.859.652.1 61.857.8 55.858.360.459.197.4"
+    },
+    {
+      "figure_label": "10",
+      "figure_type": "table",
+      "figure_id": "tab_9",
+      "figure_caption": "Efficiency of our FlashVID. We conduct the efficiency analysis on LLaVA-Video, and report the prefilling time and Time-To-First-Token (TTFT) in milliseconds (ms).",
+      "figure_data": "MethodRetention Ratio RTFLOPsVision EncodingPrefilling Time Compression LLM ForwardTotalTTFTAvg. Score Rel. Acc (%)Vanilla100%94.8685.0-1016.81016.8 (1.0×) 1701.8 (1.0×) 60.7100.0FlashVID10%8.0685.085.7107.6193.3 (5.3×) 878.3 (1.9×) 58.295.9"
+    },
+    {
+      "figure_label": "11",
+      "figure_type": "table",
+      "figure_id": "tab_10",
+      "figure_caption": "Ablation study on the tree depth. The maximum tree depth constraint prevents token merging in tokens from spanning an overly long temporal range.",
+      "figure_data": "Depth VideoMME EgoSchemaLongVideo BenchMVBenchRel. Acc.1/Min57.260.055.557.298.5457.660.356.457.299.1857.660.056.057.499.01657.760.056.357.399.032/Inf57.860.056.557.499.1"
+    },
+    {
+      "figure_label": "12",
+      "figure_type": "table",
+      "figure_id": "tab_11",
+      "figure_caption": "Ablation study on tree breadth. The maximum tree breadth prevents the merge of tokens in adjacent frames from crossing excessively large spatial regions, ensuring that spatial locality is preserved.",
+      "figure_data": "Breadth VideoMME EgoSchemaLongVideo BenchMVBenchRel. Acc.1/Min57.360.156.057.298.6557.360.156.057.298.8957.960.056.056.898.814/Inf57.860.056.557.499.1"
+    },
+    {
+      "figure_label": "13",
+      "figure_type": "table",
+      "figure_id": "tab_12",
+      "figure_caption": "Ablation study on the T τ . T τ controls the merging strength, in which a lower T τ indicates stronger compression.",
+      "figure_data": "T τ VideoMME EgoSchemaLongVideo BenchMVBenchRel. Acc.LLaVA-OneVision0.957.360.456.557.399.10.857.860.056.557.499.10.757.160.156.057.098.5LLaVA-Video0.957.255.056.959.795.70.857.254.957.759.395.90.757.855.357.159.295.7"
+    },
+    {
+      "figure_label": "14",
+      "figure_type": "table",
+      "figure_id": "tab_13",
+      "figure_caption": "Ablation study on f e . f e controls the expansion ratio, in which a large f e may lead to computational inefficiency, while a low value may lose critical information.",
+      "figure_data": "f e VideoMME EgoSchemaLongVideo BenchMVBenchRel. Acc.1.0056.560.455.156.597.81.1556.960.255.456.998.11.2057.360.356.057.398.81.2557.860.056.557.499.11.3057.560.356.357.599.11.3557.160.056.557.398.8"
+    },
+    {
+      "figure_label": "6",
+      "figure_type": "figure",
+      "figure_id": "fig_5",
+      "figure_caption": "Figure 6 :6(a) LLaVA-OneVision with and without FlashVID (Example 1) Question: What are the moves in the last scene of this dance? LLaVA-OneVision LLaVA-OneVision w/ FlashVID A. Kneel down on one knee and lean back. B. Passe and then chasse (b) LLaVA-OneVision with and without FlashVID (Example 2) Question: Who fight versus the black dinosaur at last? LLaVA-OneVision LLaVA-OneVision w/ FlashVID D. A dragon C. A King Kong. (c) LLaVA-OneVision with and without FlashVID (Example 3) Question: which smart phone is advertised on the screen of the laptop? LLaVA-OneVision LLaVA-OneVision w/ FlashVID D. iPhone 6s. B. iPhone 14 Pro. (d) LLaVA-OneVision with and without FlashVID (Example 4)Qualitative comparison of LLaVA-OneVision with and without FlashVID. We conduct qualitative analysis on LLaVA OneVision with and without FlashVID under a 25% retention ratio. We observe an interesting phenomenon: in some examples, LLaVA OneVision with FlashVID compression can answer the questions correctly, whereas the original model with full visual tokens input gives incorrect answers, unveiling a \"less-is-more\" pattern where excessive visual tokens input may degrade model performance.Question: What is the specific sentence in the smart phone that makes the man embarrassed? Qwen2.5-VL B. Dude! You gotta come toBigStuf Camps! Qwen2.5-VL w/ FlashVID A. BTW...you got something in your teeth! (a) Qwen2.5-VL with and without FlashVID (Example 1) Question: What is the specific sentence in the smart phone that makes the man embarrassed? Qwen2.5-VL A. A bamboo. Qwen2.5-VL w/ FlashVID B. A stick. (b) Qwen2.5-VL with and without FlashVID (Example 2) Question: What are the moves in the last scene of this dance? Qwen2.5-VL Qwen2.5-VL w/ FlashVID A. Kneel down on one knee and lean back. C. Releve and then pirouette.",
+      "figure_data": ""
+    },
+    {
+      "figure_label": "7810",
+      "figure_type": "figure",
+      "figure_id": "fig_6",
+      "figure_caption": "Figure 7 :Figure 8 :Figure 10 :7810(c) Qwen2.5-VL with and without FlashVID (Example 3) Question: What is the stage background where several male performers are holding long sticks? Qwen2.5-VL Qwen2.5-VL w/ FlashVID A. A sailboat. B. A forest. (d) Qwen2.5-VL with and without FlashVID (Example 4) Qualitative comparison of Qwen2.5-VL with and without FlashVID. The vanilla model processes only 16 sampled frames, which limits its ability to capture sufficient temporal information. In contrast, Qwen2.5-VL can handle 160 (10×) frames with FlashVID while maintaining the overall computational budget, yielding more accurate predictions by leveraging longer temporal context. ADTS w/o Event Relevance ADTS w/ Event Relevance Question: What is the final score of the game? B. 6-8 B. 5-9 (a) Visualization of ADTS (Example 1) ADTS w/o Event Relevance ADTS w/ Event Relevance Question: What is left of the wine on the animation when suggesting avoiding stimulants? C. Heavy meals. A. Caffines. (b) Visualization of ADTS (Example 2) Comparisons of ADTS with and without event relevance calibration. ADTS employs event relevance calibration terms to identify the tokens most relevant to the video event. Published as a conference paper at ICLR 2026 Question: What does the panda use to fight with enemies in the video? (a) Visualization of visual perception layers. (Example 1) Question: Which of the following is visible in the background of the video when the miniature bottle is shown empty? (b) Visualization of visual perception layers. (Example 2) Question: When is the zodiacal light visible from the video? (c) Visualization of visual perception layers. (Example 3) Visualizations of visual perception layers.",
+      "figure_data": ""
+    }
+  ],
+  "formulas": [
+    {
+      "formula_id": "formula_0",
+      "formula_text": "Q l = H l W l Q , K l = H l W l K , V l = H l W l V ,(1)",
+      "formula_coordinates": [
+        3.0,
+        205.83,
+        692.47,
+        298.17,
+        12.69
+      ]
+    },
+    {
+      "formula_id": "formula_1",
+      "formula_text": "W l Q , W l K , W l V ∈ R d×d",
+      "formula_coordinates": [
+        3.0,
+        128.9,
+        709.52,
+        102.23,
+        12.47
+      ]
+    },
+    {
+      "formula_id": "formula_2",
+      "formula_text": "K ← concat[K, K t ], V ← concat[V, V t ].(2)",
+      "formula_coordinates": [
+        4.0,
+        215.83,
+        380.42,
+        288.17,
+        9.68
+      ]
+    },
+    {
+      "formula_id": "formula_3",
+      "formula_text": "FLOPs = L × (4nd 2 + 2n 2 d + 2ndm),(3)",
+      "formula_coordinates": [
+        4.0,
+        225.27,
+        491.9,
+        278.74,
+        11.03
+      ]
+    },
+    {
+      "formula_id": "formula_4",
+      "formula_text": "S (f ) = cos(E (f ) v , E (f +1) v ) ∈ R Nv×Nv ,(4)",
+      "formula_coordinates": [
+        5.0,
+        228.18,
+        626.17,
+        275.81,
+        12.69
+      ]
+    },
+    {
+      "formula_id": "formula_5",
+      "formula_text": "c (i) = Agg(T (i) ),(5)",
+      "formula_coordinates": [
+        5.0,
+        269.84,
+        720.98,
+        234.15,
+        11.03
+      ]
+    },
+    {
+      "formula_id": "formula_6",
+      "formula_text": "p * ← arg max p∈R (f -1) sim(r f i , p) 12: if sim(r f i , p * ) ≥ T τ then 13: Connect r f i to p * 14:",
+      "formula_coordinates": [
+        6.0,
+        108.5,
+        255.14,
+        184.9,
+        50.13
+      ]
+    },
+    {
+      "formula_id": "formula_7",
+      "formula_text": "C ← C ∪ Agg(T ) 19: end for 20: return X ← C ∪ ( F f =1 I (f ) )",
+      "formula_coordinates": [
+        6.0,
+        108.5,
+        340.37,
+        137.74,
+        36.05
+      ]
+    },
+    {
+      "formula_id": "formula_8",
+      "formula_text": "D (f ) = 1 -cos(E (f ) v , E (f ) v ),(6)",
+      "formula_coordinates": [
+        6.0,
+        247.36,
+        577.14,
+        256.64,
+        12.69
+      ]
+    },
+    {
+      "formula_id": "formula_9",
+      "formula_text": "A = Softmax(QK T / √ d) ∈ R F ×Nv×Nv ,(7)",
+      "formula_coordinates": [
+        6.0,
+        222.78,
+        685.78,
+        281.23,
+        18.27
+      ]
+    },
+    {
+      "formula_id": "formula_10",
+      "formula_text": "Se = 1 F F i=1 (E v • f v ⊤ )[:, :, i] ∈ R F ×Nv .(8)",
+      "formula_coordinates": [
+        7.0,
+        225.46,
+        125.11,
+        278.53,
+        30.32
+      ]
+    },
+    {
+      "formula_id": "formula_11",
+      "formula_text": "I = MMDP(D, A [CLS] , Se ).(9)",
+      "formula_coordinates": [
+        7.0,
+        249.11,
+        189.83,
+        254.89,
+        12.33
+      ]
+    },
+    {
+      "formula_id": "formula_12",
+      "formula_text": "for each token r f i ∈ R (f ) do 4: N (r f i ) ← candidate parents in R (f -1) within neighborhood k 5: p * ← arg max p∈N (r f i ) sim(r f i , p) 6: if sim(r f i , p * ) ≥ T τ then 7: Connect r f i to p * 8:",
+      "formula_coordinates": [
+        21.0,
+        112.98,
+        159.99,
+        290.06,
+        78.96
+      ]
+    },
+    {
+      "formula_id": "formula_13",
+      "formula_text": "f e = GAP(E v ) ∈ R F ×d . (10",
+      "formula_coordinates": [
+        22.0,
+        255.33,
+        526.73,
+        244.52,
+        11.72
+      ]
+    },
+    {
+      "formula_id": "formula_14",
+      "formula_text": "t i = cos(f i , f i+1 ), i = 1, 2, • • • , F -1, T = {t 1 , t 2 , • • • , t F -1 } (11",
+      "formula_coordinates": [
+        22.0,
+        222.96,
+        572.31,
+        276.89,
+        23.67
+      ]
+    },
+    {
+      "formula_id": "formula_15",
+      "formula_text": ")",
+      "formula_coordinates": [
+        22.0,
+        499.85,
+        586.65,
+        4.15,
+        8.64
+      ]
+    },
+    {
+      "formula_id": "formula_16",
+      "formula_text": "FLOPs = L × (2nd 2 (1 + g/h) + 2n 2 d + 3ndm), (12",
+      "formula_coordinates": [
+        23.0,
+        204.9,
+        599.81,
+        294.96,
+        11.03
+      ]
+    },
+    {
+      "formula_id": "formula_17",
+      "formula_text": ")",
+      "formula_coordinates": [
+        23.0,
+        499.86,
+        602.2,
+        4.15,
+        8.64
+      ]
+    },
+    {
+      "formula_id": "formula_18",
+      "formula_text": "RL = M K + R(L -K).(13)",
+      "formula_coordinates": [
+        23.0,
+        255.11,
+        720.54,
+        248.88,
+        11.48
+      ]
+    },
+    {
+      "formula_id": "formula_19",
+      "formula_text": "R = R(L -f e K) L -K .(14)",
+      "formula_coordinates": [
+        24.0,
+        266.62,
+        99.22,
+        237.38,
+        24.83
+      ]
+    },
+    {
+      "formula_id": "formula_20",
+      "formula_text": "r = R M = L -f e K f e (L -K) .(15)",
+      "formula_coordinates": [
+        24.0,
+        258.66,
+        144.77,
+        245.34,
+        23.23
+      ]
+    }
+  ],
+  "doi": "",
+  "source_paper": {
+    "title": "FlashVID: Efficient Video Large Language Models via Training-free Tree-based Spatiotemporal Token Merging",
+    "openreview_url": "https://openreview.net/forum?id=H6rDX4w6Al",
+    "openreview_id": "H6rDX4w6Al",
+    "venue": "ICLR",
+    "year": 2026
+  }
+}
