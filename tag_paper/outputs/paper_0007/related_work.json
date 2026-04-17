@@ -1,0 +1,178 @@
+{
+  "target_paper_title": "Neptune-X: Active X-to-Maritime Generation for Universal Maritime Object Detection",
+  "related_work_items": [
+    {
+      "citation_marker": "[34]",
+      "paper_title": "Aerogen: enhancing remote sensing object detection with diffusion-driven data generation",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Data Augmentation for Object Detection.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "AeroGen [34] further explores layout-conditioned diffusion to generate synthetic remote sensing imagery based on rotated bounding boxes."
+        },
+        {
+          "section": "High-quality Data Generation",
+          "evidence_type": "method_context",
+          "evidence_text": "Subsequently, we apply a filter inspired by AeroGen [34] to eliminate low-quality data."
+        },
+        {
+          "section": "A.2 Maritime Generation Dataset",
+          "evidence_type": "comparison_context",
+          "evidence_text": "The experimental results, shown in Table 8, indicate that existing generative methods perform poorly in maritime scenarios."
+        }
+      ],
+      "gap_relevance_note": "AeroGen is the closest cited generative augmentation baseline and also a direct design reference for Neptune-X's filtering stage, but the paper argues such methods do not model maritime-specific object-water interactions."
+    },
+    {
+      "citation_marker": "[18]",
+      "paper_title": "Gligen: Open-set grounded textto-image generation",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Related Work Diffusion-based Image Generation.",
+          "evidence_type": "method_context",
+          "evidence_text": "GLIGEN [18] introduces gated self-attention to fuse layout and textual conditions in a pre-trained SD model, while RC-L2I [5] employs regional cross-attention to enhance instance-level controllability."
+        },
+        {
+          "section": "Attribute-related Training Difficulty Factors",
+          "evidence_type": "method_context",
+          "evidence_text": "Inspired by GLIGEN [18], our module employs an identical embedding strategy to transform both conditional types into token representations."
+        },
+        {
+          "section": "A.2 Maritime Generation Dataset",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Methods Venue & Year mAP ↑ mAP50 ↑ ... GLIGEN [18] CVPR2023 41.54 62.85 ... Ours NeurIPS2025 43.62 65.50"
+        }
+      ],
+      "gap_relevance_note": "GLIGEN is an explicit architectural precursor and an experimental comparator, but Neptune-X claims GLIGEN-style conditioning still overlooks interactions between maritime objects and surrounding water."
+    },
+    {
+      "citation_marker": "[5]",
+      "paper_title": "Image synthesis from layout with locality-aware mask adaption",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Related Work Diffusion-based Image Generation.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "RC-L2I [5] employs regional cross-attention to enhance instance-level controllability."
+        },
+        {
+          "section": "Related Work Diffusion-based Image Generation.",
+          "evidence_type": "tension_context",
+          "evidence_text": "However, these methods generally treat object regions independently and overlook interactions with complex scene contexts, limiting their effectiveness in domains like maritime environments."
+        },
+        {
+          "section": "A.2 Maritime Generation Dataset",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Methods Venue & Year mAP ↑ mAP50 ↑ ... RC-L2I [5] NeurIPS2024 41.48 63.26 ... Ours NeurIPS2025 43.62 65.50"
+        }
+      ],
+      "gap_relevance_note": "RC-L2I is a direct layout-to-image comparison target and exemplifies the paper's claim that region-level controllability alone is insufficient for maritime scenes."
+    },
+    {
+      "citation_marker": "[50]",
+      "paper_title": "Layoutdiffusion: Controllable diffusion model for layout-to-image generation",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Related Work Diffusion-based Image Generation.",
+          "evidence_type": "method_context",
+          "evidence_text": "For example, LayoutDiff [50] integrates bounding box constraints into the diffusion process."
+        },
+        {
+          "section": "A.2 Maritime Generation Dataset",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Methods Venue & Year mAP ↑ mAP50 ↑ ... LayoutDiff [50] CVPR2023 40.03 61.01 ... Ours NeurIPS2025 43.62 65.50"
+        },
+        {
+          "section": "Related Work Diffusion-based Image Generation.",
+          "evidence_type": "tension_context",
+          "evidence_text": "However, these methods generally treat object regions independently and overlook interactions with complex scene contexts, limiting their effectiveness in domains like maritime environments."
+        }
+      ],
+      "gap_relevance_note": "LayoutDiff is a representative controllable diffusion baseline that motivates Neptune-X's move from box-only conditioning to explicit object-water interaction modeling."
+    },
+    {
+      "citation_marker": "[30]",
+      "paper_title": "High-resolution image synthesis with latent diffusion models",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Related Work Diffusion-based Image Generation.",
+          "evidence_type": "method_context",
+          "evidence_text": "Stable Diffusion (SD) [30] made this technology more accessible by introducing latent space compression, enabling efficient high-resolution synthesis."
+        },
+        {
+          "section": "X-to-Maritime Generation",
+          "evidence_type": "method_context",
+          "evidence_text": "As a state-of-the-art approach for text-to-image generation, SD [30] establishes itself as an effective framework for generative modeling. In this paper, we adopt SD as the foundational architecture due to its demonstrated effectiveness in conditional image generation."
+        }
+      ],
+      "gap_relevance_note": "Stable Diffusion is the direct generative foundation Neptune-X extends, so it is central to the method lineage rather than the main comparative gap argument."
+    },
+    {
+      "citation_marker": "[42]",
+      "paper_title": "A joint ship detection and waterway segmentation method for environment-aware of usvs in canal waterways",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "explicit_claim",
+          "evidence_text": "Object detection is a fundamental technology for maritime environmental perception ... including autonomous or assisted navigation for surface ships [43], intelligent video surveillance for coastal facilities [40], and autonomous inspection using Unmanned Aerial Vehicles (UAVs) [44]."
+        },
+        {
+          "section": "Introduction",
+          "evidence_type": "method_context",
+          "evidence_text": "Maritime scenes demand an explicit semantic understanding of the interaction between objects and their aquatic surroundings, as objects and environmental context (e.g., sea states, reflections, lighting) are closely intertwined in both appearance and meaning."
+        }
+      ],
+      "gap_relevance_note": "This cited maritime detection work helps establish the application domain and motivates environment-aware maritime perception, which Neptune-X targets through data generation rather than detector-only design."
+    },
+    {
+      "citation_marker": "[41]",
+      "paper_title": "Plug and play active learning for object detection",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Active Learning for Object Detection.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "For example, Choi et al. [7] modeled joint uncertainties using Mixture Density Networks, while PPAL [42] combines difficultycalibrated uncertainty sampling with diversity-based selection."
+        },
+        {
+          "section": "Attribute-correlated Training Difficulty Factors.",
+          "evidence_type": "method_context",
+          "evidence_text": "This adaptive momentum mechanism accelerates update rates for rare samples, thereby mitigating update speed disparities caused by sample imbalance within the same dimension [42]."
+        },
+        {
+          "section": "Comparison of Different Sampling Methods in Data Augmentation.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "To comprehensively demonstrate the advantages of the proposed AAS method, extensive comparative experiments were conducted with five different active learning approaches."
+        }
+      ],
+      "gap_relevance_note": "The paper draws directly on active-learning-style sample selection ideas for AAS while arguing that standard active learning does not account for synthetic-data utility and maritime attribute difficulty."
+    }
+  ]
+}

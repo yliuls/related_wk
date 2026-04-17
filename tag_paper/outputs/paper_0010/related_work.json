@@ -1,0 +1,248 @@
+{
+  "target_paper_title": "QSVD: Efficient Low-rank Approximation for Unified Query-Key-Value Weight Compression in Low-Precision Vision-Language Models",
+  "related_work_items": [
+    {
+      "citation_marker": "b59",
+      "paper_title": "Asvd: Activation-aware singular value decomposition for compressing large language models",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Singular Value Decomposition for Large Models",
+          "evidence_type": "comparison_context",
+          "evidence_text": "ASVD [60] incorporates activation outliers into the factorization."
+        },
+        {
+          "section": "Cross-layer Rank Allocation for Low-rank SVD",
+          "evidence_type": "method_context",
+          "evidence_text": "We adopt the activation-aware SVD technique from ASVD [60] to extract the singular values across all layers."
+        },
+        {
+          "section": "Evaluation Results",
+          "evidence_type": "comparison_context",
+          "evidence_text": "the baselines include the SVD approaches (ASVD [60], SVD-LLM [52])"
+        }
+      ],
+      "gap_relevance_note": "ASVD is both a direct experimental baseline and an immediate technical precursor, but the paper argues QSVD improves on it by using joint QKV decomposition and a global singular-value allocation scheme rather than layer-local factorization alone."
+    },
+    {
+      "citation_marker": "b51",
+      "paper_title": "Svd-llm: Truncation-aware singular value decomposition for large language model compression",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Singular Value Decomposition for Large Models",
+          "evidence_type": "comparison_context",
+          "evidence_text": "SVD-LLM [52] further reduces compression loss by explicitly minimizing the contribution of each truncated singular value."
+        },
+        {
+          "section": "Evaluation Results",
+          "evidence_type": "comparison_context",
+          "evidence_text": "the baselines include the SVD approaches (ASVD [60], SVD-LLM [52])"
+        },
+        {
+          "section": "Accuracy Evaluation on QSVD-noQ",
+          "evidence_type": "explicit_claim",
+          "evidence_text": "Our method outperforms ASVD and SVD-LLM in accuracy while incurring minimal or comparable hardware cost."
+        }
+      ],
+      "gap_relevance_note": "SVD-LLM is a central comparison point because QSVD targets the same compression objective, while claiming stronger accuracy-hardware tradeoffs by decomposing joint QKV weights and reducing KV-cache-related overhead."
+    },
+    {
+      "citation_marker": "b27",
+      "paper_title": "Adasvd: Adaptive singular value decomposition for large language models",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Singular Value Decomposition for Large Models",
+          "evidence_type": "method_context",
+          "evidence_text": "Recent advances include AdaSVD [28], which adaptively compensates for truncation errors and dynamically allocates compression rates according to layer importance"
+        },
+        {
+          "section": "Introduction",
+          "evidence_type": "method_context",
+          "evidence_text": "we introduce a novel rank allocation scheme, which investigates the importance of each singular value in relation to VLM accuracy."
+        }
+      ],
+      "gap_relevance_note": "AdaSVD is part of the immediate method lineage because it motivates adaptive rank allocation, but QSVD shifts that idea to a cross-layer singular-value budget tailored to joint QKV compression in VLMs."
+    },
+    {
+      "citation_marker": "b4",
+      "paper_title": "Kv-cache compression with low-rank projection",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "tension_or_conflict_work"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Singular Value Decomposition for Large Models",
+          "evidence_type": "method_context",
+          "evidence_text": "Palu [6] and [58] have shifted attention to compressing the KV-Cache, leveraging SVD and low-rank projections to reduce memory footprint."
+        },
+        {
+          "section": "Introduction",
+          "evidence_type": "method_context",
+          "evidence_text": "this work proposes the application of Singular-Value Decomposition (SVD) ... to the joint weight matrices of the query, key, and value. This approach significantly reduces the KV cache size by storing only the latent vectors instead of separate key and value vectors."
+        }
+      ],
+      "gap_relevance_note": "Low-rank KV-cache compression papers form the bridge to QSVD's cache-efficiency objective, but the target paper positions its unified QKV factorization as a more integrated way to reduce cache size and compute together."
+    },
+    {
+      "citation_marker": "b30",
+      "paper_title": "Deepseek-v3 technical report",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "method_context",
+          "evidence_text": "A recent proposal, Multi-Head Latent Attention (MLA) in the DeepSeek-v3 model [31], offers a novel approach to improving VLM efficiency. It significantly reduces the KV cache size by compressing the KV cache into a latent vector"
+        },
+        {
+          "section": "Singular Value Decomposition for Large Models",
+          "evidence_type": "method_context",
+          "evidence_text": "This latent factorization can be viewed as an implicit low-rank approximation applied dynamically during inference, offering complementary benefits to static weight compression methods such as SVD."
+        }
+      ],
+      "gap_relevance_note": "The DeepSeek MLA line is a direct bridge because it motivates latent-space KV compression; QSVD adapts that efficiency intuition into a static SVD factorization over concatenated QKV weights."
+    },
+    {
+      "citation_marker": "b1",
+      "paper_title": "Quarot: Outlier-free 4-bit inference in rotated llms",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Quantization for Large Models",
+          "evidence_type": "method_context",
+          "evidence_text": "Building upon these ideas, techniques like QuaRot [2], DuQuant [29], and SpinQuant [35] incorporate orthogonal transformations to further enhance quantization performance."
+        },
+        {
+          "section": "Cross-layer Rank Allocation for Low-rank SVD",
+          "evidence_type": "method_context",
+          "evidence_text": "We adopt the rotational method introduced in [2,54] and outlined in Section 2.3 to smooth channelwise outliers."
+        },
+        {
+          "section": "Evaluation Results",
+          "evidence_type": "comparison_context",
+          "evidence_text": "we compare the results with advanced quantization methods such as DuQuant [29] and QVLM [46], as well as quantized version of ASVD (QASVD). For QASVD, we apply QuaRot [2] to the SVD-truncated VLMs obtained from ASVD."
+        }
+      ],
+      "gap_relevance_note": "QuaRot provides the core rotation-based outlier smoothing used inside QSVD's quantization stage, making it part of the technical backbone rather than the main novelty."
+    },
+    {
+      "citation_marker": "b28",
+      "paper_title": "Duquant: Distributing outliers via dual transformation makes stronger quantized llms",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Quantization for Large Models",
+          "evidence_type": "method_context",
+          "evidence_text": "Building upon these ideas, techniques like QuaRot [2], DuQuant [29], and SpinQuant [35] incorporate orthogonal transformations to further enhance quantization performance."
+        },
+        {
+          "section": "Accuracy Evaluation of QSVD",
+          "evidence_type": "comparison_context",
+          "evidence_text": "We compare QSVD with DuQuant [29] and QVLM [46], as well as QASVD"
+        },
+        {
+          "section": "QSVD Results.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Under the W8A8 setting, QSVD matches or exceeds prior methods such as Duquant [29], QVLM [46], and QASVD"
+        }
+      ],
+      "gap_relevance_note": "DuQuant is a direct low-precision baseline. The paper uses it to show that quantization alone is insufficient compared with a joint SVD-plus-quantization design."
+    },
+    {
+      "citation_marker": "b45",
+      "paper_title": "Q-vlm: Post-training quantization for large vision-language models",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "tension_or_conflict_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Quantization for Large Models",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Q-VLM [46] addresses cross-layer dependency in quantization by leveraging activation entropy as a proxy to guide block partitioning."
+        },
+        {
+          "section": "Evaluation Results",
+          "evidence_type": "comparison_context",
+          "evidence_text": "we compare the results with advanced quantization methods such as DuQuant [29] and QVLM [46]"
+        },
+        {
+          "section": "QSVD Results.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Compared to QSVDLLM, our approach avoids the need for manually re-optimizing decomposed matrices while still achieving superior performance."
+        }
+      ],
+      "gap_relevance_note": "Q-VLM is an important VLM-specific quantization baseline, but the paper frames QSVD as addressing a broader efficiency gap by jointly reducing weight, compute, and KV-cache cost rather than quantization calibration alone."
+    },
+    {
+      "citation_marker": "b26",
+      "paper_title": "Modality-balanced quantization for large vision-language models",
+      "primary_label": "tension_or_conflict_work",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Quantization for Large Models",
+          "evidence_type": "comparison_context",
+          "evidence_text": "MBQ [27] proposes a modality-balanced quantization approach that accounts for the distinct gradient distributions of visual and textual tokens during calibration."
+        },
+        {
+          "section": "Quantization for Large Models",
+          "evidence_type": "tension_context",
+          "evidence_text": "However, to the best of our knowledge, no prior work has combined quantization with SVD for efficient VLM processing in the manner proposed by QSVD."
+        }
+      ],
+      "gap_relevance_note": "MBQ represents the existing VLM quantization line that QSVD contrasts with to justify combining low-rank QKV compression and quantization in one framework."
+    },
+    {
+      "citation_marker": "b0",
+      "paper_title": "Gqa: Training generalized multi-query transformer models from multi-head checkpoints",
+      "primary_label": "tension_or_conflict_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "comparison_context",
+          "evidence_text": "several variants have been proposed, such as Grouped-Query Attention [1] and Multi-Query Attention [42,1], which aim to reduce the number of KV projections while maintaining performance."
+        },
+        {
+          "section": "Introduction",
+          "evidence_type": "tension_context",
+          "evidence_text": "Building on the insights from MLA, this work proposes the application of Singular-Value Decomposition (SVD) ... to the joint weight matrices of the query, key, and value."
+        }
+      ],
+      "gap_relevance_note": "Grouped- or multi-query attention is an alternative route to reducing attention overhead. The paper positions QSVD against that design space by keeping the original model family and compressing its QKV projections with low-rank structure instead."
+    }
+  ]
+}

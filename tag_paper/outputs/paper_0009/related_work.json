@@ -1,0 +1,242 @@
+{
+  "target_paper_title": "Physics-Driven Spatiotemporal Modeling for AI-Generated Video Detection",
+  "related_work_items": [
+    {
+      "citation_marker": "b24",
+      "paper_title": "Demamba: Ai-generated video detection on million-scale genvideo benchmark",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "tension_or_conflict_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Related Work AI-Generated Video Detection.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Ma et al. [39] and Chen et al. [25] propose Transformer-and mamba-based frameworks to model spatiotemporal relationships in video frame features for detection."
+        },
+        {
+          "section": "Evaluation Metrics.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "We compare our NSG-VD with following baselines: TALL [24], NPR [27], STIL [36], and Demamba [25]."
+        },
+        {
+          "section": "Comparisons on Standard Evaluation",
+          "evidence_type": "comparison_context",
+          "evidence_text": "For instance, Demamba struggles with generative paradigms like HotShot (40.60% Recall) and Sora (48.21% Recall)."
+        }
+      ],
+      "gap_relevance_note": "Demamba is a main direct comparator on the same AI-generated video detection task, and the paper uses its weaker results on difficult generators to motivate the need for physics-driven modeling beyond learned spatiotemporal feature modeling."
+    },
+    {
+      "citation_marker": "b23",
+      "paper_title": "Tall: Thumbnail layout for deepfake video detection",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "tension_or_conflict_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Related Work AI-Generated Video Detection.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Xu et al. [24] transform consecutive frames into a predefined layout via masking/resizing to enable efficient spatiotemporal modeling."
+        },
+        {
+          "section": "Evaluation Metrics.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "We compare our NSG-VD with following baselines: TALL [24], NPR [27], STIL [36], and Demamba [25]."
+        },
+        {
+          "section": "Comparisons on Standard Evaluation",
+          "evidence_type": "comparison_context",
+          "evidence_text": "TALL fails on synthetic outliers (e.g., 25.00% Recall on Sora)."
+        }
+      ],
+      "gap_relevance_note": "TALL is a direct baseline for video forgery detection, but the paper presents it as another conventional spatiotemporal modeling approach that remains vulnerable on highly realistic generated videos."
+    },
+    {
+      "citation_marker": "b35",
+      "paper_title": "Spatiotemporal inconsistency learning for deepfake video detection",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "tension_or_conflict_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Related Work AI-Generated Video Detection.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Gu et al. [36] separately model spatial and temporal inconsistencies, and introduce a vertical slicing feature fusion mechanism to establish a more comprehensive spatial-temporal representation."
+        },
+        {
+          "section": "Evaluation Metrics.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "We compare our NSG-VD with following baselines: TALL [24], NPR [27], STIL [36], and Demamba [25]."
+        },
+        {
+          "section": "Comparisons on Standard Evaluation",
+          "evidence_type": "comparison_context",
+          "evidence_text": "STIL collapses completely on critical cases (e.g., 1.40% Recall on HotShot and 1.79% Recall on Sora), revealing limitations of their inherent dependencies on generator-specific artifacts."
+        }
+      ],
+      "gap_relevance_note": "STIL is explicitly compared in experiments and helps define the paper's gap: modeling inconsistency cues alone is not robust enough when generated videos become highly realistic and artifact cues weaken."
+    },
+    {
+      "citation_marker": "b21",
+      "paper_title": "Deepfake video detection through optical flow based cnn",
+      "primary_label": "tension_or_conflict_work",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "tension_context",
+          "evidence_text": "Traditional methods [22,23,24] often rely on specific artifacts like appearance consistency and optical flow-based motion modeling, struggling with highly realistic content yet physically implausible."
+        },
+        {
+          "section": "Related Work AI-Generated Video Detection.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Bai et al. [38] fuse frame-level and optical flow predictions to detect spatial-temporal anomalies."
+        },
+        {
+          "section": "Introduction",
+          "evidence_type": "tension_context",
+          "evidence_text": "Existing AI-generated video detection methods primarily rely on local feature inconsistencies (e.g., optical flow-based motion modeling [22], appearance consistency modeling [23]) ... However, they often ignore physics-driven constraints governing spatiotemporal evolution inherent to natural videos."
+        }
+      ],
+      "gap_relevance_note": "The optical-flow detection line is a key foil for the paper's framing because NSG-VD is presented as replacing artifact-specific motion cues with a physics-grounded statistic over probability flow."
+    },
+    {
+      "citation_marker": "b22",
+      "paper_title": "Altfreezing for more general video face forgery detection",
+      "primary_label": "tension_or_conflict_work",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Related Work AI-Generated Video Detection.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Wang et al. [23] propose an alternating-freezing strategy with spatiotemporal augmentation for facial consistency modeling."
+        },
+        {
+          "section": "Related Work AI-Generated Video Detection.",
+          "evidence_type": "tension_context",
+          "evidence_text": "While most methods utilize facial priors, their reliance on domain-specific features limits their generalizability to more general AI-generated content detection."
+        },
+        {
+          "section": "Introduction",
+          "evidence_type": "tension_context",
+          "evidence_text": "Existing AI-generated video detection methods primarily rely on local feature inconsistencies ... or supervised learning with large-scale datasets [25,24,26,27]."
+        }
+      ],
+      "gap_relevance_note": "AltFreezing represents the face-forgery-specific appearance-consistency line that the paper argues does not generalize well to general AI-generated video detection."
+    },
+    {
+      "citation_marker": "b29",
+      "paper_title": "Generative modeling by estimating gradients of the data distribution",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "method_context",
+          "evidence_text": "To enable practical estimation, we develop an NSG estimator leveraging pre-trained diffusion models' inherent gradient estimation ability [30,31]."
+        },
+        {
+          "section": "Estimating NSG with Diffusion Models",
+          "evidence_type": "method_context",
+          "evidence_text": "Using diffusion models' inherent gradient estimation ability [30,31], we propose an effective estimator combining spatial gradients from pre-trained diffusion models with motion-aware temporal dynamics."
+        },
+        {
+          "section": "Spatial Gradients Estimation.",
+          "evidence_type": "method_context",
+          "evidence_text": "Diffusion models [31,56] explicitly learn a score network sθ through score matching [30] or denoising diffusion modeling [41] to approximate ∇x log p(x, t)."
+        }
+      ],
+      "gap_relevance_note": "Score matching is a core technical ancestor because the paper relies on learned score functions to estimate the spatial probability gradients inside NSG."
+    },
+    {
+      "citation_marker": "b30",
+      "paper_title": "Score-based generative modeling through stochastic differential equations",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "method_context",
+          "evidence_text": "To enable practical estimation, we develop an NSG estimator leveraging pre-trained diffusion models' inherent gradient estimation ability [30,31]."
+        },
+        {
+          "section": "Spatial Gradients Estimation.",
+          "evidence_type": "method_context",
+          "evidence_text": "Diffusion models [31,56] explicitly learn a score network sθ through score matching [30] or denoising diffusion modeling [41] to approximate ∇x log p(x, t)."
+        },
+        {
+          "section": "Estimating NSG with Diffusion Models",
+          "evidence_type": "method_context",
+          "evidence_text": "The NSG statistic g(x, t) in Eqn. (6) requires estimating two key components: the spatial gradients ∇x log p(x, t) and the temporal derivatives ∂t log p(x, t). Using diffusion models' inherent gradient estimation ability [30,31]..."
+        }
+      ],
+      "gap_relevance_note": "The paper directly builds its NSG estimator on score-based diffusion models, making this reference part of the immediate method lineage rather than a competing detector."
+    },
+    {
+      "citation_marker": "b32",
+      "paper_title": "A kernel two-sample test",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "method_context",
+          "evidence_text": "Building on this foundation, we propose an NSG-based video detection method (NSG-VD) in Section 3.3, which computes the Maximum Mean Discrepancy (MMD) [33,34] between NSG features of real videos and the test video as the detection metric."
+        },
+        {
+          "section": "Exploring NSG for Detecting AI-Generated Videos",
+          "evidence_type": "method_context",
+          "evidence_text": "Recent studies show Maximum Mean Discrepancy (MMD) [33]-a non-parametric statistic for distribution alignment-has demonstrated remarkable capabilities in measuring distributional differences."
+        },
+        {
+          "section": "MMD Formulation with NSG Features.",
+          "evidence_type": "method_context",
+          "evidence_text": "The MMD [33] between SreP and SteQ in terms of NSG is computed as:"
+        }
+      ],
+      "gap_relevance_note": "The kernel two-sample test provides the core statistical comparison tool used by NSG-VD after the paper constructs NSG features."
+    },
+    {
+      "citation_marker": "b47",
+      "paper_title": "Detecting machine-generated texts by multi-population aware optimization for maximum mean discrepancy",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "tension_or_conflict_work"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Exploring NSG for Detecting AI-Generated Videos",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Recent studies show Maximum Mean Discrepancy (MMD) [33]-a non-parametric statistic for distribution alignment-has demonstrated remarkable capabilities in measuring distributional differences, e.g., AI-text detection [48,46] and adversarial samples detection [57,58]."
+        },
+        {
+          "section": "MMD Formulation with NSG Features.",
+          "evidence_type": "method_context",
+          "evidence_text": "Considering the multiple-population scenarios across diverse video distributions [48], we adopt a multi-population aware optimization for the kernel training."
+        },
+        {
+          "section": "MMD Formulation with NSG Features.",
+          "evidence_type": "method_context",
+          "evidence_text": "Note that while MMD is conventionally used for distribution-level comparisons, recent studies [48, 46, 58] validate its efficacy in single-sample detection by quantifying deviations from reference distributions."
+        }
+      ],
+      "gap_relevance_note": "This paper is a bridge from MMD-based machine-generated text detection to the target paper's video setting, especially for the multi-population-aware kernel optimization adopted in NSG-VD."
+    }
+  ]
+}
