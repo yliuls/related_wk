@@ -1,0 +1,282 @@
+{
+  "input_dir": "/Users/king/Desktop/gitcode/related_wk/tag_paper/outputs",
+  "unique_related_papers": 46,
+  "related_paper_to_citing_papers": {
+    "Accelerating diffusion language model inference via efficient kv caching and guided diffusion": {
+      "citing_papers": [
+        "paper_0002"
+      ],
+      "citation_count": 1
+    },
+    "Accelerating diffusion large language models with slowfast: The three golden principles": {
+      "citing_papers": [
+        "paper_0002"
+      ],
+      "citation_count": 1
+    },
+    "An image is worth 1/2 tokens after layer 2: Plug-and-play inference acceleration for large visionlanguage models": {
+      "citing_papers": [
+        "paper_0003"
+      ],
+      "citation_count": 1
+    },
+    "Anomaly detection on attributed networks via contrastive self-supervised learning": {
+      "citing_papers": [
+        "paper_0004"
+      ],
+      "citation_count": 1
+    },
+    "Arc: A generalist graph anomaly detector with in-context learning": {
+      "citing_papers": [
+        "paper_0004"
+      ],
+      "citation_count": 1
+    },
+    "Are convolutional neural networks or transformers more like human vision": {
+      "citing_papers": [
+        "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "Beyond autoregression: Fast LLMs via self-distillation through time": {
+      "citing_papers": [
+        "paper_0002"
+      ],
+      "citation_count": 1
+    },
+    "Contributions of shape, texture, and color in visual recognition": {
+      "citing_papers": [
+        "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "Cross-domain graph anomaly detection": {
+      "citing_papers": [
+        "paper_0004"
+      ],
+      "citation_count": 1
+    },
+    "Cross-domain graph anomaly detection via anomaly-aware contrastive alignment": {
+      "citing_papers": [
+        "paper_0004"
+      ],
+      "citation_count": 1
+    },
+    "Deep anomaly detection on attributed networks": {
+      "citing_papers": [
+        "paper_0004"
+      ],
+      "citation_count": 1
+    },
+    "Diffusion large language models": {
+      "citing_papers": [
+        "paper_0002"
+      ],
+      "citation_count": 1
+    },
+    "Discrete diffusion language modeling by estimating the ratios of the data distribution": {
+      "citing_papers": [
+        "paper_0002"
+      ],
+      "citation_count": 1
+    },
+    "Dycoke: Dynamic compression of tokens for fast video large language models": {
+      "citing_papers": [
+        "paper_0003"
+      ],
+      "citation_count": 1
+    },
+    "Fast-dLLM: Training-free acceleration of diffusion LLM by enabling KV cache and parallel decoding": {
+      "citing_papers": [
+        "paper_0002"
+      ],
+      "citation_count": 1
+    },
+    "Fastvid: Dynamic density pruning for fast video large language models": {
+      "citing_papers": [
+        "paper_0003"
+      ],
+      "citation_count": 1
+    },
+    "Gctam: Global and contextual combined truncated affinity maximization model for unsupervised graph anomaly detection": {
+      "citing_papers": [
+        "paper_0004"
+      ],
+      "citation_count": 1
+    },
+    "Generalisation in humans and deep neural networks": {
+      "citing_papers": [
+        "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "Global-local label correlation for partial multi-label learning": {
+      "citing_papers": [
+        "paper_0006"
+      ],
+      "citation_count": 1
+    },
+    "Hierarchical consensus hashing for cross-modal retrieval": {
+      "citing_papers": [
+        "paper_0006"
+      ],
+      "citation_count": 1
+    },
+    "Holitom: Holistic token merging for fast video large language models": {
+      "citing_papers": [
+        "paper_0003"
+      ],
+      "citation_count": 1
+    },
+    "Human alignment of neural network representations": {
+      "citing_papers": [
+        "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "ImageNet-trained CNNs are biased towards texture; increasing shape bias improves accuracy and robustness": {
+      "citing_papers": [
+        "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "Intriguing properties of vision transformers": {
+      "citing_papers": [
+        "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "Large language diffusion models": {
+      "citing_papers": [
+        "paper_0002"
+      ],
+      "citation_count": 1
+    },
+    "Learning visual representations for transfer learning by suppressing texture": {
+      "citing_papers": [
+        "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "Llava-onevision: Easy visual task transfer": {
+      "citing_papers": [
+        "paper_0003"
+      ],
+      "citation_count": 1
+    },
+    "Modality-invariant asymmetric networks for cross-modal hashing": {
+      "citing_papers": [
+        "paper_0006"
+      ],
+      "citation_count": 1
+    },
+    "Multi-granular spatio-temporal token merging for training-free acceleration of video llms": {
+      "citing_papers": [
+        "paper_0003"
+      ],
+      "citation_count": 1
+    },
+    "Partial multi-label learning with noisy label identification": {
+      "citing_papers": [
+        "paper_0006"
+      ],
+      "citation_count": 1
+    },
+    "Partial multilabel learning based on near-far neighborhood label enhancement and nonlinear guidance": {
+      "citing_papers": [
+        "paper_0006"
+      ],
+      "citation_count": 1
+    },
+    "Partial success in closing the gap between human and machine vision": {
+      "citing_papers": [
+        "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "Prunevid: Visual token pruning for efficient video large language models": {
+      "citing_papers": [
+        "paper_0003"
+      ],
+      "citation_count": 1
+    },
+    "Qwen2.5-vl technical report": {
+      "citing_papers": [
+        "paper_0003"
+      ],
+      "citation_count": 1
+    },
+    "Revisiting the shape-bias of deep learning for dermoscopic skin lesion classification": {
+      "citing_papers": [
+        "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "Robust contrastive cross-modal hashing with noisy labels": {
+      "citing_papers": [
+        "paper_0006"
+      ],
+      "citation_count": 1
+    },
+    "Robust self-paced hashing for cross-modal retrieval with noisy labels": {
+      "citing_papers": [
+        "paper_0006"
+      ],
+      "citation_count": 1
+    },
+    "Shape or Texture: Understanding Discriminative Features in CNNs": {
+      "citing_papers": [
+        "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "The Origins and Prevalence of Texture Bias in Convolutional Neural Networks": {
+      "citing_papers": [
+        "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "Truncated affinity maximization: One-class homophily modeling for graph anomaly detection": {
+      "citing_papers": [
+        "paper_0004"
+      ],
+      "citation_count": 1
+    },
+    "Unsupervised contrastive cross-modal hashing": {
+      "citing_papers": [
+        "paper_0006"
+      ],
+      "citation_count": 1
+    },
+    "Video instruction tuning with synthetic data": {
+      "citing_papers": [
+        "paper_0003"
+      ],
+      "citation_count": 1
+    },
+    "Visionzip: Longer is better but not necessary in vision language models": {
+      "citing_papers": [
+        "paper_0003"
+      ],
+      "citation_count": 1
+    },
+    "What shapes feature representations? Exploring datasets, architectures, and training": {
+      "citing_papers": [
+        "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "Zero-shot generalist graph anomaly detection with unified neighborhood prompts": {
+      "citing_papers": [
+        "paper_0004"
+      ],
+      "citation_count": 1
+    },
+    "treamingdllm: Accelerating diffusion llms via suffix pruning and dynamic decoding": {
+      "citing_papers": [
+        "paper_0002"
+      ],
+      "citation_count": 1
+    }
+  }
+}

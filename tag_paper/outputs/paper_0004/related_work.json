@@ -1,0 +1,212 @@
+{
+  "target_paper_title": "IA-GGAD: Zero-shot Generalist Graph Anomaly Detection via Invariant and Affinity Learning",
+  "related_work_items": [
+    {
+      "citation_marker": "b19",
+      "paper_title": "Arc: A generalist graph anomaly detector with in-context learning",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "tension_or_conflict_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "comparison_context",
+          "evidence_text": "ARC employs an in-context learning strategy with a feature alignment module to extract cross-dataset anomaly patterns."
+        },
+        {
+          "section": "Generalist Graph Anomaly Detection.",
+          "evidence_type": "tension_context",
+          "evidence_text": "ARC still requires a few target-domain normal examples at inference, and its learned alignment may not eliminate all domain shifts."
+        },
+        {
+          "section": "Experiments",
+          "evidence_type": "comparison_context",
+          "evidence_text": "IA-GGAD improves AUROC by +12.28% compared with ARC on ACM, and ARC is identified as a state-of-the-art GGAD baseline."
+        }
+      ],
+      "gap_relevance_note": "ARC is the main direct generalist baseline and sharpens the paper's gap because it still needs target-domain normal examples and does not fully solve feature and structure shifts."
+    },
+    {
+      "citation_marker": "b21",
+      "paper_title": "Zero-shot generalist graph anomaly detection with unified neighborhood prompts",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "tension_or_conflict_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Unprompt uses a prompt-based mechanism to unify node representations across graphs."
+        },
+        {
+          "section": "Generalist Graph Anomaly Detection.",
+          "evidence_type": "tension_context",
+          "evidence_text": "UNPrompt relies on consistent attribute semantics and a single-source training setup, which can limit its applicability when graphs vary widely in feature space or structure."
+        },
+        {
+          "section": "Experimental Setup",
+          "evidence_type": "comparison_context",
+          "evidence_text": "UNPrompt is listed among the two state-of-the-art generalist approaches compared against IA-GGAD."
+        }
+      ],
+      "gap_relevance_note": "UNPrompt is the other principal generalist baseline, and the paper positions IA-GGAD as addressing its weakness under large feature-space and structure variation."
+    },
+    {
+      "citation_marker": "b29",
+      "paper_title": "Gctam: Global and contextual combined truncated affinity maximization model for unsupervised graph anomaly detection",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge",
+        "tension_or_conflict_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Graph Anomaly Detection.",
+          "evidence_type": "method_context",
+          "evidence_text": "GCTAM extends one-class deep learning to graphs by optimizing an affinity objective over GNN embeddings."
+        },
+        {
+          "section": "Ablation Study",
+          "evidence_type": "tension_context",
+          "evidence_text": "GCTAM excels under GSS but degrades under FSS."
+        },
+        {
+          "section": "Experiments",
+          "evidence_type": "comparison_context",
+          "evidence_text": "IA-GGAD's mean rank of 1.12 far surpasses ARC (2.38) and GCTAM (4.37)."
+        }
+      ],
+      "gap_relevance_note": "GCTAM is both a strong baseline and a structural-affinity predecessor; the paper uses it to show that affinity-based methods alone are insufficient when feature-space shift is severe."
+    },
+    {
+      "citation_marker": "b28",
+      "paper_title": "Truncated affinity maximization: One-class homophily modeling for graph anomaly detection",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Graph Anomaly Detection.",
+          "evidence_type": "method_context",
+          "evidence_text": "TAM extends one-class deep learning to graphs by optimizing an affinity objective over GNN embeddings."
+        },
+        {
+          "section": "Ablation Study",
+          "evidence_type": "comparison_context",
+          "evidence_text": "ARC shows the reverse, while GCTAM excels under GSS; by contrast, IA-GGAD outperforms both baselines in all scenarios."
+        },
+        {
+          "section": "Supplementary Experiments",
+          "evidence_type": "method_context",
+          "evidence_text": "TAM is designed based on one-class homophily and local affinity, and optimizes the proposed anomaly metric end-to-end on the truncated adjacency matrix."
+        }
+      ],
+      "gap_relevance_note": "TAM is a clear affinity-learning lineage source for the paper's structural module, but it remains a one-graph method rather than a zero-shot generalist detector."
+    },
+    {
+      "citation_marker": "b14",
+      "paper_title": "Deep anomaly detection on attributed networks",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Graph Anomaly Detection.",
+          "evidence_type": "method_context",
+          "evidence_text": "DOMINANT employs GCNs as an autoencoder to reconstruct graph structure and node attributes and identifies anomalies via the reconstruction error."
+        },
+        {
+          "section": "Experiments",
+          "evidence_type": "comparison_context",
+          "evidence_text": "The sole exception is Weibo, where DOMINANT's reconstruction-based detector attains 92.88% versus our 91.18%."
+        },
+        {
+          "section": "Graph Anomaly Detection.",
+          "evidence_type": "tension_context",
+          "evidence_text": "These unsupervised methods achieve strong performance on individual graphs but must be retrained for each new graph, limiting their cross-domain generalization."
+        }
+      ],
+      "gap_relevance_note": "DOMINANT represents the reconstruction-based GAD line that remains competitive on some homophilous graphs but does not address the paper's generalist zero-shot setting."
+    },
+    {
+      "citation_marker": "b15",
+      "paper_title": "Anomaly detection on attributed networks via contrastive self-supervised learning",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Graph Anomaly Detection.",
+          "evidence_type": "method_context",
+          "evidence_text": "CoLA, based on contrastive learning, uses a discriminator to detect inconsistencies between the target node and neighbor subgraph embeddings."
+        },
+        {
+          "section": "Experimental Setup",
+          "evidence_type": "comparison_context",
+          "evidence_text": "CoLA is included among the unsupervised baselines compared with IA-GGAD."
+        },
+        {
+          "section": "Graph Anomaly Detection.",
+          "evidence_type": "tension_context",
+          "evidence_text": "These unsupervised methods achieve strong performance on individual graphs but must be retrained for each new graph, limiting their cross-domain generalization."
+        }
+      ],
+      "gap_relevance_note": "CoLA is a representative unsupervised GAD baseline that helps define the pre-generalist state of the field and the limitation of single-graph training."
+    },
+    {
+      "citation_marker": "b30",
+      "paper_title": "Cross-domain graph anomaly detection",
+      "primary_label": "tension_or_conflict_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Generalist Graph Anomaly Detection.",
+          "evidence_type": "explicit_claim",
+          "evidence_text": "Some GAD approaches can handle cross-domain scenarios, but their requirement for high correlation between source and target datasets limits their generalizability."
+        },
+        {
+          "section": "Related Work",
+          "evidence_type": "tension_context",
+          "evidence_text": "Some methods tackle domain shifts by leveraging distribution alignment or domain adaptation, yet they often assume semantic similarity between source and target domains, which limits broader applicability."
+        }
+      ],
+      "gap_relevance_note": "This work is relevant because it targets cross-domain anomaly detection but embodies the assumption regime that IA-GGAD argues is too restrictive for diverse graph domains."
+    },
+    {
+      "citation_marker": "b31",
+      "paper_title": "Cross-domain graph anomaly detection via anomaly-aware contrastive alignment",
+      "primary_label": "tension_or_conflict_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Generalist Graph Anomaly Detection.",
+          "evidence_type": "explicit_claim",
+          "evidence_text": "Some GAD approaches can handle cross-domain scenarios, but their requirement for high correlation between source and target datasets limits their generalizability."
+        },
+        {
+          "section": "Generalist Graph Anomaly Detection.",
+          "evidence_type": "tension_context",
+          "evidence_text": "Differing from those, ARC and later IA-GGAD are discussed as more flexible generalist settings for unseen graphs."
+        }
+      ],
+      "gap_relevance_note": "This cited cross-domain alignment work helps explain the paper's motivation to move beyond methods that assume stronger source-target correspondence than GGAD permits."
+    }
+  ]
+}

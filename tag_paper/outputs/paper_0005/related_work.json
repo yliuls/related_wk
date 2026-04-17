@@ -1,0 +1,258 @@
+{
+  "target_paper_title": "ImageNet-trained CNNs are not biased towards texture: Revisiting feature reliance through controlled suppression",
+  "related_work_items": [
+    {
+      "citation_marker": "b7",
+      "paper_title": "ImageNet-trained CNNs are biased towards texture; increasing shape bias improves accuracy and robustness",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "tension_or_conflict_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "comparison_context",
+          "evidence_text": "One of the most influential claims in this direction is that CNNs trained on ImageNet are inherently biased towards texture [8], in contrast to humans who predominantly rely on shape cues [11]."
+        },
+        {
+          "section": "Rethinking Texture Bias: A Critical Look at Cue-Conflict Evaluation",
+          "evidence_type": "tension_context",
+          "evidence_text": "The hypothesis that CNNs trained on ImageNet are biased towards texture was popularized by Geirhos et al. [8], who introduced a cue-conflict evaluation protocol."
+        },
+        {
+          "section": "Conclusion",
+          "evidence_type": "explicit_claim",
+          "evidence_text": "This paper revisited the widely cited claim that CNNs trained on ImageNet are inherently biased towards texture. We identify critical conceptual and methodological limitations in the cue-conflict experiment popularized by Geirhos et al. [8] that support this hypothesis."
+        }
+      ],
+      "gap_relevance_note": "Geirhos et al. is the central prior work the paper re-examines and challenges; the paper's main gap is framed as limitations in that cue-conflict-based texture-bias claim."
+    },
+    {
+      "citation_marker": "b12",
+      "paper_title": "The Origins and Prevalence of Texture Bias in Convolutional Neural Networks",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "tension_or_conflict_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Related Work",
+          "evidence_type": "method_context",
+          "evidence_text": "Hermann et al. [13] showed that texture bias in CNNs arises primarily from training objectives and augmentations, with techniques like blurring and cropping increasing shape bias more than architectural changes."
+        },
+        {
+          "section": "Conclusion",
+          "evidence_type": "tension_context",
+          "evidence_text": "These findings challenge the notion of fixed architectural biases and instead position feature reliance as a flexible property shaped by optimization objectives and domain-specific semantics."
+        }
+      ],
+      "gap_relevance_note": "This work is used to shift the explanation of feature reliance from architecture to training, which directly informs the present paper's argument that texture bias is not inherent."
+    },
+    {
+      "citation_marker": "b13",
+      "paper_title": "What shapes feature representations? Exploring datasets, architectures, and training",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Related Work",
+          "evidence_type": "method_context",
+          "evidence_text": "Although shape features are present in deeper layers [15], [14], they are not consistently used during classification."
+        },
+        {
+          "section": "Conclusion",
+          "evidence_type": "method_context",
+          "evidence_text": "At the same time, the relative contributions of architectural components and training strategies to these reliance patterns remain to be systematically evaluated."
+        }
+      ],
+      "gap_relevance_note": "The paper situates its suppression-based evaluation alongside prior work studying how architecture, datasets, and training shape feature representations."
+    },
+    {
+      "citation_marker": "b14",
+      "paper_title": "Shape or Texture: Understanding Discriminative Features in CNNs",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Related Work",
+          "evidence_type": "method_context",
+          "evidence_text": "Although shape features are present in deeper layers [15], [14], they are not consistently used during classification."
+        }
+      ],
+      "gap_relevance_note": "This cited work is part of the immediate literature on disentangling shape and texture use in CNNs, which the paper extends by measuring reliance through suppression rather than cue conflict."
+    },
+    {
+      "citation_marker": "b18",
+      "paper_title": "Intriguing properties of vision transformers",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Related Work",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Vision transformers (ViTs) exhibit lower texture bias due to their global attention mechanism [19], [20], and vision-language models show improved alignment with human-like shape use [21]."
+        },
+        {
+          "section": "Results",
+          "evidence_type": "tension_context",
+          "evidence_text": "Among transformer-based models, the ViT demonstrates a feature reliance profile similar to ResNet50-sota across all suppression conditions, challenging the notion that transformers are inherently more shape-oriented than CNNs."
+        }
+      ],
+      "gap_relevance_note": "ViT-related prior claims serve as a comparison point that the paper qualifies by showing similar reliance profiles under its suppression-based evaluation."
+    },
+    {
+      "citation_marker": "b19",
+      "paper_title": "Are convolutional neural networks or transformers more like human vision",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Related Work",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Vision transformers (ViTs) exhibit lower texture bias due to their global attention mechanism [19], [20], and vision-language models show improved alignment with human-like shape use [21]."
+        },
+        {
+          "section": "Results",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Notably, the CLIP VIT model most closely matches human performance across all feature suppression conditions, suggesting that vision-language supervision encourages more human-aligned representations."
+        }
+      ],
+      "gap_relevance_note": "This work is part of the transformer-versus-CNN human-vision comparison line that the paper revisits with a different evaluation paradigm."
+    },
+    {
+      "citation_marker": "b21",
+      "paper_title": "Learning visual representations for transfer learning by suppressing texture",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Related Work",
+          "evidence_type": "method_context",
+          "evidence_text": "Various methods have attempted to enforce shape bias or suppress texture cues for improved robustness, including anisotropic filtering [22], edge encoding [23], style disentanglement [24], [25], and shape-focused augmentations [26], [27]."
+        }
+      ],
+      "gap_relevance_note": "This cited work represents prior attempts to suppress texture during training; the present paper instead proposes an evaluation framework that measures reliance via controlled suppression at test time."
+    },
+    {
+      "citation_marker": "b31",
+      "paper_title": "Contributions of shape, texture, and color in visual recognition",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Related Work",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Ge et al. [32] and Jain et al. [17] show that disentangling and combining shape, texture, and color improve robustness and interpretability."
+        },
+        {
+          "section": "Introduction",
+          "evidence_type": "method_context",
+          "evidence_text": "we propose a new domain-agnostic evaluation framework that quantifies feature reliance through systematic suppression of shape, texture, and color cues"
+        }
+      ],
+      "gap_relevance_note": "This is a close bridge work because it explicitly studies shape, texture, and color together, aligning with the present paper's three-cue suppression framework."
+    },
+    {
+      "citation_marker": "b32",
+      "paper_title": "Revisiting the shape-bias of deep learning for dermoscopic skin lesion classification",
+      "primary_label": "tension_or_conflict_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Related Work",
+          "evidence_type": "tension_context",
+          "evidence_text": "Nonetheless, Lucieri et al. [33] caution that in domains like MI, cue entanglement is essential and biasing towards shape may be counterproductive."
+        },
+        {
+          "section": "Medical Imaging (MI).",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Taken together, these results suggest that feature reliance in MI varies substantially across datasets, with a common trend towards greater dependence on color information."
+        }
+      ],
+      "gap_relevance_note": "This work directly supports the paper's cross-domain argument that shape bias is not universally desirable, especially in medical imaging."
+    },
+    {
+      "citation_marker": "b33",
+      "paper_title": "Generalisation in humans and deep neural networks",
+      "primary_label": "tension_or_conflict_work",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Related Work",
+          "evidence_type": "tension_context",
+          "evidence_text": "Efforts to increase shape bias are often motivated by the broader goal of human-model alignment. Geirhos et al. [34], [35] show that even robust models exhibit error patterns that diverge from humans, revealing a persistent consistency gap."
+        },
+        {
+          "section": "Experiment I: Human vs. CNNs Feature Reliance Experimental Setup.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "To compare human and model reliance on different visual features, we designed a controlled experiment inspired by Geirhos et al. [34], [8]."
+        }
+      ],
+      "gap_relevance_note": "This prior human-versus-model generalization work motivates the paper's explicit human comparison and its claim that robustness or shape bias alone is insufficient for human alignment."
+    },
+    {
+      "citation_marker": "b34",
+      "paper_title": "Partial success in closing the gap between human and machine vision",
+      "primary_label": "tension_or_conflict_work",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Related Work",
+          "evidence_type": "tension_context",
+          "evidence_text": "Geirhos et al. [34], [35] show that even robust models exhibit error patterns that diverge from humans, revealing a persistent consistency gap."
+        },
+        {
+          "section": "Experiment I: Human vs. CNNs Feature Reliance Experimental Setup.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "To compare human and model reliance on different visual features, we designed a controlled experiment inspired by Geirhos et al. [34], [8]."
+        }
+      ],
+      "gap_relevance_note": "This work anchors the paper's human-alignment motivation and the need for a cleaner evaluation of feature reliance than cue-conflict protocols provide."
+    },
+    {
+      "citation_marker": "b35",
+      "paper_title": "Human alignment of neural network representations",
+      "primary_label": "tension_or_conflict_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Related Work",
+          "evidence_type": "tension_context",
+          "evidence_text": "Muttenthaler et al. [36] further argue that alignment with human conceptual structure depends more on training signals than model scale, indicating that robustness and shape bias alone are insufficient proxies for human-like perception."
+        },
+        {
+          "section": "Results",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Notably, the CLIP VIT model most closely matches human performance across all feature suppression conditions, suggesting that vision-language supervision encourages more human-aligned representations."
+        }
+      ],
+      "gap_relevance_note": "This cited alignment work reinforces the paper's view that human-like perception depends on training signals, which the experiments echo with vision-language supervision."
+    }
+  ]
+}

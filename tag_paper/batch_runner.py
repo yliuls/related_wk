@@ -13,12 +13,15 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_ROOT = Path("/data3/yaofu/related_wk/tag_paper")
+DEFAULT_ROOT = Path(__file__).resolve().parent
 DEFAULT_MANIFEST = DEFAULT_ROOT / "data" / "manifest.jsonl"
 DEFAULT_LOG = DEFAULT_ROOT / "outputs" / "batch_runner_log.jsonl"
-DEFAULT_BUNDLE_SKILL = DEFAULT_ROOT / "skills" / "extract-paper-bundle" / "SKILL.md"
-DEFAULT_GOLD_SKILL = DEFAULT_ROOT / "skills" / "extract-gold-annotations" / "SKILL.md"
-DEFAULT_RELATED_SKILL = DEFAULT_ROOT / "skills" / "extract-related-work" / "SKILL.md"
+MACOS_CODEX_RETRYABLE_MARKERS = (
+    "Could not create otel exporter",
+    "Attempted to create a NULL object",
+    "stream disconnected before completion",
+    "error sending request for url",
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -30,6 +33,12 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=DEFAULT_MANIFEST,
         help="Path to manifest.jsonl.",
+    )
+    parser.add_argument(
+        "--project-root",
+        type=Path,
+        default=None,
+        help="Optional project root. If omitted, auto-detect from manifest path.",
     )
     parser.add_argument(
         "--start",
@@ -68,8 +77,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--ephemeral",
         action="store_true",
-        default=True,
-        help="Run each codex exec in an isolated ephemeral session. Default: enabled.",
+        help="Run each codex exec in an isolated ephemeral session. Default: disabled.",
+    )
+    parser.add_argument(
+        "--isolated-home",
+        action="store_true",
+        help="Use an isolated HOME/CODEX_HOME/XDG_* under project root. Default: disabled.",
     )
     parser.add_argument(
         "--model",
@@ -98,13 +111,53 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Maximum number of items to run after filtering.",
     )
+    parser.add_argument(
+        "--retries",
+        type=int,
+        default=2,
+        help="Number of retries for retryable codex failures. Default: 2.",
+    )
     return parser.parse_args()
+
+
+def infer_project_root(manifest_path: Path) -> Path:
+    manifest_path = manifest_path.resolve()
+
+    # 1) Search upward from manifest for a repo-like root.
+    for candidate in [manifest_path.parent, *manifest_path.parents]:
+        if (candidate / "skills").is_dir():
+            return candidate
+
+    # 2) If this script itself sits in a repo root with skills/, prefer it.
+    if (DEFAULT_ROOT / "skills").is_dir():
+        return DEFAULT_ROOT
+
+    # 3) Fallback to the old assumption: repo_root/data/manifest.jsonl
+    if manifest_path.parent.name == "data":
+        return manifest_path.parent.parent
+
+    # 4) Last resort: manifest parent
+    return manifest_path.parent
+
+
+def require_skill_paths(root_dir: Path) -> tuple[Path, Path, Path]:
+    bundle_skill = root_dir / "skills" / "extract-paper-bundle" / "SKILL.md"
+    gold_skill = root_dir / "skills" / "extract-gold-annotations" / "SKILL.md"
+    related_skill = root_dir / "skills" / "extract-related-work" / "SKILL.md"
+
+    missing = [p for p in (bundle_skill, gold_skill, related_skill) if not p.exists()]
+    if missing:
+        missing_text = "\n".join(f"- {p}" for p in missing)
+        raise FileNotFoundError(f"Missing required skill files:\n{missing_text}")
+
+    return bundle_skill, gold_skill, related_skill
 
 
 def load_manifest(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         raise FileNotFoundError(f"Manifest not found: {path}")
-    records = []
+
+    records: list[dict[str, Any]] = []
     with path.open("r", encoding="utf-8") as f:
         for lineno, line in enumerate(f, start=1):
             line = line.strip()
@@ -118,6 +171,20 @@ def load_manifest(path: Path) -> list[dict[str, Any]]:
                 raise ValueError(f"Expected object on line {lineno} of {path}")
             records.append(record)
     return records
+
+
+def require_record_keys(record: dict[str, Any], keys: list[str], idx: int | None = None) -> None:
+    missing = [key for key in keys if key not in record]
+    if missing:
+        prefix = f"Manifest row {idx}: " if idx is not None else ""
+        raise ValueError(f"{prefix}missing required keys: {', '.join(missing)}")
+
+
+def resolve_manifest_path(path_str: str, root_dir: Path) -> Path:
+    path = Path(path_str).expanduser()
+    if path.is_absolute():
+        return path
+    return (root_dir / path).resolve()
 
 
 def build_prompt(record: dict[str, Any], skill_path: Path) -> str:
@@ -215,6 +282,8 @@ def select_records(records: list[dict[str, Any]], args: argparse.Namespace) -> l
         selected = [(idx, record) for idx, record in selected if record.get("paper_id") in wanted]
 
     if args.max_items is not None:
+        if args.max_items < 0:
+            raise ValueError("--max-items must be >= 0")
         selected = selected[: args.max_items]
 
     return selected
@@ -280,8 +349,12 @@ def determine_action(record: dict[str, Any], paper_path: Path, output_dir: Path)
 def output_ok_for_action(action: str, output_dir: Path, expected_title: str) -> bool:
     gold_path = output_dir / "gold_annotations.json"
     related_path = output_dir / "related_work.json"
+
     if action == "bundle":
-        return not needs_regeneration(gold_path, expected_title) and not needs_regeneration(related_path, expected_title)
+        return (
+            not needs_regeneration(gold_path, expected_title)
+            and not needs_regeneration(related_path, expected_title)
+        )
     if action == "gold":
         return not needs_regeneration(gold_path, expected_title)
     if action == "related":
@@ -289,12 +362,53 @@ def output_ok_for_action(action: str, output_dir: Path, expected_title: str) -> 
     return True
 
 
+def build_codex_env(args: argparse.Namespace, root_dir: Path) -> dict[str, str]:
+    env = os.environ.copy()
+
+    if args.isolated_home:
+        runner_home = root_dir / ".codex_batch_runner_home"
+        runner_home.mkdir(parents=True, exist_ok=True)
+
+        env["HOME"] = str(runner_home)
+        env["CODEX_HOME"] = str(runner_home)
+        env["XDG_CONFIG_HOME"] = str(runner_home / "xdg_config")
+        env["XDG_CACHE_HOME"] = str(runner_home / "xdg_cache")
+        env["XDG_STATE_HOME"] = str(runner_home / "xdg_state")
+        env["XDG_DATA_HOME"] = str(runner_home / "xdg_data")
+
+        for key in [
+            "HOME",
+            "CODEX_HOME",
+            "XDG_CONFIG_HOME",
+            "XDG_CACHE_HOME",
+            "XDG_STATE_HOME",
+            "XDG_DATA_HOME",
+        ]:
+            Path(env[key]).mkdir(parents=True, exist_ok=True)
+
+    # Codex on macOS can panic while initializing OTLP exporters through
+    # SystemConfiguration. Disable telemetry exporters for child runs.
+    env.setdefault("OTEL_SDK_DISABLED", "true")
+    env.setdefault("OTEL_EXPORTER_OTLP_ENDPOINT", "")
+    env.setdefault("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", "")
+    env.setdefault("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT", "")
+    env.setdefault("OTEL_EXPORTER_OTLP_LOGS_ENDPOINT", "")
+
+    return env
+
+
+def is_retryable_codex_failure(returncode: int, stderr: str) -> bool:
+    if returncode == 0:
+        return False
+    return any(marker in stderr for marker in MACOS_CODEX_RETRYABLE_MARKERS)
+
+
 def run_codex_exec(
     prompt: str,
     args: argparse.Namespace,
     root_dir: Path,
-) -> tuple[int, float, str, str, str]:
-    with tempfile.NamedTemporaryFile("w+", suffix=".txt", delete=False) as temp_last:
+) -> tuple[int, float, str, str, str, int]:
+    with tempfile.NamedTemporaryFile("w+", suffix=".txt", delete=False, encoding="utf-8") as temp_last:
         last_message_path = Path(temp_last.name)
 
     cmd = [
@@ -303,62 +417,56 @@ def run_codex_exec(
         "-C",
         str(root_dir),
         "--skip-git-repo-check",
-        "--ephemeral",
         "--add-dir",
         str(root_dir),
         "-o",
         str(last_message_path),
         "-",
     ]
+
+    if args.ephemeral:
+        cmd.append("--ephemeral")
+
     if args.sandbox == "danger-full-access":
         cmd.append("--dangerously-bypass-approvals-and-sandbox")
     elif args.sandbox == "workspace-write":
         cmd.append("--full-auto")
     else:
         cmd.extend(["--sandbox", args.sandbox])
+
     if args.profile:
         cmd.extend(["--profile", args.profile])
     if args.model:
         cmd.extend(["--model", args.model])
 
-    runner_home = root_dir / ".codex_batch_runner_home"
-    runner_home.mkdir(parents=True, exist_ok=True)
-    env = os.environ.copy()
-    env["HOME"] = str(runner_home)
-    env["CODEX_HOME"] = str(runner_home)
-    env["XDG_CONFIG_HOME"] = str(runner_home / "xdg_config")
-    env["XDG_CACHE_HOME"] = str(runner_home / "xdg_cache")
-    env["XDG_STATE_HOME"] = str(runner_home / "xdg_state")
-    env["XDG_DATA_HOME"] = str(runner_home / "xdg_data")
-    env["TMPDIR"] = "/tmp"
-    for key in [
-        "HOME",
-        "CODEX_HOME",
-        "XDG_CONFIG_HOME",
-        "XDG_CACHE_HOME",
-        "XDG_STATE_HOME",
-        "XDG_DATA_HOME",
-    ]:
-        Path(env[key]).mkdir(parents=True, exist_ok=True)
+    env = build_codex_env(args, root_dir)
 
+    attempt = 0
     started_at = time.time()
     try:
-        proc = subprocess.run(
-            cmd,
-            input=prompt,
-            text=True,
-            capture_output=True,
-            check=False,
-            env=env,
-        )
+        while True:
+            attempt += 1
+            proc = subprocess.run(
+                cmd,
+                input=prompt,
+                text=True,
+                capture_output=True,
+                check=False,
+                env=env,
+            )
+            if attempt > args.retries + 1 or not is_retryable_codex_failure(proc.returncode, proc.stderr):
+                break
+            time.sleep(min(attempt, 3))
+
         duration = round(time.time() - started_at, 2)
         last_message = ""
         if last_message_path.exists():
             last_message = last_message_path.read_text(encoding="utf-8", errors="replace").strip()
-        return proc.returncode, duration, proc.stdout, proc.stderr, last_message
+
+        return proc.returncode, duration, proc.stdout, proc.stderr, last_message, attempt
     finally:
         if last_message_path.exists():
-            last_message_path.unlink()
+            last_message_path.unlink(missing_ok=True)
 
 
 def run_one(
@@ -370,9 +478,11 @@ def run_one(
     gold_skill_path: Path,
     related_skill_path: Path,
 ) -> tuple[bool, str]:
+    require_record_keys(record, ["paper_id", "paper_path", "output_dir"], idx=idx)
+
     paper_id = str(record["paper_id"])
-    paper_path = Path(record["paper_path"])
-    output_dir = Path(record["output_dir"])
+    paper_path = resolve_manifest_path(str(record["paper_path"]), root_dir)
+    output_dir = resolve_manifest_path(str(record["output_dir"]), root_dir)
 
     if not paper_path.exists():
         return False, f"[{idx}] {paper_id}: paper file not found: {paper_path}"
@@ -399,18 +509,17 @@ def run_one(
     else:
         prompt = build_related_prompt(record, related_skill_path)
 
-    returncode, duration, stdout, stderr, last_message = run_codex_exec(
+    returncode, duration, stdout, stderr, last_message, attempts = run_codex_exec(
         prompt=prompt,
         args=args,
         root_dir=root_dir,
     )
 
     ok = returncode == 0 and output_ok_for_action(action, output_dir, expected_title)
-    summary = (
-        f"[{idx}] {paper_id}: "
-        f"{'done' if ok else 'failed'} "
-        f"via {action} (exit={returncode}, {duration}s)"
-    )
+    summary = f"[{idx}] {paper_id}: {'done' if ok else 'failed'} via {action} (exit={returncode}, {duration}s)"
+    if attempts > 1:
+        summary += f" after {attempts} attempts"
+
     append_log(
         args.output_log,
         {
@@ -424,16 +533,19 @@ def run_one(
             "reason": reason,
             "success": ok,
             "duration_sec": duration,
+            "attempts": attempts,
             "returncode": returncode,
             "stdout": stdout,
             "stderr": stderr,
             "last_message": last_message,
         },
     )
+
     if not ok and last_message:
         summary += f" | {last_message[:300]}"
     elif not ok:
         summary += " | outputs were not produced or title validation failed"
+
     return ok, summary
 
 
@@ -444,12 +556,17 @@ def main() -> int:
         raise FileNotFoundError(f"Codex executable not found: {args.codex_bin}")
 
     manifest_path = args.manifest.expanduser().resolve()
-    root_dir = manifest_path.parent.parent
-    bundle_skill_path = DEFAULT_BUNDLE_SKILL.resolve()
-    gold_skill_path = DEFAULT_GOLD_SKILL.resolve()
-    related_skill_path = DEFAULT_RELATED_SKILL.resolve()
+    if args.project_root is not None:
+        root_dir = args.project_root.expanduser().resolve()
+    else:
+        root_dir = infer_project_root(manifest_path)
+
+    bundle_skill_path, gold_skill_path, related_skill_path = require_skill_paths(root_dir)
 
     records = load_manifest(manifest_path)
+    for idx, record in enumerate(records, start=1):
+        require_record_keys(record, ["paper_id", "paper_path", "output_dir"], idx=idx)
+
     selected = select_records(records, args)
 
     if not selected:
@@ -460,12 +577,15 @@ def main() -> int:
     failure_count = 0
     total = len(selected)
 
+    print(f"Project root: {root_dir}", flush=True)
+    print(f"Manifest: {manifest_path}", flush=True)
     print(f"Selected {total} items from manifest.", flush=True)
 
     for position, (idx, record) in enumerate(selected, start=1):
         paper_id = str(record.get("paper_id", f"item_{idx}"))
-        paper_path = Path(record["paper_path"])
-        output_dir = Path(record["output_dir"])
+        paper_path = resolve_manifest_path(str(record["paper_path"]), root_dir)
+        output_dir = resolve_manifest_path(str(record["output_dir"]), root_dir)
+
         if args.force:
             planned_action = "bundle"
             planned_reason = "forced regeneration"
@@ -487,10 +607,12 @@ def main() -> int:
             related_skill_path=related_skill_path,
         )
         print(message, flush=True)
+
         if ok:
             success_count += 1
         else:
             failure_count += 1
+
         print(
             f"Progress: {position}/{total} finished | success={success_count} | failure={failure_count}",
             flush=True,

@@ -1,0 +1,189 @@
+{
+  "target_paper_title": "Neighbor-aware Contrastive Disambiguation for Cross-Modal Hashing with Redundant Annotations",
+  "related_work_items": [
+    {
+      "citation_marker": "b21",
+      "paper_title": "Unsupervised contrastive cross-modal hashing",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "method_context",
+          "evidence_text": "Moreover, UCCH [22] proposes a contrastive learning-based unsupervised CMH method with a momentum optimizer and crossmodal ranking learning loss to improve performance."
+        },
+        {
+          "section": "Class-aware Robust Contrastive Hashing",
+          "evidence_type": "method_context",
+          "evidence_text": "To mitigate this issue, we follow [22] and introduce a margin-based thresholding mechanism that adaptively adjusts cross-modal similarities matrix S to reduce the impact of negative pairs with overly high similarities."
+        },
+        {
+          "section": "Comparison with State-of-the-Arts",
+          "evidence_type": "comparison_context",
+          "evidence_text": "In this work, we compare our NACD against 11 state-of-the-art CMH methods, including five unsupervised methods: DJSRH [18], DGCPN [20], PIP [49], CIRH [21], and UCCH [22]."
+        }
+      ],
+      "gap_relevance_note": "UCCH is both a direct baseline and a methodological bridge because NACD explicitly builds part of its contrastive design by following its margin-based handling of negatives."
+    },
+    {
+      "citation_marker": "b30",
+      "paper_title": "Robust self-paced hashing for cross-modal retrieval with noisy labels",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "comparison_context",
+          "evidence_text": "RSHNL [31] designs a Robust Self-paced Hashing mechanism that mitigates the misleading effects of noisy labels on the model by simulating the human cognitive process."
+        },
+        {
+          "section": "Cross-Modal Hashing",
+          "evidence_type": "tension_context",
+          "evidence_text": "RSHNL [31] proposes a robust self-paced hashing mechanism that emulates human cognition, thereby reducing the negative impact of noisy labels and improving model performance. However, in real-world applications, multimodal annotations often contain \"redundant annotations\"."
+        },
+        {
+          "section": "Comparison with State-of-the-Arts",
+          "evidence_type": "comparison_context",
+          "evidence_text": "In this work, we compare our NACD against 11 state-of-the-art CMH methods, including five unsupervised methods: DJSRH [18], DGCPN [20], PIP [49], CIRH [21], and UCCH [22]; and six supervised methods: CMMQ [50], MIAN [27], LtCMH [28], DHRL [29], NRCH [30], and RSHNL [31]."
+        }
+      ],
+      "gap_relevance_note": "RSHNL is a strong noisy-label CMH baseline, but the paper argues it still assumes label corruption by replacement rather than redundant candidate label sets."
+    },
+    {
+      "citation_marker": "b29",
+      "paper_title": "Robust contrastive cross-modal hashing with noisy labels",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [
+        "method_lineage_or_bridge"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Comparison with State-of-the-Arts",
+          "evidence_type": "comparison_context",
+          "evidence_text": "In this work, we compare our NACD against 11 state-of-the-art CMH methods, including five unsupervised methods: DJSRH [18], DGCPN [20], PIP [49], CIRH [21], and UCCH [22]; and six supervised methods: CMMQ [50], MIAN [27], LtCMH [28], DHRL [29], NRCH [30], and RSHNL [31]."
+        },
+        {
+          "section": "Robustness Analysis.",
+          "evidence_type": "comparison_context",
+          "evidence_text": "As shown in Fig. 5(a,b): (1) Both NACD-1 and NACD-2 tend to overfit redundant noise, indicating that the CM strategy and class-wise threshold updating are crucial for enhancing the robustness of NACD. (2) Although NRCH exhibits certain robustness under redundant annotations, it still lags significantly behind NACD."
+        }
+      ],
+      "gap_relevance_note": "NRCH is a direct robust-hashing comparison point; the paper uses it to show that robustness to noisy labels alone does not solve redundant-annotation disambiguation."
+    },
+    {
+      "citation_marker": "b26",
+      "paper_title": "Modality-invariant asymmetric networks for cross-modal hashing",
+      "primary_label": "core_comparison_work",
+      "secondary_labels": [],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "comparison_context",
+          "evidence_text": "Within a probabilistic modality alignment framework, MIAN [27] investigates the preservation of asymmetric similarities both within and between modalities, thereby fully utilizing multi-level semantic information throughout the entire database."
+        },
+        {
+          "section": "Comparison with State-of-the-Arts",
+          "evidence_type": "comparison_context",
+          "evidence_text": "In this work, we compare our NACD against 11 state-of-the-art CMH methods, including five unsupervised methods: DJSRH [18], DGCPN [20], PIP [49], CIRH [21], and UCCH [22]; and six supervised methods: CMMQ [50], MIAN [27], LtCMH [28], DHRL [29], NRCH [30], and RSHNL [31]."
+        }
+      ],
+      "gap_relevance_note": "MIAN represents supervised CMH methods that leverage clean label information effectively but are not designed for redundant candidate-label supervision."
+    },
+    {
+      "citation_marker": "b35",
+      "paper_title": "Hierarchical consensus hashing for cross-modal retrieval",
+      "primary_label": "tension_or_conflict_work",
+      "secondary_labels": [
+        "core_comparison_work"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        {
+          "section": "Cross-Modal Hashing",
+          "evidence_type": "comparison_context",
+          "evidence_text": "For example, HCCH [36] introduces a coarse-to-fine hierarchical hashing strategy to effectively utilize hierarchical features and accurate labels across modalities."
+        },
+        {
+          "section": "Cross-Modal Hashing",
+          "evidence_type": "tension_context",
+          "evidence_text": "However, in real-world applications, multimodal annotations often contain \"redundant annotations\". Therefore, this paper focuses on a largely unexplored yet challenging problem: cross-modal hashing with redundant annotations."
+        }
+      ],
+      "gap_relevance_note": "HCCH is cited as a representative accurate-label supervised CMH method, which the paper contrasts with its focus on redundant annotation settings."
+    },
+    {
+      "citation_marker": "b31",
+      "paper_title": "Global-local label correlation for partial multi-label learning",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "tension_or_conflict_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "tension_context",
+          "evidence_text": "Although partial multi-label learning (PML) [32][33][34][35] provides a potential solution for redundant annotations, most PML methods assume a shared feature space and overlook cross-modal semantic divergence."
+        },
+        {
+          "section": "Learning with Redundant Annotations",
+          "evidence_type": "method_context",
+          "evidence_text": "The sparsity regularization-based approaches [32,33,40] impose sparsity on the candidate label set, effectively suppressing noisy labels and facilitating disambiguation."
+        }
+      ],
+      "gap_relevance_note": "This PML work is part of the paper's nearest label-disambiguation lineage, but the paper argues that PML methods do not address cross-modal divergence and robust pair construction."
+    },
+    {
+      "citation_marker": "b32",
+      "paper_title": "Partial multi-label learning with noisy label identification",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "tension_or_conflict_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "tension_context",
+          "evidence_text": "Although partial multi-label learning (PML) [32][33][34][35] provides a potential solution for redundant annotations, most PML methods assume a shared feature space and overlook cross-modal semantic divergence."
+        },
+        {
+          "section": "Learning with Redundant Annotations",
+          "evidence_type": "method_context",
+          "evidence_text": "The sparsity regularization-based approaches [32,33,40] impose sparsity on the candidate label set, effectively suppressing noisy labels and facilitating disambiguation."
+        }
+      ],
+      "gap_relevance_note": "This work directly relates to identifying true labels from candidate labels, but the paper positions NACD as extending beyond single-space PML to cross-modal hashing."
+    },
+    {
+      "citation_marker": "b34",
+      "paper_title": "Partial multilabel learning based on near-far neighborhood label enhancement and nonlinear guidance",
+      "primary_label": "method_lineage_or_bridge",
+      "secondary_labels": [
+        "tension_or_conflict_work"
+      ],
+      "confidence": "high",
+      "evidence": [
+        {
+          "section": "Introduction",
+          "evidence_type": "tension_context",
+          "evidence_text": "Although partial multi-label learning (PML) [32][33][34][35] provides a potential solution for redundant annotations, most PML methods assume a shared feature space and overlook cross-modal semantic divergence."
+        },
+        {
+          "section": "Learning with Redundant Annotations",
+          "evidence_type": "method_context",
+          "evidence_text": "Smoothness assumption-based approaches [35,37,38] are based on the assumption that neighboring samples in the feature space are more likely to have similar labels."
+        }
+      ],
+      "gap_relevance_note": "This neighborhood-based PML paper is especially close to NACD's confidence reconstruction intuition, while NACD adapts the idea to cross-modal neighbors and hashing."
+    }
+  ]
+}

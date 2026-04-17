@@ -1,0 +1,86 @@
+{
+  "input_dir": "/Users/king/Desktop/gitcode/related_wk/tag_paper/outputs",
+  "processed_subdirectories": 6,
+  "papers_with_related_work": 5,
+  "missing_related_work_files": [
+    "/Users/king/Desktop/gitcode/related_wk/tag_paper/outputs/paper_0001/related_work.json"
+  ],
+  "paper_to_related_papers": {
+    "paper_0002": {
+      "target_paper_title": "DIFFUSION LANGUAGE MODELS KNOW THE ANSWER BEFORE DECODING",
+      "related_papers": [
+        "Fast-dLLM: Training-free acceleration of diffusion LLM by enabling KV cache and parallel decoding",
+        "Accelerating diffusion large language models with slowfast: The three golden principles",
+        "Beyond autoregression: Fast LLMs via self-distillation through time",
+        "treamingdllm: Accelerating diffusion llms via suffix pruning and dynamic decoding",
+        "Accelerating diffusion language model inference via efficient kv caching and guided diffusion",
+        "Large language diffusion models",
+        "Diffusion large language models",
+        "Discrete diffusion language modeling by estimating the ratios of the data distribution"
+      ],
+      "related_paper_count": 8
+    },
+    "paper_0003": {
+      "target_paper_title": "FLASHVID: EFFICIENT VIDEO LARGE LANGUAGE MODELS VIA TRAINING-FREE TREE-BASED SPA-TIOTEMPORAL TOKEN MERGING",
+      "related_papers": [
+        "Fastvid: Dynamic density pruning for fast video large language models",
+        "Prunevid: Visual token pruning for efficient video large language models",
+        "Visionzip: Longer is better but not necessary in vision language models",
+        "An image is worth 1/2 tokens after layer 2: Plug-and-play inference acceleration for large visionlanguage models",
+        "Holitom: Holistic token merging for fast video large language models",
+        "Dycoke: Dynamic compression of tokens for fast video large language models",
+        "Multi-granular spatio-temporal token merging for training-free acceleration of video llms",
+        "Video instruction tuning with synthetic data",
+        "Llava-onevision: Easy visual task transfer",
+        "Qwen2.5-vl technical report"
+      ],
+      "related_paper_count": 10
+    },
+    "paper_0004": {
+      "target_paper_title": "IA-GGAD: Zero-shot Generalist Graph Anomaly Detection via Invariant and Affinity Learning",
+      "related_papers": [
+        "Arc: A generalist graph anomaly detector with in-context learning",
+        "Zero-shot generalist graph anomaly detection with unified neighborhood prompts",
+        "Gctam: Global and contextual combined truncated affinity maximization model for unsupervised graph anomaly detection",
+        "Truncated affinity maximization: One-class homophily modeling for graph anomaly detection",
+        "Deep anomaly detection on attributed networks",
+        "Anomaly detection on attributed networks via contrastive self-supervised learning",
+        "Cross-domain graph anomaly detection",
+        "Cross-domain graph anomaly detection via anomaly-aware contrastive alignment"
+      ],
+      "related_paper_count": 8
+    },
+    "paper_0005": {
+      "target_paper_title": "ImageNet-trained CNNs are not biased towards texture: Revisiting feature reliance through controlled suppression",
+      "related_papers": [
+        "ImageNet-trained CNNs are biased towards texture; increasing shape bias improves accuracy and robustness",
+        "The Origins and Prevalence of Texture Bias in Convolutional Neural Networks",
+        "What shapes feature representations? Exploring datasets, architectures, and training",
+        "Shape or Texture: Understanding Discriminative Features in CNNs",
+        "Intriguing properties of vision transformers",
+        "Are convolutional neural networks or transformers more like human vision",
+        "Learning visual representations for transfer learning by suppressing texture",
+        "Contributions of shape, texture, and color in visual recognition",
+        "Revisiting the shape-bias of deep learning for dermoscopic skin lesion classification",
+        "Generalisation in humans and deep neural networks",
+        "Partial success in closing the gap between human and machine vision",
+        "Human alignment of neural network representations"
+      ],
+      "related_paper_count": 12
+    },
+    "paper_0006": {
+      "target_paper_title": "Neighbor-aware Contrastive Disambiguation for Cross-Modal Hashing with Redundant Annotations",
+      "related_papers": [
+        "Unsupervised contrastive cross-modal hashing",
+        "Robust self-paced hashing for cross-modal retrieval with noisy labels",
+        "Robust contrastive cross-modal hashing with noisy labels",
+        "Modality-invariant asymmetric networks for cross-modal hashing",
+        "Hierarchical consensus hashing for cross-modal retrieval",
+        "Global-local label correlation for partial multi-label learning",
+        "Partial multi-label learning with noisy label identification",
+        "Partial multilabel learning based on near-far neighborhood label enhancement and nonlinear guidance"
+      ],
+      "related_paper_count": 8
+    }
+  }
+}
