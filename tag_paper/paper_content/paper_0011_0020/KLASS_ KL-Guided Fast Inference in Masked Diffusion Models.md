@@ -1,0 +1,211 @@
+Title: KLASS: KL-Guided Fast Inference in Masked Diffusion Models
+Abstract: Masked diffusion models have demonstrated competitive results on various tasks including language generation. However, due to its iterative refinement process, the inference is often bottlenecked by slow and static sampling speed. To overcome this problem, we introduce 'KL-Adaptive Stability Sampling' (KLASS), a fast yet effective sampling method that exploits token-level KL divergence to identify stable, high-confidence predictions. By unmasking multiple tokens in each iteration without any additional model training, our approach speeds up generation significantly while maintaining sample quality. On reasoning benchmarks, KLASS achieves up to 2.78× wall-clock speedups while improving performance over standard greedy decoding, attaining state-of-the-art results among diffusion-based samplers. We further validate KLASS across diverse domains, including text, image, and molecular generation, showing its effectiveness as a broadly applicable sampler across different models. Our code is available at https://github.com/shkim0116/KLASS.
+
+Section: Introduction
+Masked diffusion models [1,28,34,38] have attracted growing attention for their ability to model joint distribution of sequences by iteratively refining samples from partially masked sequences to clean data, achieving competitive performance on complex language tasks [27], image generation [7], biological sequences [25,34], and planning algorithms [50,51].
+Despite recent successes, these models are often restricted by slow and static sampling strategies such as Top-k or stochastic sampling, where only a limited number of high-confidence tokens are unmasked at each step. As a result, the generation process can become inefficient and prone to local suboptimalities, thus constraining the practical applicability of masked diffusion approaches.
+Several works investigate efficient samplers by caching the logits if no tokens are unmasked at the specific timestep [34] or design a specific scheduler to unmask one token at a time [56]. Another natural solution might be to incorporate an additional "planner" or auxiliary distribution to guide sampling [48,55]. However, doing so typically incurs substantial computational overhead, increases inference latency, and can lead to difficulty aligning the planner's distribution with the base model's learned distribution. Instead, our goal is to develop a lightweight yet effective sampling method that remains within the model's own capabilities, yielding speedups in generation while simultaneously improving or maintaining overall accuracy.
+To address these challenges, we propose 'KL-Adaptive Stability Sampling' (KLASS), an adaptive sampling strategy that leverages the diffusion model's own feedback to guide unmasking. Unlike previous approaches that rely on fixed schedules (i.e., a predetermined number of tokens unmasked at each timestep), our method adapts to the evolving confidence of the model during generation. We accelerate inference by identifying stable tokens as low-risk candidates for early unmasking. To ... Therefore, the number of cars that drove through in the first 15 minutes is:\n \\[\n 25 -20 = 10\n \\] Therefore, the number of cars that drove through the traffic jam in the first 15 minutes is \\(\\boxed{ 10 }\\). … Therefore, the number of cars that drove through in the first 15 minutes is:\n \\[\n 25 -20 = 5\n \\] Therefore, the number of cars that drove through the traffic jam in the first 15 minutes is \\(\\boxed{ 5 }\\). Figure 1: KL divergence as a strong indicator of solution correctness. (a) The Top-k method selects an incorrect solution despite high confidence, whereas KLASS identifies the correct solution, which exhibits a significantly lower KL divergence. (b) KL divergence distributions for the LLaDA and DREAM models show that correct predictions consistently have lower KL divergence than incorrect ones across all datasets.
+quantify stability, we track the token-level Kullback-Leibler (KL) divergence between conditional distributions at consecutive timesteps. Tokens are unmasked when their distributions remain similar (KL below a threshold) and are predicted with high confidence (probability exceeding a confidence threshold). This dynamic allocation of unmasking tokens results in significant acceleration of generation speed while maintaining sample quality by avoiding premature or suboptimal token unmasking without additional model training or extra memory burden.
+We empirically validate our method on challenging reasoning benchmarks, including GSM8K, MATH, HumanEval, and MBPP. We show that applying KLASS with large-scale masked diffusion models not only halves the number of sampling steps compared to standard greedy or Top-k decoding [19], but also achieves higher accuracy, achieving state-of-the-art results compared to other diffusion samplers. Figure 1a presents a comparison between solutions generated by Top-k confidence and KLASS sampler. KLASS successfully identifies the correct token with lower KL, whereas Top-k confidence tends to unmask incorrect tokens even with higher confidence. Furthermore, our experiment on plain text generation also proves the effectiveness of our method which results in reduced perplexity while maintaining entropy, thereby mitigating the inefficiencies inherent in conventional sampling. We further show that our sampler works in other modalities, including images and molecules.
+Overall, our proposed sampler for masked diffusion models is both simple and practical, harnessing the latent potential of the base diffusion model itself, rather than relying on complex external planners. By strategically identifying stable tokens at each iteration, the algorithm accelerates generation and fosters more robust coverage of viable token candidates. We believe this work provides a practical and scalable way for large-scale masked diffusion models, particularly where reliable and efficient generation is essential, such as complex reasoning tasks.
+We summarize our main contributions below:
+• We propose KLASS, a training-free sampler that leverages the model's internal dynamics in terms of token level KL divergence and confidence without requiring external planners.
+• We achieve up to 2.78× faster sampling by more than halving the number of diffusion steps through parallel unmasking of stable tokens.
+• We provide comprehensive empirical validation, showing improved quality on reasoning benchmarks across math and code generation, text generation, image synthesis, and molecular generation.
+2 Related Works Discrete diffusion models D3PM [1] investigate how forward and backward processes can be constructed in discrete state spaces which is analogous to the continuous diffusion models [18,40]. [6] leverage continuous time Markov chain (CTMC) theory to formulate the forward-backward process of discrete diffusion models with providing negative ELBO in continuous time limit as an objective. Following the success of denoising score matching [41], Lou et al. [25], Meng et al. [26] suggest discrete score matching loss by defining Stein score in discrete space. Ou et al. [28], Sahoo et al. [34], Shi et al. [38] further shows that simplified version of masked diffusion model can significantly boost the performance of diffusion models closing the performance gap with AR models in language domains. Recently, LLaDA [27] demonstrates scaling law of discrete diffusion models in language domain and further shows reasoning abilities.
+this section cite: ['b0', 'b27', 'b33', 'b37', 'b26', 'b6', 'b24', 'b33', 'b49', 'b50', 'b33', 'b55', 'b47', 'b54', 'b18', 'b0', 'b17', 'b39', 'b5', 'b40', 'b24', 'b25', 'b27', 'b33', 'b37', 'b26']
+
+Section: Discrete diffusion samplers
+Generating a text from language diffusion models involves iteratively refining a sequence from a noisy or masked state. Ancestral Sampling [25,34] starts from a fully masked sequence and iteratively applies the learned reverse denoising process over a series of discrete timesteps to produce a clean sequence. SUBS parametrization [34] of the reverse step dictates how model predictions are used to unmask tokens, often by ensuring that already revealed tokens remain unchanged. To improve sample quality, ReMDM [43] adopts remasking strategies, where some newly predicted tokens are reset to a mask based on confidence or timestep.
+this section cite: ['b24', 'b33', 'b33', 'b42']
+
+Section: Accelerated Sampling of Discrete diffusion models
+The iterative nature of ancestral sampling can result in high latency due to the large number of sequential steps. Consequently, much research has focused on reducing the number of function evaluations (NFEs) in diffusion models. Deschenaux and Gulcehre [11], Hayakawa et al. [15] leverage distillation methods to train the model with reduced NFEs in analogous to fast sampling of continuous diffusion models [35,41,53]. Ren et al. [33] improve discrete diffusion solvers by considering second-order numerical solver in CTMC framework. Zheng et al. [56] propose a First-Hitting Sampler (FHS) to skip the unnecessary timesteps and unmask one token at a time. Most of the existing samplers of masked diffusion models, however, resort to additional training or rely on other models (i.e., planners) to choose unmasking tokens at each timestep [21,24,29]. This could help avoiding suboptimal token selection but with considerable computational overhead and may fail to be aligned with the model's intrinsic capability.
+Recent training-free strategies for accelerating masked diffusion language models have emerged concurrently, with several works exploring heuristics based on model certainty to guide this process. Fast-dLLM [47] and Dimple [54] use confidence-aware decoding, SlowFast Sampling [45] alternates decoding stages based on certainty, convergence, and position principles, EB-Sampler [4] unmasks multiple tokens based on entropy bounds, and Prophet [23] uses the Top-2 confidence gap. While these concurrent approaches validate the utility of heuristics largely based on certainty, we empirically demonstrate that this signal alone is insufficient. To ensure tokens are not unmasked prematurely, we propose a novel method that utilizes KL divergence to identify stable tokens for parallel decoding.
+this section cite: ['b10', 'b14', 'b34', 'b40', 'b52', 'b32', 'b55', 'b20', 'b23', 'b28', 'b46', 'b53', 'b44', 'b3', 'b22']
+
+Section: Preliminaries
+
+this section cite: []
+
+Section: Masked diffusion models
+In masked diffusion models, one requires an additional mask index m for each tokens and forward process is defined by following absorbing process [1]:
+q(z t |x) = Cat(z t ; α t x + (1 -α t )m),(1)
+where α t is predefined schedule, monotonically decreasing in t. Then one can analytically obtain posterior distribution as:
+q(z s | z t , x) = Cat(z s ; z t ) if z t ̸ = m, Cat z s ; (1-αs)m+(αs-αt)x 1-αt if z t = m.(2)
+The goal of the masked diffusion model is to learn this reverse process by parameterizing the posterior (Eq. 2) by a neural network with p θ (z s |z t ) := q(z s |z t , µ θ (z t , t)).
+In simplified masked diffusion models [28,34,38], learning objective can be simplified by parameterizing the models to focus on estimating only masked tokens while maintaining unmasked tokens throughout the generation.
+Then the learning objective is to minimize Negative ELBO (NELBO) whose continuous form is the following:
+𝐷 !" ( ∥ )
+Confidence: = 0.412 < 0.
+9 ✗ KL: = 0.163 > 0.01 ✗ Confidence: = 0.928 ≥ 0.9 ✓ KL: = 0.641 > 0.01 ✗ Confidence: = 0.957 ≥ 0.9 ✓ KL: = 0.004 ≤ 0.01 ✓ 2 1 + takes total In . 3 1 + 2 takes it , total In . bolts 3 = 1 + 2 takes it , total In t t-1 t-2 t-3 𝐷 !" ( ∥ ) 𝑚𝑎𝑥 t-2 t-3 t-3 t-1 t-2 t-2 t-1 Both Not Satisfied KL Not Satisfied Both Satisfied 236 237 238 239 240 241 242 243 244 245 246 247 : Token probability distribution, : Masked, : Unmasked, : Fixed 𝑚𝑎𝑥 𝐷 !" ( ∥ ) 𝑚𝑎𝑥 Unmask Mask Mask t t-1
+Figure 2: Illustration of parallel decoding with KLASS. Tokens are unmasked when they meet the two criteria: high predictive confidence and a stable probability distribution. Stability is measured by a low KL divergence between consecutive steps (illustrated with history length of 1 for simplicity). On the right it shows the sampling process for position 245: it remains masked due to low confidence or high KL score, and is unmasked when both conditions are satisfied.
+L ∞ = E x∼q0,zt∼qt(zt|x) 1 0 α ′ t 1 -α t [δ x,m x • log µ θ (z t , t)] .(3)
+Here, q 0 denotes data distribution and α ′ t is the derivative of noise schedule α t in time. In this continuous time framework, [34] further proves that above objective is invariant of noise schedule α t .
+The above can be generalized to sequence-level of token length L modeling as follows.
+L (L) ∞ = 1 0 α ′ t 1 -α t E x∼q0,zt∼qt(zt|x)    l:z (l) t =m x (l) • log µ (l) θ (z t , t)    dt.(4)
+this section cite: ['b0', 'b27', 'b33', 'b37', 'b33']
+
+Section: Inference via Ancestral Sampling
+At inference, we discretize t ∈ [0, 1] into times {t T > • • • > t 1 ≈ 0}, initializing x t T = [mask] L . We then sample backward:
+x ti-1 ∼ p θ x ti-1 | x ti , i = T, . . . , 1.
+In simplified MDM, unmasked tokens remain fixed and masked tokens are drawn from the model's prediction. After T steps, we obtain a complete sequence x t0 . We provide additional analysis of other sampling strategies in Appendix C.
+this section cite: []
+
+Section: Method
+
+this section cite: []
+
+Section: Defining Confidence Score and KL Score
+KLASS aims to identify which tokens are stable enough to be unmasked at each step of the inference process, which we index by timesteps t = T, . . . , 1. To guide this selection, we introduce two key metrics: a confidence score to measure the model's certainty on a given token and a KL score to measure the temporal consistency of its predictions. Definition 4.1. (Confidence score) Denoting p i t as the categorical distribution predicted by the diffusion model at timestep t for token position i, we define the confidence conf i t to be the largest value of the probability function among vocabulary space V (v ∈ V ):
+conf i t = max v p i t (v).(5)
+Intuitively, a higher confidence score indicates the model is more certain about estimating the current token, which increases the chance that the model's estimate for that token is correct.
+Definition 4.2. (KL score) We define KL score d i t of the token position i at timestep t as the Kullback-Leibler divergence between previous estimates and current estimates of the given token:
+d i t = D KL p i t ∥ p i t+1 ,(6)
+where we denote p i t , p i t+1 be the probability distribution of the model estimates of token index i at time t and at time t + 1, respectively. KL score should be low only when the model's estimate is consistent throughout the reverse diffusion process, which implies the estimated token is more reliable.
+To empirically demonstrate how KL score behaves in practical scenario, we first generate samples for a variety of math and programming reasoning benchmarks. As shown in Figure 1b, correct samples consistently exhibit significantly lower KL scores than incorrect ones, for all models and datasets. This observation motivates our use of KL scores as a guiding signal in the sampling algorithm of masked diffusion models, which we formally introduce in the next section.
+this section cite: []
+
+Section: KLASS: KL-Adaptive Stability Sampling
+We introduce 'KL-Adaptive Stability Sampling' (KLASS), a novel sampling algorithm for masked diffusion models. As illustrated in Figure 2, KLASS leverages confidence score and KL score during the unmasking process of the masked diffusion models (Eq. 2), by selectively choosing unmasking tokens that have low KL score and high confidence score.
+this section cite: []
+
+Section: Stable-token selection.
+To effectively set the standard using both KL and confidence score, we propose stable-token selection in the following way: Given a history length n, a KL threshold ϵ KL , and a confidence threshold τ , we select the set of stable tokens at step t as,
+S t = i ∀k ∈ {1, . . . , n} D KL p i t+k-1 ∥ p i t+k < ϵ KL all recent KL's below threshold ∧ conf i t > τ high confidence .(7)
+Unmasking rule. KLASS adaptively chooses which tokens to unmask at given timestep with above defined stable index (Eq. 7). At each diffusion step t, we apply
+x i t =
+unmask token at position i, i ∈ S t , otherwise, unmask the Top-u positions by conf i t , S t = ∅,
+where u is a fixed fallback unmasking count. We provide a pseudocode of our algorithm with further analysis in Appendix B.
+this section cite: []
+
+Section: Theoretical Rationale
+We provide a theoretical perspective on why using KL divergence can improve sample quality. We show that, for a well-trained model, a token that is predicted as incorrect at the current step cannot remain uniformly stable as the context is progressively resolved. Definition 5.1. For each context c (instantiation of variables outside X i ), let C(c) be the nonempty set of task-correct conditionals. Let C := {µ : µ(• | c) ∈ C(c) ∀c}. We say p θ is a conditional δ-approximation to the task if
+inf π∈C sup c TV p θ ( • | c), π( • | c) ≤ δ. Definition 5.2. Fix i. Let x ⋆ i be optimal under π(• | c ⋆ ) at near-optimal context c ⋆ . Let x † i ̸ = x ⋆ i be suboptimal. Assume a true margin γ > 0 at c ⋆ : π(x ⋆ i | c ⋆ ) ≥ π(x † i | c ⋆ ) + γ. Assume the model currently prefers x † i at c M by margin β ≥ 0: p θ (x † i | c M ) ≥ p θ (x ⋆ i | c M ) + β. Proposition 5.3. Suppose p θ is a conditional δ-approximation of π.
+TV(P M , P 0 ) ≥ ∆, 1 M M -1 t=0 KL P t ∥ P t+1 ≥ 2 ∆ 2 M 2 .
+Proof. The proof is in Appendix A.
+this section cite: []
+
+Section: Experiments
+To show effectiveness of our proposed sampler, we conduct experiments on multiple benchmarks including reasoning benchmarks with large scale models in Section 6.1, text generation in Section 6.2, along with other modalities including images in Section 6.3 and molecules in Section 6.4. We also present ablation studies in Section 6.5 and analyze computational overhead in Section 6.6.
+this section cite: []
+
+Section: Reasoning tasks
+Experimental setup We evaluate on four reasoning benchmarks: GSM8K [10] and MATH500 [16] for math, and HumanEval [9] and MBPP-sanitized [2] for code synthesis. We use two instructiontuned models, LLaDA 8B Instruct [27] and Dream 7B Instruct [52]. For both models we set the generation length to 256 tokens, with LLaDA using a block size of 64. The generation temperature is set to 0 for LLaDA and 0.2 for Dream. We report both the number of sampling steps and the pass@1 accuracy. The maximum inference timestep is set to 256. In KLASS, we compute per-token KL divergence over a history length of n = 2, and apply KL thresholds ranging from 0.001 to 0.01 and confidence thresholds from 0.5 to 0.9. Full configuration details and a lightweight guideline for hyperparameter selection are provided in Appendix D.1.2.
+Baselines We compare KLASS against baselines across two categories. The first is sequential unmasking (single-token), which includes: (i) Top-1 sampling, selecting the highest-confidence token at each step [7]; and (ii) random sampling [1]. The second category is parallel unmasking, which accelerates generation by revealing multiple tokens per step: (iii) Top-2 sampling, decoding the two highest-confidence tokens per step to halve the total number of steps; (iv) confidence-threshold sampling, unmasking all tokens with a predicted probability over 0.9; and (v) KL-threshold sampling, unmasking all tokens with a KL divergence under 0.001, using a history length n = 2 as in KLASS.
+this section cite: ['b9', 'b15', 'b8', 'b1', 'b26', 'b51', 'b6', 'b0']
+
+Section: Results
+
+this section cite: []
+
+Section: As shown in
+Table 1, KLASS consistently improves accuracy across most tasks compared to the standard greedy decoding (Top-1) baseline. It demonstrates robust generalization for both LLaDA and Dream models across math and code synthesis benchmarks. Beyond accuracy, KLASS This proves that the effectiveness of KLASS comes from its novel approach of combining token confidence with KL-divergence trajectories.
+this section cite: []
+
+Section: Text generation
+Experimental setup We evaluate KLASS on Masked Diffusion Language Model (MDLM) [34] pre-trained on the OpenWebText corpus [13]. As baselines, we include (i) the original autoregressive sampler, (ii) SEDD [25], and (iii) two variants of MDLM: one parameterized with SUBS (the standard 512-step sampler) and one parameterized with D3PM [3] (the absorbing variant). For all diffusion-based methods, we generate 1,000 sequences of length 1,024 tokens under a fixed 512-step schedule, with nucleus Top-p filtering at p = 0.9, history length n = 2, KL threshold ϵ KL = 1e -4, and confidence threshold τ = 0.57.
+this section cite: ['b33', 'b12', 'b24', 'b2']
+
+Section: Evaluation
+We report generative perplexity by exponentiating the average token-level negative loglikelihood under three oracle models: LLaMA2 (7B) [42], LLaMA3 (8B) [14], and GPT-2 [30]. We measure Shannon entropy of the predicted token distributions and compute MAUVE by comparing our 1,000 generated samples to 1,000 held-out segments from the OpenWebText. Baseline (*Data) results are given from the corresponding literatures [43,48].
+Results Table 2 shows that KLASS substantially improves generative quality over existing discrete diffusion samplers. Our method higher MAUVE and lower perplexity across all oracle models while maintaining comparable entropy. These results highlight that stability-aware multi-token unmasking guided by KLASS leads to more coherent and fluent text generation, all without any additional model training. We provide experimental details in Appendix D.2.
+this section cite: ['b41', 'b13', 'b29', 'b42', 'b47']
+
+Section: Image generation
+Experimental setup We evaluate KLASS on the MMaDA (Multimodal Large Diffusion Language Models) [49], a multimodal diffusion foundation model. We compare two samplers: (i) the standard confidence-based sampler used by MMaDA, and (ii) our proposed KLASS. For each method, we 0.5 0.6 0.7 0.8 0.9 Confidence Threshold none 0.02 0.015 0.01 0.005 KL Threshold 25.4 29.2 30.6 30.8 31.6   27.8 31.0 31.4 31.6 30.8   30.4 33.2 33.0 31.0 30.8   31.6 33.8 32.4 30.8 30.6   32.6 31.4 31.6 30.830.2 26 28 30 32 Accuracy (%) (a) LLaDA 0.5 0.6 0.7 0.8 0.9 Confidence Threshold none 0.02 0.015 0.01 0.005 0.001 KL Threshold 22.2 25.0 25.0 36.8 41.8 29.2 33.2 38.6 39.4 40.2   32.4 33.4 38.4 39.2 40.4   31.0 29.6 37.8 39.2 42.0   32.6 35.6 37.8 40.6 43.2   40.4 39.6 41.4 41.8 generate 10,000 images conditioned on labels drawn uniformly from the 1,000 ImageNet classes, using 16 and 32 step decoding schedules. KLASS is configured with history length n = 1, KL divergence threshold ϵ KL = 0.3, and confidence threshold τ = 0.1.
+Evaluation We assess sample fidelity using two widely adopted metrics. First, we compute Fréchet Inception Distance (FID) [17] between our 10,000 generated samples and the ImageNet validation set, using the official Inception v3 implementation. Second, we measure Inception Score (IS) [36] on the same samples with the standard protocol.
+this section cite: ['b48', 'b16', 'b35']
+
+Section: Results
+Table 3 shows that KLASS improves image quality on MMaDA over the standard confidence-based sampler. Across both decoding schedules, KLASS yielding lower FID and higher IS. The trend holds under the same decoding schedules and fairness controls, indicating that KLASS improves fidelity and class-consistency without modifying the backbone or adding auxiliary guidance. We provide experimental details in Appendix D.3.
+this section cite: []
+
+Section: Molecular generation
+Experimental setup We use QM9 [31], which contains molecules with up to nine heavy atoms, represented in SMILES [46]. For models we follow the training recipe of [37] to train seperate models conditioned on drug-likeness (QED) [5] and number of rings using classifier-free training of masked diffusion models.
+this section cite: ['b30', 'b45', 'b36', 'b4']
+
+Section: Evaluation
+We test KLASS on conditional generation of small molecules using CFG guidance. Specifically, we aim to generate molecules with higher score of QED or maximizing ring counts while fixing the CFG strength for fair comparison. We generate 1,024 samples for each task and provide average value of number of function evaluation (NFEs). Further details of the experimental setups are provided in Appendix D.4.
+this section cite: []
+
+Section: Results
+The result shows that KLASS effectively reduces the total sampling steps while maintaining target reward in the conditional generation scenario for both target reward (QED and Ring count). We provide further experimental results in this setup in Appendix D.4.
+this section cite: []
+
+Section: Ablation Studies
+Effect of confidence and KL score thresholds Our evaluation of different confidence and KL thresholds on the MATH dataset reveals that combining both is essential for optimal performance. As shown in Figure 3, applying the KL threshold consistently enhances accuracy across all confidence levels compared to relying on a confidence threshold alone ('none' row). This synergistic relationship is further substantiated by Table 1, which demonstrates that using a single criterion leads to a notable reduction in accuracy. While the optimal hyperparameter settings vary significantly between models, each model's performance remains stable and robust around its unique optimal point. For example, LLaDA performs best with a lower confidence threshold, whereas Dream requires a higher one to achieve maximum accuracy. In both cases, however, accuracy does not degrade sharply near these values, indicating low sensitivity to minor hyperparameter adjustments. A more detailed sensitivity analysis, featuring additional tasks and a finer-grained grid of thresholds, is provided in Appendix D.5.1.
+this section cite: []
+
+Section: Effect of unmasking multiple tokens
+We evaluate whether unmasking multiple tokens per step improves LLaDA's performance. Using KLASS, which selects tokens based on fixed thresholds, we compare parallel multi-token unmasking to two sequential variants. These variants unmask only a single token from the same stable pool satisfying the KLASS criteria: 'Single (conf)' unmasks the one with the highest confidence and 'Single (KL)' unmasks the one with the lowest KL score.
+As shown in Table 5, parallel sampling of KLASS boosts both accuracy and efficiency. On MATH, it improves accuracy by up to 4.8 points while cutting sampling steps by nearly 50%. Similar trends hold on GSM8K. These results suggest that LLaDA benefits from unmasking multiple stable tokens in parallel, leading to faster and even more accurate reasoning.
+this section cite: []
+
+Section: Analysis on Computational Overhead
+The overhead of KL computation is negligible, as it is a lightweight post-processing step on existing logits that requires no additional forward pass. For the set of masked tokens I m = {i | z i t = m}, we compute the KL score d i t = D KL (p i t ∥p i t+1 ) and cache the prior distribution. This yields a combined computational and memory overhead of O(|I m | • |V |), a linear cost that is negligible compared to the expensive matrix multiplications and multi-gigabyte footprint of the main diffusion step. Table 6 empirically supports this conclusion. We measure the overhead for LLaDA and Dream, with vocab sizes of 126,464 and 152,064, respectively, using a generation length of 256. The results show memory overheads below 1.57% of total memory and latency overheads below 0.21% per decoding step, confirming that KL computation adds only minimal cost.
+this section cite: []
+
+Section: Conclusion
+We proposed KL-Adaptive Stability Sampling (KLASS), an efficient and adaptive sampling method for masked diffusion models that leverages token-level KL divergence and model confidence to guide the unmasking process. KLASS substantially reduces the number of sampling steps while maintaining or improving accuracy, achieving state-of-the-art performance on math and code reasoning benchmarks. Our approach is simple, requires no additional training, and generalizes well across multiple modalities, making it a practical solution for faster and more reliable generation in masked diffusion models.
+For future work, one could extend this approach to discrete diffusion models with alternative noise schedules, such as the uniform or marginal prior [1]. Another direction is to evaluate the proposed sampler with larger models as they become available. We also discuss the broader impact and limitations of our work in Appendix G.
+this section cite: ['b0']
+
+Section: References
+Ref_id:b0 Title: Structured denoising diffusion models in discrete state-spaces Year: (2021)
+Ref_id:b1 Title: Program synthesis with large language models Year: (2021)
+Ref_id:b2 Title: Structured denoising diffusion models in discrete state-spaces Year: (2023)
+Ref_id:b3 Title: Accelerated sampling from masked diffusion models via entropy bounded unmasking Year: (2025)
+Ref_id:b4 Title: Quantifying the chemical beauty of drugs Year: (2012)
+Ref_id:b5 Title: A continuous time framework for discrete denoising models Year: (2022)
+Ref_id:b6 Title: Masked generative image transformer Year: (2022)
+Ref_id:b7 Title: Convergence analysis of discrete diffusion model: Exact implementation through uniformization Year: (2024)
+Ref_id:b8 Title: Evaluating large language models trained on code Year: (2021)
+Ref_id:b9 Title: Training verifiers to solve math word problems Year: (2021)
+Ref_id:b10 Title: Beyond autoregression: Fast llms via self-distillation through time Year: (2024)
+Ref_id:b11 Title: A general method for numerically simulating the stochastic time evolution of coupled chemical reactions Year: (1976)
+Ref_id:b12 Title:  Year: (2019)
+Ref_id:b13 Title:  Year: (2024)
+Ref_id:b14 Title: Distillation of discrete diffusion through dimensional correlations Year: (2024)
+Ref_id:b15 Title: Measuring mathematical problem solving with the math dataset Year: (2021)
+Ref_id:b16 Title: Gans trained by a two time-scale update rule converge to a local nash equilibrium Year: (2018)
+Ref_id:b17 Title: Denoising diffusion probabilistic models Year: (2020)
+Ref_id:b18 Title: The curious case of neural text degeneration Year: (2019)
+Ref_id:b19 Title: Elucidating the design space of diffusion-based generative models Year: (2022)
+Ref_id:b20 Title: Train for the worst, plan for the best: Understanding token ordering in masked diffusions Year: (2025)
+Ref_id:b21 Title: Macm: Utilizing a multi-agent system for condition mining in solving complex mathematical problems Year: (2024)
+Ref_id:b22 Title: Diffusion language models know the answer before decoding Year: (2025)
+Ref_id:b23 Title: Think while you generate: Discrete diffusion with planned denoising Year: (2024)
+Ref_id:b24 Title: Discrete diffusion modeling by estimating the ratios of the data distribution Year: (2023)
+Ref_id:b25 Title: Concrete score matching: Generalized score matching for discrete data Year: (2022)
+Ref_id:b26 Title: Large language diffusion models Year: (2025)
+Ref_id:b27 Title: Your absorbing discrete diffusion secretly models the conditional distributions of clean data Year: (2024)
+Ref_id:b28 Title: Path planning for masked diffusion model sampling Year: (2025)
+Ref_id:b29 Title: Language models are unsupervised multitask learners Year: (2019)
+Ref_id:b30 Title: Quantum chemistry structures and properties of 134 kilo molecules Year: (2014)
+Ref_id:b31 Title: How discrete and continuous diffusion meet: Comprehensive analysis of discrete diffusion models via a stochastic integral framework Year: (2024)
+Ref_id:b32 Title: Fast solvers for discrete diffusion models: Theory and applications of high-order algorithms Year: (2025)
+Ref_id:b33 Title: Simple and effective masked diffusion language models Year: (2024)
+Ref_id:b34 Title: Progressive distillation for fast sampling of diffusion models Year: (2022)
+Ref_id:b35 Title: Improved techniques for training gans Year: (2016)
+Ref_id:b36 Title: Simple guidance mechanisms for discrete diffusion models Year: (2024)
+Ref_id:b37 Title: Simplified and generalized masked diffusion for discrete data Year: (2024)
+Ref_id:b38 Title: Reflexion: Language agents with verbal reinforcement learning Year: (2023)
+Ref_id:b39 Title: Deep unsupervised learning using nonequilibrium thermodynamics Year: (2015)
+Ref_id:b40 Title: Score-based generative modeling through stochastic differential equations Year: (2020)
+Ref_id:b41 Title: Llama 2: Open foundation and fine-tuned chat models Year: (2023)
+Ref_id:b42 Title: Remasking discrete diffusion models with inference-time scaling Year: (2025)
+Ref_id:b43 Title: Executable code actions elicit better llm agents Year: (2024)
+Ref_id:b44 Title: Accelerating diffusion large language models with slowfast: The three golden principles Year: (2025)
+Ref_id:b45 Title: Smiles, a chemical language and information system. 1. introduction to methodology and encoding rules Year: (1988)
+Ref_id:b46 Title: Fast-dllm: Training-free acceleration of diffusion llm by enabling kv cache and parallel decoding Year: (2025)
+Ref_id:b47 Title: Energy-based diffusion language models for text generation Year: (2024)
+Ref_id:b48 Title: Multimodal large diffusion language models Year: (2025)
+Ref_id:b49 Title: Beyond autoregression: Discrete diffusion for complex reasoning and planning Year: (2024)
+Ref_id:b50 Title: Implicit search via discrete diffusion: A study on chess Year: (2025)
+Ref_id:b51 Title:  Year: (2025)
+Ref_id:b52 Title: One-step diffusion with distribution matching distillation Year: (2024)
+Ref_id:b53 Title: Discrete diffusion multimodal large language model with parallel decoding Year: (2025)
+Ref_id:b54 Title: Informed correctors for discrete diffusion models Year: (2024)
+Ref_id:b55 Title: Masked diffusion models are secretly time-agnostic masked models and exploit inaccurate categorical sampling Year: (2024)

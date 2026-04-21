@@ -1,0 +1,156 @@
+Title: Deciphering the Extremes: A Novel Approach for Pathological Long-tailed Recognition in Scientific Discovery
+Abstract: Scientific discovery across diverse fields increasingly grapples with datasets exhibiting pathological long-tailed distributions: a few common phenomena overshadow a multitude of rare yet scientifically critical instances. Unlike standard benchmarks, these scientific datasets often feature extreme imbalance coupled with a modest number of classes and limited overall sample volume, rendering existing long-tailed recognition (LTR) techniques ineffective. Such methods, biased by majority classes or prone to overfitting on scarce tail data, frequently fail to identify the very instances-novel materials, rare disease biomarkers, faint astronomical signals-that drive scientific breakthroughs. This paper introduces a novel, end-to-end framework explicitly designed to address pathological long-tailed recognition in scientific contexts. Our approach synergizes a Balanced Supervised Contrastive Learning (B-SCL) mechanism, which enhances the representation of tail classes by dynamically re-weighting their contributions, with a Smooth Objective Regularization (SOR) strategy that manages the inherent tension between tail-class focus and overall classification performance. We introduce and analyze the real-world ZincFluor chemical dataset (T = 137.54) and synthetic benchmarks with controllable extreme imbalances (CIFAR-LT variants). Extensive evaluations demonstrate our method's superior ability to decipher these extremes. Notably, on ZincFluor, our approach achieves a Tail Top-2 accuracy of 66.84%, significantly outperforming existing techniques. On CIFAR-10-LT with an imbalance ratio of 1000 (T = 100), our method achieves a tail-class accuracy of 38.99%, substantially leading the next best. These results underscore our framework's potential to unlock novel insights from complex, imbalanced scientific datasets, thereby accelerating discovery. We provide the detailed code in https://github.com/DataLab-atom/PLTR-SD.
+
+Section: Introduction
+Scientific discovery, spanning disciplines from materials science and drug development to astrophysics and genomics, increasingly relies on harnessing vast datasets. However, a pervasive and often underestimated challenge in these domains is the pathological long-tailed distribution of data. Unlike common benchmark datasets (e.g., ImageNet-LT [19], Places365-LT [32]), scientific datasets often exhibit extreme imbalances: a few well-understood or easily observable phenomena constitute the majority classes, while a multitude of rare, novel, or hard-to-characterize instances form an extensive tail. More critically, while many existing highly imbalanced benchmarks feature a large number of classes and a relatively substantial total sample size, the pathological long-tailed distributions encountered in scientific exploration are frequently characterized by a comparatively smaller number of classes coupled with a limited overall sample volume. This scarcity of available information for each tail class imposes even more stringent demands on a model's learning capabilities. This is not an artifact but an intrinsic feature of scientific exploration: groundbreaking discoveries often reside in these sparse tail regions, representing new materials with unique properties, biomarkers for rare diseases, or faint astronomical signals indicative of new physical laws. The criticality of accurately identifying and understanding these tail-class instances in scientific domains cannot be overstated.
+Standard deep learning models and existing Long-Tailed Recognition (LTR) techniques [31,29] often falter with such pathological imbalances . Current LTR methods, whether based on re-sampling [4,8], re-weighting [7,2], decoupled training [12], or specific loss designs [18,3], primarily aim to mitigate head-class dominance. However, with extreme scarcity, re-weighting can overfit to noise, re-sampling may lose or redundantly add information, and decoupled training struggles if initial features for tail classes are poorly learned. These shortcomings are drastically amplified at pathological imbalance levels, leading to CATASTROPHIC FAILURES in identifying scientifically paramount tail instances. For example, in our ZincFluor dataset (T = 137.54), rare, valuable fluorescent compounds are often missed, hindering discovery. This paper directly confronts pathological long-tailed recognition in  scientific data. We argue that extreme imbalance necessitates a paradigm shift from adapting existing LTR methods to designing bespoke solutions. To this end, we propose a novel, end-to-end trainable framework (overviewed in Figure 1b, with key contributions highlighted below:
+▶ We profoundly unveil and quantify the unique severity of the "pathological long-tail" problem within scientific discovery contexts. By introducing and analyzing the real-world ZincFluor chemical dataset (T = 137.54), and complementing it with synthetic datasets we constructed featuring controllable extreme imbalance (variants of CIFAR-10-LT and CIFAR-100-LT [15]), we systematically benchmark the performance bottlenecks of existing LTR methods in these extreme scenarios, thereby providing new benchmarks and challenges for research in this domain.
+this section cite: ['b18', 'b31', 'b30', 'b28', 'b3', 'b7', 'b6', 'b1', 'b11', 'b17', 'b2', 'b14']
+
+Section: ▶
+We introduce an innovative balanced supervised contrastive learning framework, inspired by [14], engineered to fundamentally enhance the model's capacity to perceive and represent rare yet critical scientific signals. Our approach dynamically adjusts the contribution weights of samples from different classes during contrastive learning and integrates multi-objective optimization strategies. This not only compels the model to focus on and learn fine-grained, discriminative features for tail classes but also, through artful loss function design, ensures stable learning of common head-class phenomena. Consequently, it achieves a balanced cognitive understanding across varying class frequencies, effectively preventing the neglect of scarce signals.
+▶ We demonstrate the remarkable efficacy of our method through extensive evaluations.
+Critically, on the highly challenging real-world ZincFluor dataset, our approach achieves a breakthrough in identifying rare fluorescent compounds, evidenced by, for instance, a Tail Top-2 accuracy of 66.84%, significantly outperforming existing techniques. Furthermore, on synthetic long-tailed benchmarks with tunable pathological imbalance, our model consistently surpasses state-of-the-art LTR methods, especially when the imbalance is more extreme. For instance, with an imbalance ratio of 1000 on CIFAR-10-LT (T = 100), our method achieves a tail-class accuracy of 38.99%, substantially leading the next best method at 28.55%. These results underscore the immense potential of our approach to unlock novel insights from complex, imbalanced scientific datasets, offering a potent tool to accelerate scientific discovery.
+By developing a robust solution tailored to the pathological long-tailed distributions inherent in scientific research, this work aims to bridge the gap between advanced machine learning capabilities and the pressing need to extract knowledge from the most challenging, yet often most valuable, segments of scientific data.
+2 Related Work
+this section cite: ['b13']
+
+Section: Long-Tailed Phenomena in Scientific Tasks
+Long-tailed distributions, where a few common observations dominate numerous rare ones, are intrinsic to many scientific domains. For instance, in materials science, novel materials with exceptional functionalities are far rarer than common stable compounds [1,20]. Similarly, drug discovery and genomics face challenges in identifying rare genetic variants or novel drug targets from vast datasets [5,26]. Astrophysics also encounters this, with rare celestial events or objects being crucial yet sparsely observed compared to common ones [13,9]. Distinct from typical largescale LTR benchmarks like ImageNet-LT [19] or Places365-LT [32], scientific datasets often exhibit a pathological long-tail: extreme imbalance ratios coupled with a modest number of total classes and often limited overall sample sizes. This unique setting challenges generic LTR methods and motivates our tailored approach.
+this section cite: ['b0', 'b19', 'b4', 'b25', 'b12', 'b8', 'b18', 'b31']
+
+Section: Long-Tailed Recognition (LTR)
+LTR techniques aim to mitigate semantic and structural biases toward majority classes. We categorize prevalent strategies as follows:
+• Data and Loss Manipulation: Early methods rely on re-sampling (e.g., SMOTE [4] or undersampling [8]) to balance the training distribution. Re-weighting strategies further refine this by assigning class-specific costs, such as Class-Balanced Loss [7], Focal Loss [18], and LDAM [2]. Notably, recent studies provide a unified theoretical framework for these loss-oriented approaches via localization [28].
+• Decoupled and Manifold Learning: Decoupled training [12] separates feature learning from classifier adjustment. To enhance the robustness of the learned features, recent works delve into semantic scale imbalance [22] and curvature-balanced feature manifolds [24], aiming for fairer DNNs by optimizing the geometry of perceptual manifolds [23].
+• Logit Adjustment and Distillation: Post-hoc adjustments, such as label over-smoothing [25] and logit retargeting [21], calibrate the model's confidence. Knowledge distillation [10,11] and hierarchical label distribution strategies [30] have also proven effective for test-agnostic scenarios.
+Contrastive learning for LTR has emerged as a potent direction. Building upon Supervised Contrastive Learning (SupCon) [14], methods like Parametric Contrastive Learning (BCL) [6] and Targeted SupCon [17] leverage sample-to-sample relationships to foster discriminative embeddings. Our B-SCL extends this paradigm by integrating class-frequency aware weights specifically tailored for pathological distributions, where standard benchmarks like iNaturalist [27] fail to capture the extreme scarcity and low total volume typical of scientific discovery datasets.
+this section cite: ['b3', 'b7', 'b6', 'b17', 'b1', 'b27', 'b11', 'b21', 'b23', 'b22', 'b24', 'b20', 'b9', 'b10', 'b29', 'b13', 'b5', 'b16', 'b26']
+
+Section: Methodology: Balanced Contrastive Representation Learning under Dynamic Multi-Objective Constraints for Pathological Long-Tails
+Our methodology addresses the critical challenge of pathological long-tailed recognition, prevalent in scientific discovery, by architecting a synergistic learning framework. This framework prioritizes the discriminative representation of tail classes while ensuring overall classification efficacy and robustness. We formalize this as a multi-objective optimization problem and derive a tractable loss function that dynamically balances these, often conflicting, objectives.
+this section cite: []
+
+Section: Formalizing Pathological Long-Tailed Recognition as a Multi-Objective Optimization Problem
+We consider a dataset D = {(x i , y i )} N i=1 characterized by a pathological long-tailed distribution across C classes, where x i ∈ X and y i ∈ {0, . . . , C -1}. The per-class sample count N c exhibits extreme imbalance, quantified by T = (max c N c )/((min c N c ) • C). Our goal is to learn model parameters θ for a feature extractor f backbone , a projection head π proj , and a classifier g cls .
+In this setting, we identify three primary, potentially conflicting, learning objectives:
+1. Robust Classification Performance (O 1 (θ)): The model must achieve high classification accuracy across all classes, for both original and augmented data views. This is quantified by the Classification Performance Objective (CPO):
+L CPO (θ) = E (x,y)∼D [ℓ CE (g cls (f backbone (x; θ)), y) + ℓ CE (g cls (f backbone (x ′ ; θ)), y)](1)
+where ℓ CE (o, y) = -log(softmax(o) y ) is the standard cross-entropy loss. Let L CE,orig (θ) = E [ℓ CE (g cls (f backbone (x; θ)), y)] and L CE,aug (θ) = E [ℓ CE (g cls (f backbone (x ′ ; θ)), y)]. Thus, L CPO (θ) = L CE,orig (θ) + L CE,aug (θ).
+this section cite: []
+
+Section: 2.
+Tail-Centric Discriminative Representation (O 2 (θ)): The model must learn highly discriminative features, particularly for information-starved tail classes, to enable their identification. This is addressed by the Balanced Supervised Contrastive Learning (B-SCL) objective:
+L B-SC (θ) = λ B-SC • 1 2B zj ∈Sbatch w yj ℓ SC (z j ; θ)(2)
+where ℓ SC (z j ; θ) is the standard per-anchor SupCon loss for anchor z j with label y j , computed using embeddings z = π proj (f backbone (•; θ)). The weights w c = exp(s ′ c )/ k exp(s ′ k ) with s ′ k = (N C-1-k ) α up-weight tail-class contributions.
+The challenge is that minimizing L CPO (often dominated by head classes) can conflict with minimizing L B-SC (emphasizing tail classes). We seek a solution θ * that is Pareto-optimal with respect to (L CE,orig , L CE,aug , L B-SC ).
+Optimization Target 1 (Constrained Multi-Objective Formulation) We aim to find parameters θ * that minimize a primary combined objective while ensuring no individual sub-objective becomes excessively large. This can be conceptualized as:
+min θ L CPO (θ) + L B-SC (θ) subject to L CE,orig (θ) ≤ ϵ 1 L CE,aug (θ) ≤ ϵ 2 L B-SC (θ) ≤ ϵ 3(3)
+where ϵ 1 , ϵ 2 , ϵ 3 are dynamically adjusted upper bounds.
+Solving Optimization Target 1 directly is intractable. Instead, we formulate a penalty-based approach.
+this section cite: []
+
+Section: Derivation of the Training Objective from Multi-Objective Constraints
+To find a solution approximating the Pareto front of (L CE,orig , L CE,aug , L B-SC ), we employ a scalarization technique that incorporates a penalty for deviations from a balanced state.
+Proposition 1 (LogSumExp as a Smooth Maximum) The LogSumExp (LSE) function, LSE(v) = log i exp(v i ), is a differentiable, convex approximation of the maximum function, i.e., max i
+v i ≤ LSE(v) ≤ max i v i + log M for a vector v of M components.
+We introduce a Smooth Objective Regularization (SOR) term designed to penalize solutions where any of the fundamental objectives (L CE,orig , L CE,aug , or L B-SC ) becomes disproportionately large. This aligns with the Tchebycheff (min-max) approach for multi-objective optimization. Let L constituent (θ) = [L CE,orig (θ), L CE,aug (θ), L B-SC (θ)] T . The SOR term is defined as:
+L SOR (θ) = λ SOR • LSE(L constituent (θ)/τ SOR )(4)
+where λ SOR is a regularization strength and τ SOR is a temperature parameter. For simplicity and alignment with the paper's practical implementation, we set τ SOR = 1. Thus,
+L SOR (θ) = λ SOR • log (exp(L CE,orig (θ)) + exp(L CE,aug (θ)) + exp(L B-SC (θ))) .(5)
+The final training objective L total (θ) combines the primary objectives with this dynamic regularization:
+L total (θ) = L CE,orig (θ) + L CE,aug (θ) LCPO(θ) +L B-SC (θ) + L SOR (θ).(6)
+Substituting Eq. 5 into Eq. 6:
+L total (θ) = L CPO (θ) + L B-SC (θ) + λ SOR • log (exp(L CE,orig (θ)) + exp(L CE,aug (θ)) + exp(L B-SC (θ))) .(7)
+Theoretical Justification. Minimizing L total (θ) aims to achieve a state where: 1. The sum of the primary objectives (L CPO + L B-SC ) is low. 2. The SOR term, leveraging Proposition 1, ensures that the maximum of the constituent objectives (L CE,orig , L CE,aug , L B-SC ) is also kept low.
+This formulation implicitly seeks a solution where no single objective can be significantly improved without degrading another, which is characteristic of Pareto-optimal solutions. The SOR term dynamically adjusts the pressure on each constituent objective. If, for instance, L B-SC becomes very large (e.g., due to difficulty in representing extremely rare tail classes or overfitting), the gradient contribution from the SOR term with respect to L B-SC will increase, effectively pushing the optimizer to reduce it. Similarly, if L CE,orig is high (poor classification on original data), SOR will penalize this.
+This dynamic balancing is crucial for pathological long-tails:
+• B-SCL (O 2 ) provides the necessary focus on tail classes by up-weighting their contribution to representation learning, fostering discriminative features despite data scarcity.
+• CPO (O 1 ) ensures general classification utility.
+• SOR acts as the arbiter, preventing either the tail-class specific learning or the general classification learning from excessively dominating and destabilizing the other, thus guiding the optimization towards a robust equilibrium suitable for the extreme imbalances encountered in scientific discovery.The Appendix C provides more theory.
+this section cite: []
+
+Section: Experiments
+In this section, we conduct extensive experiments to evaluate the efficacy of our proposed method, referred to as Ours, in addressing pathological long-tailed recognition. We first detail the datasets and evaluation metrics (Section 4.1). We then outline the experimental setup, including baselines and implementation details (Section 4.2). Subsequently, we present quantitative results on both real-world scientific datasets and synthetic long-tailed benchmarks (Section 4.3), followed by ablation studies (Section 4.4) and qualitative analyses (Section 4.5).
+this section cite: []
+
+Section: Datasets, Metrics, and Pathological Imbalance
+The variable T is used to quantify the degree of pathological imbalance in the dataset. A higher value of T corresponds to a more pronounced imbalance. It is defined as:
+T = N majority N minority • N classes (8
+)
+where N majority represents the number of samples in the majority class, N minority represents the number of samples in the minority class, and N classes denotes the total number of classes.  Table 1: The anonymized ZincFluor dataset examples.
+Index SMILES Pred Fluor Colour Intensity Fluor Value ZINC1 CC(=O)Nc1c(-c2cccccc2)c(C)nn1-c1ccc(C(=O)Nc2ccc... Ultraviolet Weak 1 ZINC2 Cc1nc(-c2cccc(NC(=O)c3ncccn3)c2)cs1 Ultraviolet Weak 1 ZINC3 CCCc1ccc(/N=N/C(Sc2nnc(-c3ccncc3)o2)=C(O)c2ccc... Ultraviolet Weak 1 ZINC4 CCOC(=O)Nc1ccc2c(Sc3ccccc[n+]3[O-])cc(=O)oc2c1 Violet Weak 2 ZINC5 O=CNC(=O)c1sc2ncccc3c2c1ncn3-c1cccccc1 Violet Weak 2 ZINC6 Cc1ccn(C(=O)c2cccc(N3CCCS3(=O)=O)c2)c=NC2CCCC...
+this section cite: []
+
+Section: Blue Weak 3
+Real Dataset: ZincFluor. This is a classification dataset from a chemical laboratory. Its general content is exemplified in Table 1. As shown in Figure 2b, the dataset exhibits an extremely pathological class imbalance with an imbalance degree T = 137.54 after an 8:2 train-test split. This severe imbalance poses a significant challenge to existing long-tailed learning methods. The dataset comprises 8 distinct fluorescence levels used as classes.
+this section cite: []
+
+Section: Synthetic Datasets: CIFAR-LT.
+To comprehensively evaluate robustness, we use long-tailed variants of CIFAR-10 and CIFAR-100 [15] (i.e., CIFAR-10-LT and CIFAR-100-LT). We control the imbalance ratio (IR = N majority /N minority ) to construct datasets with varying degrees of pathological imbalance T . Figure 2a visualizes the training sample distribution across classes in CIFAR-10-LT under different T settings.
+Evaluation Metrics. We report Top-1 accuracy as the primary metric. For ZincFluor, we show perclass Top-1 accuracy and aggregated tail-class accuracies (Tail Top-6, Top-4, Top-2). For CIFAR-LT, we report overall Top-1 accuracy ("All"), and accuracies on "Head", "Medium", and "Tail" class splits based on training sample counts.
+this section cite: ['b14']
+
+Section: Experimental Setup
+Baselines.
+To rigorously evaluate our framework, we compare Ours against a diverse set of representative LTR baselines: (1) CE: Standard Cross-Entropy training. (2) BS [19]: Balanced Softmax for logit adjustment. (3) BCL [6]: Balanced Contrastive Learning. (4) CE-DRW and LDAM-DRW [2]: Re-weighting and margin-based loss combined with Deferred Re-Weighting. (5) KPS [16]: Key Point Sensitive loss focusing on tail-class anchors. (6) LORT [21]: Logits Retargeting approach. For the ablation study on ZincFluor, the "base" refers to the LOS-based method (Logits Over-Smoothing) [25], which serves as our primary classification backbone.
+Implementation Details. All models were implemented using PyTorch and PyTorch Geometric. The experiments were conducted on a single NVIDIA Tesla A100 GPU, with results reported accordingly. Specifically, for the ZincFluor dataset, RDKit was utilized to convert SMILES strings into graph data, and a backbone network consisting of six stacked GCN layers was employed. During training, the number of epochs for the ZincFluor dataset was set to 100. For all other experiments, configurations followed those of LOS. Models were trained for 200 epochs using the SGD optimizer (learning rate lr=0.01, momentum=0.9, weight decay=5e-3) in conjunction with the CosineAnnealingLR learning rate scheduler. Our method demonstrates highly competitive performance on individual "Fluor Levels" and substantially outperforms all baselines in tail-class focused metrics. Notably, Ours achieves a Tail Top-2 accuracy of 66.84%, a significant improvement over the second-best, BCL (59.57%). This underscores our method's capability in handling real-world, pathologically imbalanced scientific data.
+this section cite: ['b20', 'b24']
+
+Section: Quantitative Results
+Table 3: Top-1 accuracy on CIFAR10-LT with different Imbalance ratio. The grayed-out section indicates the primary observation indicator. Blod indicates the best performance while underline indicates the second best. Method IR=1000 IR=500 IR=200 IR=100 T = 100 T = 50 T = 20 T = 10 Head Medium Tail All Head Medium Tail All Head Medium Tail All Head Medium Tail All CE 79.03 45.90 -56.6 81.32 53.55 7.8 61.06 81.91 47.8 -71.68 83.54 58.5 -78.53 BS 76.68 64.0 16.85 62.18 76.98 69.10 30.5 66.11 82.21 61.53 -76.01 84.81 64.8 -80.81 BCL 79.82 57.3 28.55 65.06 82.22 60.05 41.25 70.79 82.47 71.50 -79.18 83.25 81.2 -82.84 CE-DRW 77.97 55.15 4.15 58.64 81.58 56.15 31.2 66.42 79.34 65.17 -75.09 81.94 68.9 -79.33 LDAM-DRW 75.57 52.0 15.25 61.19 78.27 59.75 40.7 67.05 78.79 63.7 -74.29 81.98 68.55 -79.29 KPS 78.9 56.85 6.65 60.04 78.95 45.2 42.75 64.96 82.27 57.23 -74.76 82.73 61.0 -78.38 LORT 80.75 65.30 0.05 61.52 81.0 60.0 0.05 60.61 83.36 58.50 -75.9 83.76 85.1 -84.03 Ours 76.80 76.60 38.99 69.20 81.68 79.64 59.39 77.94 84.05 84.33 -84.14 87.59 89.80 -88.04 Performance on CIFAR-LT Benchmarks. Across CIFAR-LT benchmarks (Tables 3 4), our method consistently achieves superior overall accuracy and, more critically, demonstrates substantial gains in tail class accuracy across all tested imbalance ratios. For instance, on CIFAR-10-LT with extreme imbalance (IR=1000), our tail accuracy reaches 38.99%, significantly outperforming BCL (28.55%), alongside leading overall accuracy (69.20% vs. 65.06%). This superior tail performance extends to CIFAR-100-LT, where at IR=100, our 32.03% tail accuracy notably exceeds competitors (e.g., BS 27.23%), and at IR=500, we achieve 22.52% against BCL's 14.96%, while consistently maintaining  the highest overall accuracies. These comprehensive results validate our approach's robustness and effectiveness in enhancing recognition of underrepresented tail classes, particularly under severe imbalance conditions.
+this section cite: []
+
+Section: Ablation Studies
+To dissect the contributions of the core components of our method, we conduct ablation studies on the ZincFluor dataset, with results shown in Figure 3a. Removing the Balanced Supervised Contrastive learning loss ("sc.") from our full model ("ours") leads to a significant drop in per-class performance, particularly for the tail classes, highlighting the importance of B-SCL for learning discriminative representations under severe imbalance. Similarly, removing the Smooth Objective Regularization term ("st.") also results in degraded performance compared to the full model, indicating that SOR plays a vital role in balancing the different learning objectives and stabilizing training. The performance of our ablated models still generally surpasses the "base" LOS-based baseline. These studies confirm that both B-SCL and SOR are crucial for achieving the superior performance of our proposed framework.
+this section cite: []
+
+Section: Qualitative Analysis
+Representation Robustness to Augmentation. Figure 3b shows the cosine similarity between the model outputs (features) of original samples and their augmented counterparts on CIFAR-10-LT (IR=10, models trained on IR=1000). Ours generally maintains higher similarity across classes compared to a Base method, suggesting that our approach learns representations that are more invariant and robust to data augmentations.
+Class-Level Feature Discriminability. The quality of learned feature representations is further assessed by visualizing class-level cosine similarity matrices on CIFAR-10-LT (IR=1000), as shown in Figure 4. Panel (a) (standard CE loss) exhibits a diffuse similarity matrix with poor separation between classes. In contrast, panel (b) (Ours) displays a much clearer block-diagonal structure, indicating strong intra-class compactness and high inter-class separability. This demonstrates the superior ability of our method to learn discriminative features, which is fundamental for effective long-tailed recognition.
+this section cite: []
+
+Section: Discussion of Experimental Findings
+The comprehensive experimental results consistently validate the efficacy of our proposed method. The substantial gains observed on the pathologically imbalanced ZincFluor dataset, especially in
+a i r p l a n e a u t o m o b i l e b i r d c a t d e e r d o g f r o g h o r s e s h i p t r u c k a i r p l a n e a u t o m o b i l e b i r d c a t d e e r d o g f r o g h o r s e s h i p t r u c k
+1.0 0.9 1.0 1.0 0.0 1.0 1.0 0.9 0.9 0.9 0.9 1.0 0.9 0.9 0.1 0.9 0.9 0.8 0.9 0.8 1.0 0.9 1.0 1.0 0.0 0.9 0.9 0.9 0.9 0.9
+1.0 0.9 1.0 1.0 0.0 0.9 0.9 0.9 0.9 0.9 0.0 0.1 0.0 0.0 1.0 0.0 0.0 0.1 0.0 0.1 1.0 0.9 0.9 0.9 0.0 1.0 0.9 0.9 0.9 0.8 1.0 0.9 0.9 0.9 0.0 0.9 1.0 0.9 0.9 0.9 0.9 0.8 0.9 0.9 0.1 0.9 0.9 1.0 0.9 0.8 0.9 0.9 0.9 0.9 0.0 0.9 0.9 0.9 1.0 0.9 0.9 0.8 0.9 0.9 0.1 0.8 0.9 0.8 0. recognizing rare tail classes, highlight its practical utility for scientific discovery tasks. Furthermore, its robust and superior performance across a wide spectrum of imbalance ratios on synthetic CIFAR-LT benchmarks underscores its generalizability and strength in handling varying degrees of data imbalance. The ablation studies confirm the synergistic contributions of the B-SCL and SOR components, and qualitative analyses provide visual evidence of the improved representation quality and feature discriminability achieved by our approach. These findings strongly support our central claim that a tailored framework integrating balanced contrastive representation learning with dynamic multi-objective optimization is pivotal for effectively addressing pathological long-tailed recognition.
+this section cite: []
+
+Section: Conclusion
+This paper tackled the critical issue of pathological long-tailed recognition in scientific discovery, where rare instances crucial for breakthroughs are often missed by standard methods. We introduced a novel framework combining Balanced Supervised Contrastive Learning (B-SCL) to enhance tailclass representation and Smooth Objective Regularization (SOR) to dynamically balance competing learning objectives. Our approach ensures focused learning on sparse tail data without compromising overall performance. Extensive experiments on the real-world ZincFluor dataset and synthetic CIFAR-LT benchmarks with extreme imbalances demonstrated significant improvements over state-of-the-art LTR techniques, particularly in identifying critical tail classes. This work provides a robust tool for extracting valuable insights from severely imbalanced scientific datasets, paving the way for accelerated discovery. Future directions include incorporating domain knowledge and extending to other scientific data modalities.
+this section cite: []
+
+Section: References
+Ref_id:b0 Title: Machine learning for molecular and materials science Year: (2018)
+Ref_id:b1 Title: Learning imbalanced datasets with label-distribution-aware margin loss Year: (2019)
+Ref_id:b2 Title: Data-efficient learning via minimizing hyperspherical energy Year: (2023)
+Ref_id:b3 Title: Smote: synthetic minority over-sampling technique Year: (2002)
+Ref_id:b4 Title: Opportunities and obstacles for deep learning in biology and medicine Year: (2018)
+Ref_id:b5 Title: Parametric contrastive learning Year: (2021)
+Ref_id:b6 Title: Class-balanced loss based on effective number of samples Year: (2019)
+Ref_id:b7 Title: C4. 5, class imbalance, and cost sensitivity: why under-sampling beats over-sampling Year: (2003)
+Ref_id:b8 Title: Surveying the reach and maturity of machine learning and artificial intelligence in astronomy Year: (2020)
+Ref_id:b9 Title: Distilling the knowledge in a neural network Year: (2015)
+Ref_id:b10 Title: Long-tailed visual recognition via self-heterogeneous integration with knowledge excavation Year: (2023)
+Ref_id:b11 Title: Decoupling representation and classifier for long-tailed recognition Year: (2019)
+Ref_id:b12 Title: Machine learning in astronomy Year: (2022)
+Ref_id:b13 Title: Supervised contrastive learning Year: (2020)
+Ref_id:b14 Title: Learning multiple layers of features from tiny images Year: (2009)
+Ref_id:b15 Title: Key point sensitive loss for long-tailed visual recognition Year: (2022)
+Ref_id:b16 Title: Targeted supervised contrastive learning for long-tailed recognition Year: (2022)
+Ref_id:b17 Title: Focal loss for dense object detection Year: (2017)
+Ref_id:b18 Title: Largescale long-tailed recognition in an open world Year: (2019)
+Ref_id:b19 Title: Active learning in materials science with emphasis on adaptive sampling using uncertainties for targeted design Year: (2019)
+Ref_id:b20 Title: Rethinking classifier re-training in long-tailed recognition: A simple logits retargeting approach Year: (2024)
+Ref_id:b21 Title: Delving into semantic scale imbalance Year: (2022)
+Ref_id:b22 Title: Predicting and enhancing the fairness of dnns with the curvature of perceptual manifolds Year: (2025)
+Ref_id:b23 Title: Curvaturebalanced feature manifold learning for long-tailed classification Year: (2023)
+Ref_id:b24 Title: Rethinking classifier re-training in long-tailed recognition: Label over-smooth can balance Year: ()
+Ref_id:b25 Title: Applications of machine learning in drug discovery and development Year: (2019)
+Ref_id:b26 Title: The inaturalist species classification and detection dataset Year: (2018)
+Ref_id:b27 Title: A unified perspective for loss-oriented imbalanced learning via localization Year: (2025)
+Ref_id:b28 Title: Qing Song, and Jun Guo. A survey on long-tailed visual recognition Year: (2022)
+Ref_id:b29 Title: Harnessing hierarchical label distribution variations in test agnostic long-tail recognition Year: (2024)
+Ref_id:b30 Title: Deep long-tailed learning: A survey Year: (2023)
+Ref_id:b31 Title: Places: A 10 million image database for scene recognition Year: (2017)
