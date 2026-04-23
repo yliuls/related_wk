@@ -1,7 +1,128 @@
 {
   "input_dir": "/Users/king/Desktop/gitcode/related_wk/tag_paper/outputs",
-  "unique_related_papers": 46,
+  "unique_related_papers": 447,
   "related_paper_to_citing_papers": {
+    "8wDpdaN6v6ru/interpreting-gpt-the-logit-lens": {
+      "citing_papers": [
+        "paper_0031"
+      ],
+      "citation_count": 1
+    },
+    "A causal framework for distribution generalization": {
+      "citing_papers": [
+        "paper_0018"
+      ],
+      "citation_count": 1
+    },
+    "A comprehensive survey for generative data augmentation": {
+      "citing_papers": [
+        "paper_0027"
+      ],
+      "citation_count": 1
+    },
+    "A convex compressibility-inspired unsupervised loss function for physics-driven deep learning reconstruction": {
+      "citing_papers": [
+        "paper_0052"
+      ],
+      "citation_count": 1
+    },
+    "A framework for neurosymbolic robot action planning using large language models": {
+      "citing_papers": [
+        "paper_0039"
+      ],
+      "citation_count": 1
+    },
+    "A joint ship detection and waterway segmentation method for environment-aware of usvs in canal waterways": {
+      "citing_papers": [
+        "paper_0007"
+      ],
+      "citation_count": 1
+    },
+    "A kernel two-sample test": {
+      "citing_papers": [
+        "paper_0009"
+      ],
+      "citation_count": 1
+    },
+    "A linear non-gaussian acyclic model for causal discovery": {
+      "citing_papers": [
+        "paper_0021"
+      ],
+      "citation_count": 1
+    },
+    "A mathematical framework for transformer circuits": {
+      "citing_papers": [
+        "paper_0016",
+        "paper_0060"
+      ],
+      "citation_count": 2
+    },
+    "A phase transition between positional and semantic learning in a solvable model of dot-product attention": {
+      "citing_papers": [
+        "paper_0060"
+      ],
+      "citation_count": 1
+    },
+    "A polynomial-time approximation algorithm for the permanent of a matrix with nonnegative entries": {
+      "citing_papers": [
+        "paper_0021"
+      ],
+      "citation_count": 1
+    },
+    "A simple approach to maximum intractable likelihood estimation": {
+      "citing_papers": [
+        "paper_0024"
+      ],
+      "citation_count": 1
+    },
+    "A simple framework for contrastive learning of visual representations": {
+      "citing_papers": [
+        "paper_0026"
+      ],
+      "citation_count": 1
+    },
+    "A survey of stochastic simulation and optimization methods in signal processing": {
+      "citing_papers": [
+        "paper_0050"
+      ],
+      "citation_count": 1
+    },
+    "A text-guided protein design framework": {
+      "citing_papers": [
+        "paper_0038"
+      ],
+      "citation_count": 1
+    },
+    "A theory of universal artificial intelligence based on algorithmic complexity": {
+      "citing_papers": [
+        "paper_0065"
+      ],
+      "citation_count": 1
+    },
+    "A unified experiment design approach for cyclic and acyclic causal models": {
+      "citing_papers": [
+        "paper_0021"
+      ],
+      "citation_count": 1
+    },
+    "A vision-language-action flow model for general robot control": {
+      "citing_papers": [
+        "paper_0053"
+      ],
+      "citation_count": 1
+    },
+    "AM: An artificial intelligence approach to discovery in mathematics as heuristic search": {
+      "citing_papers": [
+        "paper_0061"
+      ],
+      "citation_count": 1
+    },
+    "Accelerated sampling from masked diffusion models via entropy bounded unmasking": {
+      "citing_papers": [
+        "paper_0013"
+      ],
+      "citation_count": 1
+    },
     "Accelerating diffusion language model inference via efficient kv caching and guided diffusion": {
       "citing_papers": [
         "paper_0002"
@@ -10,7 +131,68 @@
     },
     "Accelerating diffusion large language models with slowfast: The three golden principles": {
       "citing_papers": [
-        "paper_0002"
+        "paper_0002",
+        "paper_0013"
+      ],
+      "citation_count": 2
+    },
+    "Acl-spc: Adaptive closed-loop system for self-supervised point cloud completion": {
+      "citing_papers": [
+        "paper_0054"
+      ],
+      "citation_count": 1
+    },
+    "Activation addition: Steering language models without optimization. arXiv e-prints": {
+      "citing_papers": [
+        "paper_0023"
+      ],
+      "citation_count": 1
+    },
+    "Adaptive submodularity: Theory and applications in active learning and stochastic optimization": {
+      "citing_papers": [
+        "paper_0021"
+      ],
+      "citation_count": 1
+    },
+    "Adasvd: Adaptive singular value decomposition for large language models": {
+      "citing_papers": [
+        "paper_0010"
+      ],
+      "citation_count": 1
+    },
+    "Adversarial prompt tuning for vision-language models": {
+      "citing_papers": [
+        "paper_0044"
+      ],
+      "citation_count": 1
+    },
+    "Aerogen: enhancing remote sensing object detection with diffusion-driven data generation": {
+      "citing_papers": [
+        "paper_0007"
+      ],
+      "citation_count": 1
+    },
+    "Agnostic learning with multiple objectives": {
+      "citing_papers": [
+        "paper_0033"
+      ],
+      "citation_count": 1
+    },
+    "Aguvis: Unified pure vision agents for autonomous gui interaction": {
+      "citing_papers": [
+        "paper_0020"
+      ],
+      "citation_count": 1
+    },
+    "Aligning and prompting everything all at once for universal visual perception": {
+      "citing_papers": [
+        "paper_0008"
+      ],
+      "citation_count": 1
+    },
+    "Altfreezing for more general video face forgery detection": {
+      "citing_papers": [
+        "paper_0009"
       ],
       "citation_count": 1
     },
@@ -20,9 +202,45 @@
       ],
       "citation_count": 1
     },
+    "An investigation of neuron activation as a unified lens to explain chain-of-thought eliciting arithmetic reasoning of llms": {
+      "citing_papers": [
+        "paper_0023"
+      ],
+      "citation_count": 1
+    },
+    "An open-source vision-language-action model": {
+      "citing_papers": [
+        "paper_0053"
+      ],
+      "citation_count": 1
+    },
+    "Anchor regression: Heterogeneous data meet causality": {
+      "citing_papers": [
+        "paper_0018"
+      ],
+      "citation_count": 1
+    },
+    "Anisotropic proximal gradient": {
+      "citing_papers": [
+        "paper_0022"
+      ],
+      "citation_count": 1
+    },
+    "Annotation-guided protein design with multi-level domain alignment": {
+      "citing_papers": [
+        "paper_0038"
+      ],
+      "citation_count": 1
+    },
     "Anomaly detection on attributed networks via contrastive self-supervised learning": {
       "citing_papers": [
         "paper_0004"
+      ],
+      "citation_count": 1
+    },
+    "Approximate maximum likelihood estimation for population genetic inference": {
+      "citing_papers": [
+        "paper_0024"
       ],
       "citation_count": 1
     },
@@ -32,9 +250,99 @@
       ],
       "citation_count": 1
     },
+    "Arcee's mergekit: A toolkit for merging large language models": {
+      "citing_papers": [
+        "paper_0014"
+      ],
+      "citation_count": 1
+    },
     "Are convolutional neural networks or transformers more like human vision": {
       "citing_papers": [
         "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "Are graph augmentations necessary? simple graph contrastive learning for recommendation": {
+      "citing_papers": [
+        "paper_0025"
+      ],
+      "citation_count": 1
+    },
+    "Are we done with mmlu? arXiv preprint": {
+      "citing_papers": [
+        "paper_0063"
+      ],
+      "citation_count": 1
+    },
+    "Assisting in writing wikipedia-like articles from scratch with large language models": {
+      "citing_papers": [
+        "paper_0040"
+      ],
+      "citation_count": 1
+    },
+    "Asvd: Activation-aware singular value decomposition for compressing large language models": {
+      "citing_papers": [
+        "paper_0010"
+      ],
+      "citation_count": 1
+    },
+    "Audio large language models can be descriptive speech quality evaluators": {
+      "citing_papers": [
+        "paper_0055"
+      ],
+      "citation_count": 1
+    },
+    "AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation": {
+      "citing_papers": [
+        "paper_0039"
+      ],
+      "citation_count": 1
+    },
+    "Autobencher: Creating salient, novel, difficult datasets for language models": {
+      "citing_papers": [
+        "paper_0063"
+      ],
+      "citation_count": 1
+    },
+    "Automatic Concept Formation in Pure Mathematics": {
+      "citing_papers": [
+        "paper_0061"
+      ],
+      "citation_count": 1
+    },
+    "Autonomous evaluation and refinement of digital agents": {
+      "citing_papers": [
+        "paper_0030"
+      ],
+      "citation_count": 1
+    },
+    "BOND: aligning LLMs with Best-of-N distillation": {
+      "citing_papers": [
+        "paper_0048"
+      ],
+      "citation_count": 1
+    },
+    "Baptiste Rozière, and Gabriel Synnaeve. Eval-Arena: noise and errors on llm evaluations": {
+      "citing_papers": [
+        "paper_0063"
+      ],
+      "citation_count": 1
+    },
+    "Barlow twins: Self-supervised learning via redundancy reduction": {
+      "citing_papers": [
+        "paper_0026"
+      ],
+      "citation_count": 1
+    },
+    "Bayesian diffusion models for 3D shape reconstruction": {
+      "citing_papers": [
+        "paper_0059"
+      ],
+      "citation_count": 1
+    },
+    "Behavior transformers: Cloning k modes with one stone": {
+      "citing_papers": [
+        "paper_0046"
       ],
       "citation_count": 1
     },
@@ -44,9 +352,165 @@
       ],
       "citation_count": 1
     },
+    "Bias-variance decompositions: The exclusive privilege of Bregman divergences": {
+      "citing_papers": [
+        "paper_0033"
+      ],
+      "citation_count": 1
+    },
+    "Birth of a transformer: A memory viewpoint": {
+      "citing_papers": [
+        "paper_0060"
+      ],
+      "citation_count": 1
+    },
+    "Biscope: Ai-generated text detection by checking memorization of preceding tokens": {
+      "citing_papers": [
+        "paper_0062"
+      ],
+      "citation_count": 1
+    },
+    "Block diffusion: Interpolating between autoregressive and diffusion language models": {
+      "citing_papers": [
+        "paper_0045"
+      ],
+      "citation_count": 1
+    },
+    "Bootstrap your own latent-a new approach to self-supervised learning": {
+      "citing_papers": [
+        "paper_0026"
+      ],
+      "citation_count": 1
+    },
+    "Break the sequential dependency of llm inference using lookahead decoding": {
+      "citing_papers": [
+        "paper_0045"
+      ],
+      "citation_count": 1
+    },
+    "Bridging the divide: Reconsidering softmax and linear attention": {
+      "citing_papers": [
+        "paper_0057"
+      ],
+      "citation_count": 1
+    },
+    "Building normalizing flows with stochastic interpolants": {
+      "citing_papers": [
+        "paper_0050"
+      ],
+      "citation_count": 1
+    },
+    "Can Graph Neural Networks Learn to Solve MaxSAT Problem?": {
+      "citing_papers": [
+        "paper_0047"
+      ],
+      "citation_count": 1
+    },
+    "Can copyright be reduced to privacy? Forthcoming, Foundations of Responsible Computing": {
+      "citing_papers": [
+        "paper_0058"
+      ],
+      "citation_count": 1
+    },
+    "Causal regularization: On the trade-off between in-sample risk and out-ofsample risk guarantees": {
+      "citing_papers": [
+        "paper_0018"
+      ],
+      "citation_count": 1
+    },
+    "Chain of ideas: Revolutionizing research via novel idea development with llm agents": {
+      "citing_papers": [
+        "paper_0040"
+      ],
+      "citation_count": 1
+    },
+    "Chain-of-thought prompting elicits reasoning in large language models": {
+      "citing_papers": [
+        "paper_0023"
+      ],
+      "citation_count": 1
+    },
+    "Class-balanced loss based on effective number of samples": {
+      "citing_papers": [
+        "paper_0019"
+      ],
+      "citation_count": 1
+    },
+    "Classifier chains for multi-label classification": {
+      "citing_papers": [
+        "paper_0055"
+      ],
+      "citation_count": 1
+    },
+    "Claude computer use": {
+      "citing_papers": [
+        "paper_0020"
+      ],
+      "citation_count": 1
+    },
+    "Code as policies: language model programs for embodied control": {
+      "citing_papers": [
+        "paper_0039"
+      ],
+      "citation_count": 1
+    },
+    "CodeSift: An LLM-Based Reference-Less Framework for Automatic Code Validation": {
+      "citing_papers": [
+        "paper_0039"
+      ],
+      "citation_count": 1
+    },
+    "Cold diffusion: Inverting arbitrary image transforms without noise": {
+      "citing_papers": [
+        "paper_0050"
+      ],
+      "citation_count": 1
+    },
+    "Collaborative diffusion and autoregression in a unified vision-language-action model": {
+      "citing_papers": [
+        "paper_0053"
+      ],
+      "citation_count": 1
+    },
+    "Compositional score modeling for simulation-based inference": {
+      "citing_papers": [
+        "paper_0024"
+      ],
+      "citation_count": 1
+    },
+    "Computing VaR and CVaR using stochastic approximation and adaptive unconstrained importance sampling": {
+      "citing_papers": [
+        "paper_0027"
+      ],
+      "citation_count": 1
+    },
+    "Constraint-based causal discovery using partial ancestral graphs in the presence of cycles": {
+      "citing_papers": [
+        "paper_0021"
+      ],
+      "citation_count": 1
+    },
+    "Context theory of classification learning": {
+      "citing_papers": [
+        "paper_0041"
+      ],
+      "citation_count": 1
+    },
+    "Continual learning as computationally constrained reinforcement learning": {
+      "citing_papers": [
+        "paper_0065"
+      ],
+      "citation_count": 1
+    },
     "Contributions of shape, texture, and color in visual recognition": {
       "citing_papers": [
         "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "Credit attribution and stable compression": {
+      "citing_papers": [
+        "paper_0058"
       ],
       "citation_count": 1
     },
@@ -62,9 +526,184 @@
       ],
       "citation_count": 1
     },
+    "Cycle-consistent multi-model merging": {
+      "citing_papers": [
+        "paper_0016"
+      ],
+      "citation_count": 1
+    },
+    "DFPC: Data flow driven pruning of coupled channels without data": {
+      "citing_papers": [
+        "paper_0011"
+      ],
+      "citation_count": 1
+    },
+    "DNA-GPT: Divergent n-gram analysis for training-free detection of GPT-generated text": {
+      "citing_papers": [
+        "paper_0062"
+      ],
+      "citation_count": 1
+    },
+    "DORO: Distributional and outlier robust optimization": {
+      "citing_papers": [
+        "paper_0027"
+      ],
+      "citation_count": 1
+    },
+    "Dapo: An open-source llm reinforcement learning system at scale": {
+      "citing_papers": [
+        "paper_0034"
+      ],
+      "citation_count": 1
+    },
+    "Data-efficient structured pruning via submodular optimization": {
+      "citing_papers": [
+        "paper_0011"
+      ],
+      "citation_count": 1
+    },
+    "DeFlow: Decoder of scene flow network in autonomous driving": {
+      "citing_papers": [
+        "paper_0029"
+      ],
+      "citation_count": 1
+    },
+    "Decomposable multiscale mixing for time series forecasting": {
+      "citing_papers": [
+        "paper_0042"
+      ],
+      "citation_count": 1
+    },
+    "Decomposed diffusion sampler for accelerating large-scale inverse problems": {
+      "citing_papers": [
+        "paper_0052"
+      ],
+      "citation_count": 1
+    },
+    "Decoupling representation and classifier for long-tailed recognition": {
+      "citing_papers": [
+        "paper_0019"
+      ],
+      "citation_count": 1
+    },
     "Deep anomaly detection on attributed networks": {
       "citing_papers": [
         "paper_0004"
+      ],
+      "citation_count": 1
+    },
+    "Deep kernel relative test for machine-generated text detection": {
+      "citing_papers": [
+        "paper_0062"
+      ],
+      "citation_count": 1
+    },
+    "Deep variational information bottleneck": {
+      "citing_papers": [
+        "paper_0042"
+      ],
+      "citation_count": 1
+    },
+    "Deepfake video detection through optical flow based cnn": {
+      "citing_papers": [
+        "paper_0009"
+      ],
+      "citation_count": 1
+    },
+    "Deepphase: Periodic autoencoders for learning motion phase manifolds": {
+      "citing_papers": [
+        "paper_0032"
+      ],
+      "citation_count": 1
+    },
+    "Deepresearcher: Scaling deep research via reinforcement learning in real-world environments": {
+      "citing_papers": [
+        "paper_0028"
+      ],
+      "citation_count": 1
+    },
+    "Deepseek-r1: Incentivizing reasoning capability in llms via reinforcement learning": {
+      "citing_papers": [
+        "paper_0023",
+        "paper_0034"
+      ],
+      "citation_count": 2
+    },
+    "Deepseek-v3 technical report": {
+      "citing_papers": [
+        "paper_0010"
+      ],
+      "citation_count": 1
+    },
+    "Deltaproduct: Improving state-tracking in linear RNNs via Householder products": {
+      "citing_papers": [
+        "paper_0015"
+      ],
+      "citation_count": 1
+    },
+    "Demamba: Ai-generated video detection on million-scale genvideo benchmark": {
+      "citing_papers": [
+        "paper_0009"
+      ],
+      "citation_count": 1
+    },
+    "Demystifying long chain-of-thought reasoning in llms": {
+      "citing_papers": [
+        "paper_0023"
+      ],
+      "citation_count": 1
+    },
+    "Denoising diffusion implicit models": {
+      "citing_papers": [
+        "paper_0059"
+      ],
+      "citation_count": 1
+    },
+    "DetectGPT: Zero-shot machine-generated text detection using probability curvature": {
+      "citing_papers": [
+        "paper_0062"
+      ],
+      "citation_count": 1
+    },
+    "Detecting machine-generated texts by multi-population aware optimization for maximum mean discrepancy": {
+      "citing_papers": [
+        "paper_0009"
+      ],
+      "citation_count": 1
+    },
+    "Dexmimicgen: Automated data generation for bimanual dexterous manipulation via imitation learning": {
+      "citing_papers": [
+        "paper_0043"
+      ],
+      "citation_count": 1
+    },
+    "Dexvla: Vision-language model with plug-in diffusion expert for general robot control": {
+      "citing_papers": [
+        "paper_0053"
+      ],
+      "citation_count": 1
+    },
+    "Differentiable ranking and sorting using optimal transport": {
+      "citing_papers": [
+        "paper_0048"
+      ],
+      "citation_count": 1
+    },
+    "Differentiable top-k with optimal transport": {
+      "citing_papers": [
+        "paper_0048"
+      ],
+      "citation_count": 1
+    },
+    "Differential transformer": {
+      "citing_papers": [
+        "paper_0057"
+      ],
+      "citation_count": 1
+    },
+    "Diffusion language models know the answer before decoding": {
+      "citing_papers": [
+        "paper_0013"
       ],
       "citation_count": 1
     },
@@ -74,9 +713,87 @@
       ],
       "citation_count": 1
     },
+    "Diffusion policy: Visuomotor policy learning via action diffusion": {
+      "citing_papers": [
+        "paper_0043"
+      ],
+      "citation_count": 1
+    },
+    "Diffusion posterior sampling for general noisy inverse problems": {
+      "citing_papers": [
+        "paper_0059"
+      ],
+      "citation_count": 1
+    },
+    "Diffusion probabilistic models for 3D point cloud generation": {
+      "citing_papers": [
+        "paper_0059"
+      ],
+      "citation_count": 1
+    },
+    "Digirl: Training in-the-wild device-control agents with autonomous reinforcement learning": {
+      "citing_papers": [
+        "paper_0030"
+      ],
+      "citation_count": 1
+    },
+    "DisCEdit: Model editing by identifying discriminative components": {
+      "citing_papers": [
+        "paper_0011"
+      ],
+      "citation_count": 1
+    },
+    "Discovering cyclic causal models by independent components analysis": {
+      "citing_papers": [
+        "paper_0021"
+      ],
+      "citation_count": 1
+    },
     "Discrete diffusion language modeling by estimating the ratios of the data distribution": {
       "citing_papers": [
         "paper_0002"
+      ],
+      "citation_count": 1
+    },
+    "Discrete flow matching": {
+      "citing_papers": [
+        "paper_0051"
+      ],
+      "citation_count": 1
+    },
+    "Diversity-driven exploration strategy for deep reinforcement learning": {
+      "citing_papers": [
+        "paper_0034"
+      ],
+      "citation_count": 1
+    },
+    "Do as I can, not as I say: Grounding language in robotic affordances": {
+      "citing_papers": [
+        "paper_0039"
+      ],
+      "citation_count": 1
+    },
+    "Do large language model benchmarks test reliability? arXiv preprint": {
+      "citing_papers": [
+        "paper_0063"
+      ],
+      "citation_count": 1
+    },
+    "Dual diffusion for unified image generation and understanding": {
+      "citing_papers": [
+        "paper_0051"
+      ],
+      "citation_count": 1
+    },
+    "Dual instrumental variable regression": {
+      "citing_papers": [
+        "paper_0018"
+      ],
+      "citation_count": 1
+    },
+    "Duquant: Distributing outliers via dual transformation makes stronger quantized llms": {
+      "citing_papers": [
+        "paper_0010"
       ],
       "citation_count": 1
     },
@@ -86,15 +803,225 @@
       ],
       "citation_count": 1
     },
+    "Editing models with task arithmetic": {
+      "citing_papers": [
+        "paper_0014"
+      ],
+      "citation_count": 1
+    },
+    "Efficiently Escaping Saddle Points under Generalized Smoothness via Self-Bounding Regularity": {
+      "citing_papers": [
+        "paper_0022"
+      ],
+      "citation_count": 1
+    },
+    "Enhancing reasoning capabilities of llms via principled synthetic logic corpus": {
+      "citing_papers": [
+        "paper_0049"
+      ],
+      "citation_count": 1
+    },
+    "Equivariant imaging: Learning beyond the range space": {
+      "citing_papers": [
+        "paper_0052"
+      ],
+      "citation_count": 1
+    },
+    "Estimation of non-normalized statistical models by score matching": {
+      "citing_papers": [
+        "paper_0024"
+      ],
+      "citation_count": 1
+    },
+    "Evaluating graph neural networks for link prediction: Current pitfalls and new benchmarking": {
+      "citing_papers": [
+        "paper_0036"
+      ],
+      "citation_count": 1
+    },
+    "Evaluating reward models for language modeling": {
+      "citing_papers": [
+        "paper_0030"
+      ],
+      "citation_count": 1
+    },
+    "Evaluating robustness of reward models for mathematical reasoning": {
+      "citing_papers": [
+        "paper_0030"
+      ],
+      "citation_count": 1
+    },
+    "Evf-sam: Early vision-language fusion for text-prompted segment anything model": {
+      "citing_papers": [
+        "paper_0008"
+      ],
+      "citation_count": 1
+    },
+    "Evolutionary optimization of model merging recipes": {
+      "citing_papers": [
+        "paper_0014"
+      ],
+      "citation_count": 1
+    },
+    "Exploring extreme parameter compression for pre-trained language models": {
+      "citing_papers": [
+        "paper_0012"
+      ],
+      "citation_count": 1
+    },
+    "FAST: Efficient action tokenization for vision-language-action models": {
+      "citing_papers": [
+        "paper_0053"
+      ],
+      "citation_count": 1
+    },
     "Fast-dLLM: Training-free acceleration of diffusion LLM by enabling KV cache and parallel decoding": {
       "citing_papers": [
         "paper_0002"
       ],
       "citation_count": 1
     },
+    "Fast-detectGPT: Efficient zero-shot detection of machine-generated text via conditional probability curvature": {
+      "citing_papers": [
+        "paper_0062"
+      ],
+      "citation_count": 1
+    },
+    "Fast-dllm: Training-free acceleration of diffusion llm by enabling kv cache and parallel decoding": {
+      "citing_papers": [
+        "paper_0013"
+      ],
+      "citation_count": 1
+    },
+    "Faster cascades via speculative decoding": {
+      "citing_papers": [
+        "paper_0045"
+      ],
+      "citation_count": 1
+    },
     "Fastvid: Dynamic density pruning for fast video large language models": {
       "citing_papers": [
         "paper_0003"
+      ],
+      "citation_count": 1
+    },
+    "Few-shot adversarial prompt learning on vision-language models": {
+      "citing_papers": [
+        "paper_0044"
+      ],
+      "citation_count": 1
+    },
+    "Fine-tuning vision-language-action models: Optimizing speed and success": {
+      "citing_papers": [
+        "paper_0053"
+      ],
+      "citation_count": 1
+    },
+    "Finetasks: Finding signal in a haystack of 200+ multilingual tasks": {
+      "citing_papers": [
+        "paper_0063"
+      ],
+      "citation_count": 1
+    },
+    "Fisher score matching for simulation-based forecasting and inference": {
+      "citing_papers": [
+        "paper_0024"
+      ],
+      "citation_count": 1
+    },
+    "Flow matching for generative modeling": {
+      "citing_papers": [
+        "paper_0050"
+      ],
+      "citation_count": 1
+    },
+    "Flow matching with general discrete paths: A kinetic-optimal perspective": {
+      "citing_papers": [
+        "paper_0051"
+      ],
+      "citation_count": 1
+    },
+    "Flow straight and fast: Learning to generate and transfer data with rectified flow": {
+      "citing_papers": [
+        "paper_0050"
+      ],
+      "citation_count": 1
+    },
+    "Flow4D: Leveraging 4d voxel network for lidar scene flow estimation": {
+      "citing_papers": [
+        "paper_0029"
+      ],
+      "citation_count": 1
+    },
+    "Formalizing human ingenuity: A quantitative framework for copyright law's substantial similarity": {
+      "citing_papers": [
+        "paper_0058"
+      ],
+      "citation_count": 1
+    },
+    "FourierSAT: A Fourier Expansion-Based Algebraic Framework for Solving Hybrid Boolean Constraints": {
+      "citing_papers": [
+        "paper_0047"
+      ],
+      "citation_count": 1
+    },
+    "Fractal generative models": {
+      "citing_papers": [
+        "paper_0050"
+      ],
+      "citation_count": 1
+    },
+    "Freedom: Training-free energy-guided conditional diffusion model": {
+      "citing_papers": [
+        "paper_0027"
+      ],
+      "citation_count": 1
+    },
+    "From batch to transductive online learning": {
+      "citing_papers": [
+        "paper_0064"
+      ],
+      "citation_count": 1
+    },
+    "Fusechat: Knowledge fusion of chat models": {
+      "citing_papers": [
+        "paper_0014"
+      ],
+      "citation_count": 1
+    },
+    "GNNInterpreter: A probabilistic generative model-level explanation for graph neural networks": {
+      "citing_papers": [
+        "paper_0041"
+      ],
+      "citation_count": 1
+    },
+    "GSD: View-guided Gaussian splatting diffusion for 3D reconstruction": {
+      "citing_papers": [
+        "paper_0059"
+      ],
+      "citation_count": 1
+    },
+    "Gated delta networks: Improving mamba2 with delta rule": {
+      "citing_papers": [
+        "paper_0035"
+      ],
+      "citation_count": 1
+    },
+    "Gated linear attention transformers with hardware-efficient training": {
+      "citing_papers": [
+        "paper_0057"
+      ],
+      "citation_count": 1
+    },
+    "Gaussian mixture models": {
+      "citing_papers": [
+        "paper_0037"
+      ],
+      "citation_count": 1
+    },
+    "Gaussian smoothing gradient descent for minimizing functions (gsmoothgd)": {
+      "citing_papers": [
+        "paper_0024"
       ],
       "citation_count": 1
     },
@@ -110,9 +1037,117 @@
       ],
       "citation_count": 1
     },
+    "Generalization in Multi-Objective Machine Learning": {
+      "citing_papers": [
+        "paper_0033"
+      ],
+      "citation_count": 1
+    },
+    "Generalized decoding for pixel, image, and language": {
+      "citing_papers": [
+        "paper_0008"
+      ],
+      "citation_count": 1
+    },
+    "Generating implications, proofs, and abductive statements over natural language": {
+      "citing_papers": [
+        "paper_0049"
+      ],
+      "citation_count": 1
+    },
+    "Generation with dynamic vocabulary": {
+      "citing_papers": [
+        "paper_0038"
+      ],
+      "citation_count": 1
+    },
+    "Generative modeling by estimating gradients of the data distribution": {
+      "citing_papers": [
+        "paper_0009"
+      ],
+      "citation_count": 1
+    },
+    "Git re-basin: Merging models modulo permutation symmetries": {
+      "citing_papers": [
+        "paper_0016"
+      ],
+      "citation_count": 1
+    },
+    "Gligen: Open-set grounded textto-image generation": {
+      "citing_papers": [
+        "paper_0007"
+      ],
+      "citation_count": 1
+    },
+    "Global explainability of GNNs via logic combination of learned concepts": {
+      "citing_papers": [
+        "paper_0041"
+      ],
+      "citation_count": 1
+    },
     "Global-local label correlation for partial multi-label learning": {
       "citing_papers": [
         "paper_0006"
+      ],
+      "citation_count": 1
+    },
+    "Gqa: Training generalized multi-query transformer models from multi-head checkpoints": {
+      "citing_papers": [
+        "paper_0010"
+      ],
+      "citation_count": 1
+    },
+    "Gradient Descent Only Converges to Minimizers": {
+      "citing_papers": [
+        "paper_0022"
+      ],
+      "citation_count": 1
+    },
+    "Graph Attention Networks": {
+      "citing_papers": [
+        "paper_0047"
+      ],
+      "citation_count": 1
+    },
+    "Graph neural networks for link prediction with subgraph sketching": {
+      "citing_papers": [
+        "paper_0036"
+      ],
+      "citation_count": 1
+    },
+    "Graphtrail: Translating gnn predictions into human-interpretable logical rules": {
+      "citing_papers": [
+        "paper_0041"
+      ],
+      "citation_count": 1
+    },
+    "Grokking of implicit reasoning in transformers: A mechanistic journey to the edge of generalization": {
+      "citing_papers": [
+        "paper_0031"
+      ],
+      "citation_count": 1
+    },
+    "Grounded sam: Assembling open-world models for diverse visual tasks": {
+      "citing_papers": [
+        "paper_0008"
+      ],
+      "citation_count": 1
+    },
+    "Group Equivariant CNNs (G-CNNs)": {
+      "citing_papers": [
+        "paper_0056"
+      ],
+      "citation_count": 1
+    },
+    "H2O: Heavy-hitter oracle for efficient generative inference of large language models": {
+      "citing_papers": [
+        "paper_0017"
+      ],
+      "citation_count": 1
+    },
+    "HiMo: High-speed objects motion compensation in point cloud": {
+      "citing_papers": [
+        "paper_0029"
       ],
       "citation_count": 1
     },
@@ -122,9 +1157,21 @@
       ],
       "citation_count": 1
     },
+    "High-resolution image synthesis with latent diffusion models": {
+      "citing_papers": [
+        "paper_0007"
+      ],
+      "citation_count": 1
+    },
     "Holitom: Holistic token merging for fast video large language models": {
       "citing_papers": [
         "paper_0003"
+      ],
+      "citation_count": 1
+    },
+    "How to Escape Saddle Points Efficiently": {
+      "citing_papers": [
+        "paper_0022"
       ],
       "citation_count": 1
     },
@@ -134,9 +1181,111 @@
       ],
       "citation_count": 1
     },
+    "Human motion diffusion as a generative prior": {
+      "citing_papers": [
+        "paper_0032"
+      ],
+      "citation_count": 1
+    },
+    "Identifying linear relational concepts in large language models": {
+      "citing_papers": [
+        "paper_0012"
+      ],
+      "citation_count": 1
+    },
+    "Illuminating protein space with a programmable generative model": {
+      "citing_papers": [
+        "paper_0038"
+      ],
+      "citation_count": 1
+    },
+    "Image as a foreign language: Beit pretraining for vision and vision-language tasks": {
+      "citing_papers": [
+        "paper_0008"
+      ],
+      "citation_count": 1
+    },
+    "Image synthesis from layout with locality-aware mask adaption": {
+      "citing_papers": [
+        "paper_0007"
+      ],
+      "citation_count": 1
+    },
     "ImageNet-trained CNNs are biased towards texture; increasing shape bias improves accuracy and robustness": {
       "citing_papers": [
         "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "Imitating human behaviour with diffusion models": {
+      "citing_papers": [
+        "paper_0046"
+      ],
+      "citation_count": 1
+    },
+    "Implicit language models are rnns: Balancing parallelization and expressivity": {
+      "citing_papers": [
+        "paper_0035"
+      ],
+      "citation_count": 1
+    },
+    "Improving graph collaborative filtering with neighborhood-enriched contrastive learning": {
+      "citing_papers": [
+        "paper_0025"
+      ],
+      "citation_count": 1
+    },
+    "Improving retrieval-augmented generation through multi-agent reinforcement learning": {
+      "citing_papers": [
+        "paper_0028"
+      ],
+      "citation_count": 1
+    },
+    "Increasing the expressivity of deltanet through products of householders": {
+      "citing_papers": [
+        "paper_0035"
+      ],
+      "citation_count": 1
+    },
+    "Inference-aware fine-tuning for Best-of-N sampling in large language models": {
+      "citing_papers": [
+        "paper_0048"
+      ],
+      "citation_count": 1
+    },
+    "Inferring statistical complexity": {
+      "citing_papers": [
+        "paper_0065"
+      ],
+      "citation_count": 1
+    },
+    "Informer: Beyond efficient transformer for long sequence time-series forecasting": {
+      "citing_papers": [
+        "paper_0042"
+      ],
+      "citation_count": 1
+    },
+    "InstructRAG: Instructing retrieval-augmented generation via self-synthesized rationales": {
+      "citing_papers": [
+        "paper_0028"
+      ],
+      "citation_count": 1
+    },
+    "Intent-guided heterogeneous graph contrastive learning for recommendation": {
+      "citing_papers": [
+        "paper_0025"
+      ],
+      "citation_count": 1
+    },
+    "Interleaving retrieval with chainof-thought reasoning for knowledge-intensive multi-step questions": {
+      "citing_papers": [
+        "paper_0028"
+      ],
+      "citation_count": 1
+    },
+    "Intra-agent speech permits zero-shot task acquisition": {
+      "citing_papers": [
+        "paper_0046"
       ],
       "citation_count": 1
     },
@@ -146,9 +1295,101 @@
       ],
       "citation_count": 1
     },
+    "Is efficient pac learning possible with an oracle that responds": {
+      "citing_papers": [
+        "paper_0064"
+      ],
+      "citation_count": 1
+    },
+    "Janus: Decoupling visual encoding for unified multimodal understanding and generation": {
+      "citing_papers": [
+        "paper_0051"
+      ],
+      "citation_count": 1
+    },
+    "Kv-cache compression with low-rank projection": {
+      "citing_papers": [
+        "paper_0010"
+      ],
+      "citation_count": 1
+    },
+    "LEMUR: Integrating Large Language Models in Automated Program Verification": {
+      "citing_papers": [
+        "paper_0039"
+      ],
+      "citation_count": 1
+    },
+    "LLM-planner: Few-shot grounded planning for embodied agents with large language models": {
+      "citing_papers": [
+        "paper_0039"
+      ],
+      "citation_count": 1
+    },
+    "LSH sampling for efficient LLM generation": {
+      "citing_papers": [
+        "paper_0017"
+      ],
+      "citation_count": 1
+    },
+    "Labeling trick: A theory of using graph neural networks for multi-node representation learning": {
+      "citing_papers": [
+        "paper_0036"
+      ],
+      "citation_count": 1
+    },
+    "Language models are super mario: Absorbing abilities from homologous models as a free lunch": {
+      "citing_papers": [
+        "paper_0014"
+      ],
+      "citation_count": 1
+    },
+    "Language-driven anchors for zero-shot adversarial robustness": {
+      "citing_papers": [
+        "paper_0044"
+      ],
+      "citation_count": 1
+    },
     "Large language diffusion models": {
       "citing_papers": [
-        "paper_0002"
+        "paper_0002",
+        "paper_0013",
+        "paper_0045"
+      ],
+      "citation_count": 3
+    },
+    "Layoutdiffusion: Controllable diffusion model for layout-to-image generation": {
+      "citing_papers": [
+        "paper_0007"
+      ],
+      "citation_count": 1
+    },
+    "Learning a SAT Solver from Single-Bit Supervision": {
+      "citing_papers": [
+        "paper_0047"
+      ],
+      "citation_count": 1
+    },
+    "Learning deductive reasoning from synthetic corpus based on formal logic": {
+      "citing_papers": [
+        "paper_0049"
+      ],
+      "citation_count": 1
+    },
+    "Learning formal mathematics from intrinsic motivation": {
+      "citing_papers": [
+        "paper_0061"
+      ],
+      "citation_count": 1
+    },
+    "Learning imbalanced datasets with label-distribution-aware margin loss": {
+      "citing_papers": [
+        "paper_0019"
+      ],
+      "citation_count": 1
+    },
+    "Learning to reason with search for llms via reinforcement learning": {
+      "citing_papers": [
+        "paper_0028"
       ],
       "citation_count": 1
     },
@@ -158,9 +1399,153 @@
       ],
       "citation_count": 1
     },
+    "Length generalization in arithmetic transformers": {
+      "citing_papers": [
+        "paper_0060"
+      ],
+      "citation_count": 1
+    },
+    "Less is more for reasoning": {
+      "citing_papers": [
+        "paper_0023"
+      ],
+      "citation_count": 1
+    },
+    "Lightgcn: Simplifying and powering graph convolution network for recommendation": {
+      "citing_papers": [
+        "paper_0025"
+      ],
+      "citation_count": 1
+    },
+    "Linear-time sequence modeling with selective state spaces": {
+      "citing_papers": [
+        "paper_0035"
+      ],
+      "citation_count": 1
+    },
+    "Linearity of relation decoding in transformer language models": {
+      "citing_papers": [
+        "paper_0012"
+      ],
+      "citation_count": 1
+    },
     "Llava-onevision: Easy visual task transfer": {
       "citing_papers": [
         "paper_0003"
+      ],
+      "citation_count": 1
+    },
+    "Llmmap: Fingerprinting for large language models": {
+      "citing_papers": [
+        "paper_0037"
+      ],
+      "citation_count": 1
+    },
+    "LoRA: Low-Rank Adaptation of Large Language Models": {
+      "citing_papers": [
+        "paper_0012"
+      ],
+      "citation_count": 1
+    },
+    "Locate-then-edit for multi-hop factual recall under knowledge editing": {
+      "citing_papers": [
+        "paper_0031"
+      ],
+      "citation_count": 1
+    },
+    "Logicot: Logical chain-of-thought instruction-tuning": {
+      "citing_papers": [
+        "paper_0049"
+      ],
+      "citation_count": 1
+    },
+    "Long short-term memory": {
+      "citing_papers": [
+        "paper_0035"
+      ],
+      "citation_count": 1
+    },
+    "Lora: Low-rank adaptation of large language models": {
+      "citing_papers": [
+        "paper_0044"
+      ],
+      "citation_count": 1
+    },
+    "Low-Rank Semidefinite Programming for the MAX2SAT Problem": {
+      "citing_papers": [
+        "paper_0047"
+      ],
+      "citation_count": 1
+    },
+    "Mamba: Linear-Time Sequence Modeling with Selective State Spaces": {
+      "citing_papers": [
+        "paper_0015"
+      ],
+      "citation_count": 1
+    },
+    "Mask-predict: Parallel decoding of conditional masked language models": {
+      "citing_papers": [
+        "paper_0045"
+      ],
+      "citation_count": 1
+    },
+    "Masked autoencoders are scalable vision learners": {
+      "citing_papers": [
+        "paper_0044"
+      ],
+      "citation_count": 1
+    },
+    "Math-shepherd: Verify and reinforce llms step-by-step without human annotations": {
+      "citing_papers": [
+        "paper_0030"
+      ],
+      "citation_count": 1
+    },
+    "Mathematical discoveries from program search with large language models": {
+      "citing_papers": [
+        "paper_0061"
+      ],
+      "citation_count": 1
+    },
+    "Mean teachers are better role models: weight-averaged consistency targets improve semi-supervised deep learning results": {
+      "citing_papers": [
+        "paper_0042"
+      ],
+      "citation_count": 1
+    },
+    "Memorizing is not enough: Deep knowledge injection through reasoning": {
+      "citing_papers": [
+        "paper_0031"
+      ],
+      "citation_count": 1
+    },
+    "Merging text transformer models from different initializations": {
+      "citing_papers": [
+        "paper_0016"
+      ],
+      "citation_count": 1
+    },
+    "Mimicgen: A data generation system for scalable robot learning using human demonstrations": {
+      "citing_papers": [
+        "paper_0043"
+      ],
+      "citation_count": 1
+    },
+    "Mind2web: Towards a generalist agent for the web": {
+      "citing_papers": [
+        "paper_0020"
+      ],
+      "citation_count": 1
+    },
+    "Mmlu-pro: A more robust and challenging multi-task language understanding benchmark": {
+      "citing_papers": [
+        "paper_0063"
+      ],
+      "citation_count": 1
+    },
+    "Modality-balanced quantization for large vision-language models": {
+      "citing_papers": [
+        "paper_0010"
       ],
       "citation_count": 1
     },
@@ -170,9 +1555,225 @@
       ],
       "citation_count": 1
     },
+    "Model fusion via optimal transport": {
+      "citing_papers": [
+        "paper_0016"
+      ],
+      "citation_count": 1
+    },
+    "Model sparsity can simplify machine unlearning": {
+      "citing_papers": [
+        "paper_0011"
+      ],
+      "citation_count": 1
+    },
+    "ModelPlex: verified runtime validation of verified cyberphysical system models": {
+      "citing_papers": [
+        "paper_0039"
+      ],
+      "citation_count": 1
+    },
+    "Modulate your spectrum in self-supervised learning": {
+      "citing_papers": [
+        "paper_0026"
+      ],
+      "citation_count": 1
+    },
+    "Motion diffusion in frequency domain": {
+      "citing_papers": [
+        "paper_0032"
+      ],
+      "citation_count": 1
+    },
+    "Motion in-betweening with phase manifolds": {
+      "citing_papers": [
+        "paper_0032"
+      ],
+      "citation_count": 1
+    },
     "Multi-granular spatio-temporal token merging for training-free acceleration of video llms": {
       "citing_papers": [
         "paper_0003"
+      ],
+      "citation_count": 1
+    },
+    "Natural language reasoning with first-order logic": {
+      "citing_papers": [
+        "paper_0049"
+      ],
+      "citation_count": 1
+    },
+    "Neo-gnns: Neighborhood overlap-aware graph neural networks for link prediction": {
+      "citing_papers": [
+        "paper_0036"
+      ],
+      "citation_count": 1
+    },
+    "Neural common neighbor with completion for link prediction": {
+      "citing_papers": [
+        "paper_0036"
+      ],
+      "citation_count": 1
+    },
+    "Neural eulerian scene flow fields": {
+      "citing_papers": [
+        "paper_0029"
+      ],
+      "citation_count": 1
+    },
+    "Neural graph collaborative filtering": {
+      "citing_papers": [
+        "paper_0025"
+      ],
+      "citation_count": 1
+    },
+    "Nisp: Pruning networks using neuron importance score propagation": {
+      "citing_papers": [
+        "paper_0011"
+      ],
+      "citation_count": 1
+    },
+    "Nonlinearly Preconditioned Gradient Methods under Generalized Smoothness": {
+      "citing_papers": [
+        "paper_0022"
+      ],
+      "citation_count": 1
+    },
+    "Normalized attention without probability cage": {
+      "citing_papers": [
+        "paper_0057"
+      ],
+      "citation_count": 1
+    },
+    "Olmes: A standard for language model evaluations": {
+      "citing_papers": [
+        "paper_0063"
+      ],
+      "citation_count": 1
+    },
+    "On calibration in multi-distribution learning": {
+      "citing_papers": [
+        "paper_0033"
+      ],
+      "citation_count": 1
+    },
+    "On the discovery of mathematical theorems": {
+      "citing_papers": [
+        "paper_0061"
+      ],
+      "citation_count": 1
+    },
+    "On the expressiveness and length generalization of selective state-space models on regular languages": {
+      "citing_papers": [
+        "paper_0015"
+      ],
+      "citation_count": 1
+    },
+    "On the optimality of conditional expectation as a Bregman predictor": {
+      "citing_papers": [
+        "paper_0033"
+      ],
+      "citation_count": 1
+    },
+    "On value functions and the agent-environment boundary": {
+      "citing_papers": [
+        "paper_0065"
+      ],
+      "citation_count": 1
+    },
+    "Online learning and solving infinite games with an erm oracle": {
+      "citing_papers": [
+        "paper_0064"
+      ],
+      "citation_count": 1
+    },
+    "Open-television: Teleoperation with immersive active visual feedback": {
+      "citing_papers": [
+        "paper_0043"
+      ],
+      "citation_count": 1
+    },
+    "Open-vocabulary semantic segmentation with mask-adapted clip": {
+      "citing_papers": [
+        "paper_0008"
+      ],
+      "citation_count": 1
+    },
+    "OpenAI CUA (GPT-4o based)": {
+      "citing_papers": [
+        "paper_0020"
+      ],
+      "citation_count": 1
+    },
+    "Optimal mistake bounds for transductive online learning": {
+      "citing_papers": [
+        "paper_0064"
+      ],
+      "citation_count": 1
+    },
+    "Optimal multi-distribution learning": {
+      "citing_papers": [
+        "paper_0033"
+      ],
+      "citation_count": 1
+    },
+    "Optimization of Conditional Value-at-Risk": {
+      "citing_papers": [
+        "paper_0027"
+      ],
+      "citation_count": 1
+    },
+    "Optimizing language models for inference time objectives using reinforcement learning": {
+      "citing_papers": [
+        "paper_0048"
+      ],
+      "citation_count": 1
+    },
+    "Order-free RNN with visual attention for multi-label classification": {
+      "citing_papers": [
+        "paper_0055"
+      ],
+      "citation_count": 1
+    },
+    "Orthogonal recurrent neural networks with scaled Cayley transform": {
+      "citing_papers": [
+        "paper_0035"
+      ],
+      "citation_count": 1
+    },
+    "Os-atlas: A foundation action model for generalist gui agents": {
+      "citing_papers": [
+        "paper_0020"
+      ],
+      "citation_count": 1
+    },
+    "Oscillatory state-space models": {
+      "citing_papers": [
+        "paper_0015"
+      ],
+      "citation_count": 1
+    },
+    "Osworld: Benchmarking multimodal agents for open-ended tasks in real computer environments": {
+      "citing_papers": [
+        "paper_0020"
+      ],
+      "citation_count": 1
+    },
+    "P2c: Self-supervised point cloud completion from single partial clouds": {
+      "citing_papers": [
+        "paper_0054"
+      ],
+      "citation_count": 1
+    },
+    "Parameter competition balancing for model merging": {
+      "citing_papers": [
+        "paper_0014"
+      ],
+      "citation_count": 1
+    },
+    "Parametric contrastive learning": {
+      "citing_papers": [
+        "paper_0019"
       ],
       "citation_count": 1
     },
@@ -194,15 +1795,207 @@
       ],
       "citation_count": 1
     },
+    "Path planning for masked diffusion model sampling": {
+      "citing_papers": [
+        "paper_0013"
+      ],
+      "citation_count": 1
+    },
+    "Pcn: Point completion network": {
+      "citing_papers": [
+        "paper_0054"
+      ],
+      "citation_count": 1
+    },
+    "Phanwadee Sinthong, and Jayant Kalagnanam. A time series is worth 64 words: Long-term forecasting with transformers": {
+      "citing_papers": [
+        "paper_0042"
+      ],
+      "citation_count": 1
+    },
+    "Physics of Language Models: Part 4.1, Architecture Design and the Magic of Canon Layers": {
+      "citing_papers": [
+        "paper_0060"
+      ],
+      "citation_count": 1
+    },
+    "Plan-RAG: Planning-guided retrieval augmented generation": {
+      "citing_papers": [
+        "paper_0028"
+      ],
+      "citation_count": 1
+    },
+    "Plug and play active learning for object detection": {
+      "citing_papers": [
+        "paper_0007"
+      ],
+      "citation_count": 1
+    },
+    "Policy decorator: Model-agnostic online refinement for large policy model": {
+      "citing_papers": [
+        "paper_0043"
+      ],
+      "citation_count": 1
+    },
+    "Pontus Stenetorp, Sharan Narang, and Dieuwke Hupkes. Quantifying variance in evaluation benchmarks": {
+      "citing_papers": [
+        "paper_0063"
+      ],
+      "citation_count": 1
+    },
+    "Post-training sparse attention with double sparsity": {
+      "citing_papers": [
+        "paper_0017"
+      ],
+      "citation_count": 1
+    },
+    "Preserving diversity in supervised fine-tuning of large language models": {
+      "citing_papers": [
+        "paper_0034"
+      ],
+      "citation_count": 1
+    },
+    "Proflingo: A fingerprinting-based intellectual property protection scheme for large language models": {
+      "citing_papers": [
+        "paper_0037"
+      ],
+      "citation_count": 1
+    },
+    "Projection-conditioned point cloud diffusion for single-image 3D reconstruction": {
+      "citing_papers": [
+        "paper_0059"
+      ],
+      "citation_count": 1
+    },
+    "Protgpt2 is a deep unsupervised language model for protein design": {
+      "citing_papers": [
+        "paper_0038"
+      ],
+      "citation_count": 1
+    },
+    "Provable copyright protection for generative models": {
+      "citing_papers": [
+        "paper_0058"
+      ],
+      "citation_count": 1
+    },
     "Prunevid: Visual token pruning for efficient video large language models": {
       "citing_papers": [
         "paper_0003"
       ],
       "citation_count": 1
     },
+    "Pushing the limits of mathematical reasoning in open language models": {
+      "citing_papers": [
+        "paper_0034"
+      ],
+      "citation_count": 1
+    },
+    "Q-vlm: Post-training quantization for large vision-language models": {
+      "citing_papers": [
+        "paper_0010"
+      ],
+      "citation_count": 1
+    },
+    "Quality-similar diversity via population based reinforcement learning": {
+      "citing_papers": [
+        "paper_0034"
+      ],
+      "citation_count": 1
+    },
+    "Quarot: Outlier-free 4-bit inference in rotated llms": {
+      "citing_papers": [
+        "paper_0010"
+      ],
+      "citation_count": 1
+    },
+    "Quest: Query-aware sparsity for efficient long-context LLM inference": {
+      "citing_papers": [
+        "paper_0017"
+      ],
+      "citation_count": 1
+    },
+    "Quick specifications for the busy programmer": {
+      "citing_papers": [
+        "paper_0061"
+      ],
+      "citation_count": 1
+    },
     "Qwen2.5-vl technical report": {
       "citing_papers": [
         "paper_0003"
+      ],
+      "citation_count": 1
+    },
+    "R1searcher: Incentivizing the search capability in llms via reinforcement learning": {
+      "citing_papers": [
+        "paper_0028"
+      ],
+      "citation_count": 1
+    },
+    "Rag-star: Enhancing deliberative reasoning with retrieval augmented verification and refinement": {
+      "citing_papers": [
+        "paper_0028"
+      ],
+      "citation_count": 1
+    },
+    "Randomization techniques to mitigate the risk of copyright infringement": {
+      "citing_papers": [
+        "paper_0058"
+      ],
+      "citation_count": 1
+    },
+    "Re-basin via implicit sinkhorn differentiation": {
+      "citing_papers": [
+        "paper_0016"
+      ],
+      "citation_count": 1
+    },
+    "Reasoning segmentation via large language model": {
+      "citing_papers": [
+        "paper_0008"
+      ],
+      "citation_count": 1
+    },
+    "Recurrent Bayesian classifier chains for exact multi-label classification": {
+      "citing_papers": [
+        "paper_0055"
+      ],
+      "citation_count": 1
+    },
+    "Remasking discrete diffusion models with inference-time scaling": {
+      "citing_papers": [
+        "paper_0013"
+      ],
+      "citation_count": 1
+    },
+    "Researchagent: Iterative research idea generation over scientific literature with large language models": {
+      "citing_papers": [
+        "paper_0040"
+      ],
+      "citation_count": 1
+    },
+    "Resurrecting recurrent neural networks for long sequences": {
+      "citing_papers": [
+        "paper_0035"
+      ],
+      "citation_count": 1
+    },
+    "Rethinking classifier re-training in long-tailed recognition: A simple logits retargeting approach": {
+      "citing_papers": [
+        "paper_0019"
+      ],
+      "citation_count": 1
+    },
+    "Rethinking classifier re-training in long-tailed recognition: Label over-smooth can balance": {
+      "citing_papers": [
+        "paper_0019"
+      ],
+      "citation_count": 1
+    },
+    "Rethinking the uniformity metric in self-supervised learning": {
+      "citing_papers": [
+        "paper_0026"
       ],
       "citation_count": 1
     },
@@ -224,9 +2017,280 @@
       ],
       "citation_count": 1
     },
+    "Rsmt: Real-time stylized motion transition for characters": {
+      "citing_papers": [
+        "paper_0032"
+      ],
+      "citation_count": 1
+    },
+    "Rt-2: Vision-language-action models transfer web knowledge to robotic control": {
+      "citing_papers": [
+        "paper_0053"
+      ],
+      "citation_count": 1
+    },
+    "SATNet: Bridging deep learning and logical reasoning using a differentiable satisfiability solver": {
+      "citing_papers": [
+        "paper_0047"
+      ],
+      "citation_count": 1
+    },
+    "SSF: Sparse long-range scene flow for autonomous driving": {
+      "citing_papers": [
+        "paper_0029"
+      ],
+      "citation_count": 1
+    },
+    "Salun: Empowering machine unlearning via gradient-based weight saliency in both image classification and generation": {
+      "citing_papers": [
+        "paper_0011"
+      ],
+      "citation_count": 1
+    },
+    "Scalable scene flow from point clouds in the real world": {
+      "citing_papers": [
+        "paper_0029"
+      ],
+      "citation_count": 1
+    },
+    "Scaling diffusion language models via adaptation from autoregressive models": {
+      "citing_papers": [
+        "paper_0051"
+      ],
+      "citation_count": 1
+    },
+    "Scaling synthetic logical reasoning datasets with context-sensitive declarative grammars": {
+      "citing_papers": [
+        "paper_0049"
+      ],
+      "citation_count": 1
+    },
+    "Scibench: Evaluating college-level scientific problem-solving abilities of large language models": {
+      "citing_papers": [
+        "paper_0040"
+      ],
+      "citation_count": 1
+    },
+    "Score-based diffusion models for accelerated MRI": {
+      "citing_papers": [
+        "paper_0052"
+      ],
+      "citation_count": 1
+    },
+    "Score-based generative modeling through stochastic differential equations": {
+      "citing_papers": [
+        "paper_0009",
+        "paper_0027"
+      ],
+      "citation_count": 2
+    },
+    "Search-o1: Agentic search-enhanced large reasoning models": {
+      "citing_papers": [
+        "paper_0028"
+      ],
+      "citation_count": 1
+    },
+    "Search-r1: Training llms to reason and leverage search engines with reinforcement learning": {
+      "citing_papers": [
+        "paper_0028"
+      ],
+      "citation_count": 1
+    },
+    "Selecting data augmentation for simulating interventions": {
+      "citing_papers": [
+        "paper_0018"
+      ],
+      "citation_count": 1
+    },
+    "Self-refine: Iterative refinement with self-feedback": {
+      "citing_papers": [
+        "paper_0041"
+      ],
+      "citation_count": 1
+    },
+    "Self-supervised learning of physics-guided reconstruction neural networks without fully sampled reference data": {
+      "citing_papers": [
+        "paper_0052"
+      ],
+      "citation_count": 1
+    },
+    "Semi-supervised group DRO: Combating sparsity with unlabeled data": {
+      "citing_papers": [
+        "paper_0033"
+      ],
+      "citation_count": 1
+    },
+    "Sequential neural likelihood: Fast likelihood-free inference with autoregressive flows": {
+      "citing_papers": [
+        "paper_0024"
+      ],
+      "citation_count": 1
+    },
     "Shape or Texture: Understanding Discriminative Features in CNNs": {
       "citing_papers": [
         "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "ShortGPT: Layers in large language models are more redundant than you expect": {
+      "citing_papers": [
+        "paper_0011"
+      ],
+      "citation_count": 1
+    },
+    "Shortcut learning in deep neural networks": {
+      "citing_papers": [
+        "paper_0060"
+      ],
+      "citation_count": 1
+    },
+    "Simple and effective masked diffusion language models": {
+      "citing_papers": [
+        "paper_0013"
+      ],
+      "citation_count": 1
+    },
+    "Simple online learning with consistent oracle": {
+      "citing_papers": [
+        "paper_0064"
+      ],
+      "citation_count": 1
+    },
+    "Simplerl-zoo: Investigating and taming zero reinforcement learning for open base models in the wild": {
+      "citing_papers": [
+        "paper_0034"
+      ],
+      "citation_count": 1
+    },
+    "Simplified and generalized masked diffusion for discrete data": {
+      "citing_papers": [
+        "paper_0050"
+      ],
+      "citation_count": 1
+    },
+    "Simulating 500 million years of evolution with a language model": {
+      "citing_papers": [
+        "paper_0038"
+      ],
+      "citation_count": 1
+    },
+    "Slicegpt: Compress large language models by deleting rows and columns": {
+      "citing_papers": [
+        "paper_0011"
+      ],
+      "citation_count": 1
+    },
+    "Softs: Efficient multivariate time series forecasting with series-core fusion": {
+      "citing_papers": [
+        "paper_0042"
+      ],
+      "citation_count": 1
+    },
+    "Solar 10.7 b: Scaling large language models with simple yet effective depth up-scaling": {
+      "citing_papers": [
+        "paper_0014"
+      ],
+      "citation_count": 1
+    },
+    "Space-time embedded intelligence": {
+      "citing_papers": [
+        "paper_0065"
+      ],
+      "citation_count": 1
+    },
+    "Sparse MRI: The application of compressed sensing for rapid MR imaging": {
+      "citing_papers": [
+        "paper_0052"
+      ],
+      "citation_count": 1
+    },
+    "Spatiotemporal inconsistency learning for deepfake video detection": {
+      "citing_papers": [
+        "paper_0009"
+      ],
+      "citation_count": 1
+    },
+    "Spotting LLMs with binoculars: Zero-shot detection of machine-generated text": {
+      "citing_papers": [
+        "paper_0062"
+      ],
+      "citation_count": 1
+    },
+    "Srpo: A cross-domain implementation of large-scale reinforcement learning on llm": {
+      "citing_papers": [
+        "paper_0034"
+      ],
+      "citation_count": 1
+    },
+    "Stable low-rank tensor decomposition for compression of convolutional neural network": {
+      "citing_papers": [
+        "paper_0012"
+      ],
+      "citation_count": 1
+    },
+    "Steering your generalists: Improving robotic foundation models via value guidance": {
+      "citing_papers": [
+        "paper_0046"
+      ],
+      "citation_count": 1
+    },
+    "Stochastic gradient methods for distributionally robust optimization with f-divergences": {
+      "citing_papers": [
+        "paper_0027"
+      ],
+      "citation_count": 1
+    },
+    "Stochastic interpolants with data-dependent couplings": {
+      "citing_papers": [
+        "paper_0050"
+      ],
+      "citation_count": 1
+    },
+    "Supervised contrastive learning": {
+      "citing_papers": [
+        "paper_0019"
+      ],
+      "citation_count": 1
+    },
+    "Svd-llm: Truncation-aware singular value decomposition for large language model compression": {
+      "citing_papers": [
+        "paper_0010"
+      ],
+      "citation_count": 1
+    },
+    "Synthesizing long-term human motions with diffusion models via coherent sampling": {
+      "citing_papers": [
+        "paper_0032"
+      ],
+      "citation_count": 1
+    },
+    "Tactic: Adaptive sparse attention with clustering and distribution fitting for long-context LLMs": {
+      "citing_papers": [
+        "paper_0017"
+      ],
+      "citation_count": 1
+    },
+    "Tall: Thumbnail layout for deepfake video detection": {
+      "citing_papers": [
+        "paper_0009"
+      ],
+      "citation_count": 1
+    },
+    "Targeted supervised contrastive learning for long-tailed recognition": {
+      "citing_papers": [
+        "paper_0019"
+      ],
+      "citation_count": 1
+    },
+    "Teach: Temporal action composition for 3d humans": {
+      "citing_papers": [
+        "paper_0032"
+      ],
+      "citation_count": 1
+    },
+    "Tensorizing neural networks": {
+      "citing_papers": [
+        "paper_0012"
       ],
       "citation_count": 1
     },
@@ -236,15 +2300,256 @@
       ],
       "citation_count": 1
     },
+    "The ai scientist-v2: Workshop-level automated scientific discovery via agentic tree search": {
+      "citing_papers": [
+        "paper_0040"
+      ],
+      "citation_count": 1
+    },
+    "The ai scientist: Towards fully automated open-ended scientific discovery": {
+      "citing_papers": [
+        "paper_0040"
+      ],
+      "citation_count": 1
+    },
+    "The big world hypothesis and its ramifications for artificial intelligence": {
+      "citing_papers": [
+        "paper_0065"
+      ],
+      "citation_count": 1
+    },
+    "The challenge of identifying the origin of black-box large language models": {
+      "citing_papers": [
+        "paper_0037"
+      ],
+      "citation_count": 1
+    },
+    "The devil in linear transformer": {
+      "citing_papers": [
+        "paper_0057"
+      ],
+      "citation_count": 1
+    },
+    "The expressive capacity of state space models: A formal language perspective": {
+      "citing_papers": [
+        "paper_0015",
+        "paper_0035"
+      ],
+      "citation_count": 2
+    },
+    "The illusion of state in state-space models": {
+      "citing_papers": [
+        "paper_0015"
+      ],
+      "citation_count": 1
+    },
+    "The information bottleneck method": {
+      "citing_papers": [
+        "paper_0042"
+      ],
+      "citation_count": 1
+    },
+    "The need for a big world simulator: A scientific challenge for continual learning": {
+      "citing_papers": [
+        "paper_0065"
+      ],
+      "citation_count": 1
+    },
+    "The role of permutation invariance in linear mode connectivity of neural networks": {
+      "citing_papers": [
+        "paper_0016"
+      ],
+      "citation_count": 1
+    },
+    "The two-hop curse: Llms trained on a-> b": {
+      "citing_papers": [
+        "paper_0031"
+      ],
+      "citation_count": 1
+    },
+    "Theorema: Towards computer-aided mathematical theory exploration": {
+      "citing_papers": [
+        "paper_0061"
+      ],
+      "citation_count": 1
+    },
+    "Theoretical foundations of deep selective state-space models": {
+      "citing_papers": [
+        "paper_0015"
+      ],
+      "citation_count": 1
+    },
+    "Thought cloning: Learning to think while acting by imitating human thinking": {
+      "citing_papers": [
+        "paper_0046"
+      ],
+      "citation_count": 1
+    },
+    "Ties-merging: resolving interference when merging models": {
+      "citing_papers": [
+        "paper_0014"
+      ],
+      "citation_count": 1
+    },
+    "Torchaudio-Squim: Reference-less speech quality and intelligibility measures in torchaudio": {
+      "citing_papers": [
+        "paper_0055"
+      ],
+      "citation_count": 1
+    },
+    "Toward de novo protein design from natural language": {
+      "citing_papers": [
+        "paper_0038"
+      ],
+      "citation_count": 1
+    },
+    "Towards an ai co-scientist": {
+      "citing_papers": [
+        "paper_0040"
+      ],
+      "citation_count": 1
+    },
+    "Towards an understanding of stepwise inference in transformers: A synthetic graph navigation model": {
+      "citing_papers": [
+        "paper_0031"
+      ],
+      "citation_count": 1
+    },
+    "Towards collaborative autonomous research": {
+      "citing_papers": [
+        "paper_0040"
+      ],
+      "citation_count": 1
+    },
+    "Train for the worst, plan for the best: Understanding token ordering in masked diffusions": {
+      "citing_papers": [
+        "paper_0050"
+      ],
+      "citation_count": 1
+    },
+    "Training-free llm-generated text detection by mining token probability sequences": {
+      "citing_papers": [
+        "paper_0062"
+      ],
+      "citation_count": 1
+    },
+    "Transformers are rnns: Fast autoregressive transformers with linear attention": {
+      "citing_papers": [
+        "paper_0057"
+      ],
+      "citation_count": 1
+    },
+    "Trap: Targeted random adversarial prompt honeypot for black-box identification": {
+      "citing_papers": [
+        "paper_0037"
+      ],
+      "citation_count": 1
+    },
+    "Tree search for language model agents": {
+      "citing_papers": [
+        "paper_0030"
+      ],
+      "citation_count": 1
+    },
     "Truncated affinity maximization: One-class homophily modeling for graph anomaly detection": {
       "citing_papers": [
         "paper_0004"
       ],
       "citation_count": 1
     },
+    "Tsmixer: Lightweight mlp-mixer model for multivariate time series forecasting": {
+      "citing_papers": [
+        "paper_0042"
+      ],
+      "citation_count": 1
+    },
+    "Ui-tars: Pioneering automated gui interaction with native agents": {
+      "citing_papers": [
+        "paper_0020"
+      ],
+      "citation_count": 1
+    },
+    "Ulrike von Luxburg, and Debarghya Ghoshdastidar. Interpolation and regularization for causal learning": {
+      "citing_papers": [
+        "paper_0018"
+      ],
+      "citation_count": 1
+    },
+    "Understanding and patching compositional reasoning in llms": {
+      "citing_papers": [
+        "paper_0031"
+      ],
+      "citation_count": 1
+    },
+    "Understanding the effects of rlhf on llm generalisation and diversity": {
+      "citing_papers": [
+        "paper_0034"
+      ],
+      "citation_count": 1
+    },
+    "Unified multimodal discrete diffusion": {
+      "citing_papers": [
+        "paper_0051"
+      ],
+      "citation_count": 1
+    },
+    "Unitary evolution recurrent neural networks": {
+      "citing_papers": [
+        "paper_0035"
+      ],
+      "citation_count": 1
+    },
+    "Unlocking general long chain-of-thought reasoning capabilities of large language models via representation engineering": {
+      "citing_papers": [
+        "paper_0023"
+      ],
+      "citation_count": 1
+    },
+    "Unlocking state-tracking in linear RNNs through negative eigenvalues": {
+      "citing_papers": [
+        "paper_0035"
+      ],
+      "citation_count": 1
+    },
+    "Unpaired point cloud completion on real scans using adversarial training": {
+      "citing_papers": [
+        "paper_0054"
+      ],
+      "citation_count": 1
+    },
+    "Unsupervised 3d shape completion through gan inversion": {
+      "citing_papers": [
+        "paper_0054"
+      ],
+      "citation_count": 1
+    },
     "Unsupervised contrastive cross-modal hashing": {
       "citing_papers": [
         "paper_0006"
+      ],
+      "citation_count": 1
+    },
+    "Unveiling induction heads: Provable training dynamics and feature learning in transformers": {
+      "citing_papers": [
+        "paper_0060"
+      ],
+      "citation_count": 1
+    },
+    "Va3: Virtually assured amplification attack on probabilistic copyright protection for text-to-image generative models": {
+      "citing_papers": [
+        "paper_0058"
+      ],
+      "citation_count": 1
+    },
+    "Versatile speech assessment with a unified network, 2025b": {
+      "citing_papers": [
+        "paper_0055"
+      ],
+      "citation_count": 1
+    },
+    "Vicreg: Variance-invariance-covariance regularization for self-supervised learning": {
+      "citing_papers": [
+        "paper_0026"
       ],
       "citation_count": 1
     },
@@ -260,9 +2565,87 @@
       ],
       "citation_count": 1
     },
+    "Visual autoregressive modeling: Scalable image generation via next-scale prediction": {
+      "citing_papers": [
+        "paper_0050"
+      ],
+      "citation_count": 1
+    },
+    "Visual prompting for adversarial robustness": {
+      "citing_papers": [
+        "paper_0044"
+      ],
+      "citation_count": 1
+    },
+    "Weakly-supervised 3d shape completion in the wild": {
+      "citing_papers": [
+        "paper_0054"
+      ],
+      "citation_count": 1
+    },
+    "Web agents with world models: Learning and leveraging environment dynamics in web navigation": {
+      "citing_papers": [
+        "paper_0030"
+      ],
+      "citation_count": 1
+    },
+    "Weisfeiler and leman go neural: Higher-order graph neural networks": {
+      "citing_papers": [
+        "paper_0036"
+      ],
+      "citation_count": 1
+    },
+    "What can transformers learn in-context? a case study of simple function classes": {
+      "citing_papers": [
+        "paper_0060"
+      ],
+      "citation_count": 1
+    },
     "What shapes feature representations? Exploring datasets, architectures, and training": {
       "citing_papers": [
         "paper_0005"
+      ],
+      "citation_count": 1
+    },
+    "What's behind ppo's collapse in long-cot? value optimization holds the secret": {
+      "citing_papers": [
+        "paper_0034"
+      ],
+      "citation_count": 1
+    },
+    "Whitening for self-supervised representation learning": {
+      "citing_papers": [
+        "paper_0026"
+      ],
+      "citation_count": 1
+    },
+    "Why gradient clipping accelerates training: A theoretical justification for adaptivity": {
+      "citing_papers": [
+        "paper_0022"
+      ],
+      "citation_count": 1
+    },
+    "Windows agent arena: Evaluating multi-modal os agents at scale, 2024": {
+      "citing_papers": [
+        "paper_0020"
+      ],
+      "citation_count": 1
+    },
+    "Xgnn: Towards model-level explanations of graph neural networks": {
+      "citing_papers": [
+        "paper_0041"
+      ],
+      "citation_count": 1
+    },
+    "Your absorbing discrete diffusion secretly models the conditional distributions of clean data": {
+      "citing_papers": [
+        "paper_0045"
+      ],
+      "citation_count": 1
+    },
+    "Zero-cl: Instance and feature decorrelation for negative-free symmetric contrastive learning": {
+      "citing_papers": [
+        "paper_0026"
       ],
       "citation_count": 1
     },
@@ -272,9 +2655,39 @@
       ],
       "citation_count": 1
     },
+    "Zero-shot self-supervised learning for MRI reconstruction": {
+      "citing_papers": [
+        "paper_0052"
+      ],
+      "citation_count": 1
+    },
+    "cosformer: Rethinking softmax in attention": {
+      "citing_papers": [
+        "paper_0057"
+      ],
+      "citation_count": 1
+    },
+    "itransformer: Inverted transformers are effective for time series forecasting": {
+      "citing_papers": [
+        "paper_0042"
+      ],
+      "citation_count": 1
+    },
+    "steerable CNNs": {
+      "citing_papers": [
+        "paper_0056"
+      ],
+      "citation_count": 1
+    },
     "treamingdllm: Accelerating diffusion llms via suffix pruning and dynamic decoding": {
       "citing_papers": [
         "paper_0002"
+      ],
+      "citation_count": 1
+    },
+    "π 0.5 : a visionlanguage-action model with open-world generalization": {
+      "citing_papers": [
+        "paper_0053"
       ],
       "citation_count": 1
     }
